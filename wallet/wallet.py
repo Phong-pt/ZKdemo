@@ -3,12 +3,7 @@ import json
 import secrets
 from pathlib import Path
 
-SHARED_DIR = Path(__file__).resolve().parent.parent / "shared"
 WALLET_DIR = Path(__file__).resolve().parent
-EKYC_FILE = SHARED_DIR / "ekyc.json"
-NONCE_FILE = SHARED_DIR / "nonce.json"
-PROOF_FILE = SHARED_DIR / "proof.json"
-PUBLIC_CREDDEF_FILE = SHARED_DIR / "cred_def_public.json"
 LINK_SECRET_FILE = WALLET_DIR / "link_secret.json"
 CREDENTIAL_FILE = WALLET_DIR / "credential.json"
 
@@ -19,10 +14,6 @@ EKYC_DATA = {
     "nationality": "Việt Nam",
     "address": "Tổ 1, Phường Đoàn Kết, Thành phố Lai Châu",
 }
-
-
-def get_public_cred_def() -> dict:
-    return json.loads(PUBLIC_CREDDEF_FILE.read_text(encoding="utf-8"))
 
 
 def get_link_secret(bits: int = 256) -> int:
@@ -40,7 +31,7 @@ def generate_blinding_factor(bits: int = 2048) -> int:
 
 
 def compute_commitment(S: int, R: int, n: int, v_prime: int, ls: int) -> int:
-    return (pow(S, v_prime, n) * pow(R, ls, n)) % n
+    return int(pow(S, v_prime, n) * pow(R, ls, n) % n)
 
 
 def generate_random_exponents(l: int) -> tuple[int, int]:
@@ -48,7 +39,7 @@ def generate_random_exponents(l: int) -> tuple[int, int]:
 
 
 def compute_commitment_prime(S: int, R: int, n: int, v_tilde: int, ls_tilde: int) -> int:
-    return (pow(S, v_tilde, n) * pow(R, ls_tilde, n)) % n
+    return int(pow(S, v_tilde, n) * pow(R, ls_tilde, n) % n)
 
 
 def compute_responses(
@@ -57,46 +48,16 @@ def compute_responses(
     return v_tilde + c * v_prime, ls_tilde + c * ls
 
 
-def send_ekyc_to_issuer() -> None:
-    SHARED_DIR.mkdir(exist_ok=True)
-    EKYC_FILE.write_text(json.dumps(EKYC_DATA, ensure_ascii=False), encoding="utf-8")
-
-
-def receive_nonce() -> str | None:
-    if not NONCE_FILE.exists():
-        return None
-    return json.loads(NONCE_FILE.read_text(encoding="utf-8"))["nonce"]
+def compute_link_secret_id(R: int, n: int) -> str:
+    return str(pow(R, get_link_secret(), n))
 
 
 def hash_challenge(u: str, u_prime: str, nonce: str) -> str:
     return hashlib.sha256(f"{u}|{u_prime}|{nonce}".encode()).hexdigest()
 
 
-def compute_challenge(u: int, u_prime: int) -> int | None:
-    nonce = receive_nonce()
-    if not nonce:
-        return None
+def compute_challenge(u: int, u_prime: int, nonce: str) -> int:
     return int(hash_challenge(str(u), str(u_prime), nonce), 16)
-
-
-def send_proof_to_issuer(u: int, c: int, v_hat: int, ls_hat: int) -> bool:
-    nonce = receive_nonce()
-    if not nonce:
-        return False
-    SHARED_DIR.mkdir(exist_ok=True)
-    PROOF_FILE.write_text(
-        json.dumps(
-            {
-                "u": str(u),
-                "c": str(c),
-                "v_hat": str(v_hat),
-                "ls_hat": str(ls_hat),
-                "nonce": nonce,
-            }
-        ),
-        encoding="utf-8",
-    )
-    return True
 
 
 def unblind_signature(a: int, e: int, v_prime: int, v_prime_prime: int) -> dict:
