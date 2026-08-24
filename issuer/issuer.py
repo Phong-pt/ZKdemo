@@ -1,14 +1,16 @@
-import hashlib
 import secrets
 import json
 from pathlib import Path
 
 import gmpy2
 
+from common import encode_attribute, hash_three
+
 ISSUER_DIR = Path(__file__).resolve().parent
 PUBLIC_CREDDEF_FILE = ISSUER_DIR / "cred_def_public.json"
 PRIVATE_KEY_FILE = ISSUER_DIR / "issuer_private_key.json"
-CCCD_TO_LS_FILE = ISSUER_DIR / "cccd_to_ls.json"
+
+ATTRIBUTE_NAMES = ["cccd", "name", "dob", "nationality", "address"]
 
 EKYC_DB = [
     {
@@ -17,24 +19,11 @@ EKYC_DB = [
         "dob": "05/05/2005",
         "nationality": "Việt Nam",
         "address": "Tổ 1, Phường Đoàn Kết, Thành phố Lai Châu",
+        "credential_issued": False,
     }
 ]
 
-_pending_nonces: set[str] = set()
-_cccd_to_ls: dict[str, str] = {}
-
-
-def _load_cccd_to_ls() -> None:
-    global _cccd_to_ls
-    if CCCD_TO_LS_FILE.exists():
-        _cccd_to_ls = json.loads(CCCD_TO_LS_FILE.read_text(encoding="utf-8"))
-
-
-def _save_cccd_to_ls() -> None:
-    CCCD_TO_LS_FILE.write_text(json.dumps(_cccd_to_ls), encoding="utf-8")
-
-
-_load_cccd_to_ls()
+_pending_nonces: dict[str, dict] = {}
 
 SMALL_PRIMES = [p for p in range(3, 5000) if gmpy2.is_prime(p)]
 _RANDOM_STATE = gmpy2.random_state()
@@ -45,7 +34,7 @@ def generate_nonce() -> str:
 
 
 def generate_issuer_blinding_factor(bits: int = 2724) -> int:
-    return int(gmpy2.mpz_random(_RANDOM_STATE, 1 << bits))
+    return int(gmpy2.mpz_random(_RANDOM_STATE, 1 << bits)) | (1 << (bits - 1))
 
 
 def generate_safe_prime(bits: int) -> int:
@@ -75,7 +64,7 @@ def setup(bits: int = 1024) -> dict:
     R = pow(b, 2, n)
     Z = pow(z, 2, n)
     R_attrs = {}
-    for attr in EKYC_DB[0].keys():
+    for attr in ATTRIBUTE_NAMES:
         r = int(gmpy2.mpz_random(_RANDOM_STATE, n))
         R_attrs[attr] = pow(r, 2, n)
     private_key = {"p": p, "q": q}
@@ -100,37 +89,32 @@ def get_private_key() -> dict:
     return json.loads(PRIVATE_KEY_FILE.read_text(encoding="utf-8"))
 
 
-def verify_cccd(cccd: str, name: str, dob: str, nationality: str, address: str) -> bool:
-    return any(
-        record["cccd"] == cccd
-        and record["name"] == name
-        and record["dob"] == dob
-        and record["nationality"] == nationality
-        and record["address"] == address
-        for record in EKYC_DB
-    )
+def find_ekyc_record(cccd: str, name: str, dob: str, nationality: str, address: str) -> dict | None:
+    for record in EKYC_DB:
+        if (
+            record["cccd"] == cccd
+            and record["name"] == name
+            and record["dob"] == dob
+            and record["nationality"] == nationality
+            and record["address"] == address
+        ):
+            return record
+    return None
 
 
 def issue_challenge(ekyc: dict) -> str | None:
-    if not verify_cccd(
+    record = find_ekyc_record(
         cccd=ekyc["cccd"],
         name=ekyc["name"],
         dob=ekyc["dob"],
         nationality=ekyc["nationality"],
         address=ekyc["address"],
-    ):
+    )
+    if record is None or record["credential_issued"]:
         return None
     nonce = generate_nonce()
-    _pending_nonces.add(nonce)
+    _pending_nonces[nonce] = ekyc
     return nonce
-
-
-def encode_attribute(value) -> int:
-    if isinstance(value, int):
-        return value
-    if isinstance(value, str) and value.isdigit():
-        return int(value)
-    return int(hashlib.sha256(str(value).encode()).hexdigest(), 16)
 
 
 def generate_prime_in_range(lo: int, hi: int) -> int:
@@ -155,14 +139,14 @@ def verify_proof(proof: dict) -> bool:
     v_hat = int(proof["v_hat"])
     ls_hat = int(proof["ls_hat"])
 
+    if not (1 < u < n) or gmpy2.gcd(u, n) != 1:
+        return False
+
     u_prime = (pow(S, v_hat, n) * pow(R, ls_hat, n) % n) * pow(u, -c, n) % n
-    c_prime = int(
-        hashlib.sha256(f"{u}|{u_prime}|{nonce}".encode()).hexdigest(), 16
-    )
+    c_prime = hash_three(u, u_prime, nonce)
     if c_prime != c:
         return False
 
-    _pending_nonces.remove(nonce)
     return True
 
 
@@ -170,23 +154,10 @@ def sign_blindly(attributes: dict, proof: dict) -> dict:
     if not verify_proof(proof):
         raise ValueError("ZK proof hoặc nonce không hợp lệ")
 
-    ls_id = proof.get("ls_id")
-    if not ls_id:
-        raise ValueError("Thiếu ls_id")
-
-    cccd = attributes.get("cccd")
-    if not cccd:
-        raise ValueError("Thiếu cccd")
-    cccd_hash = hashlib.sha256(cccd.encode()).hexdigest()
-
-    if cccd_hash in _cccd_to_ls:
-        if _cccd_to_ls[cccd_hash] != ls_id:
-            raise ValueError(
-                "CCCD này đã gắn với một link_secret khác — không cho phép wallet mới"
-            )
-    else:
-        _cccd_to_ls[cccd_hash] = ls_id
-        _save_cccd_to_ls()
+    nonce = proof["nonce"]
+    verified_ekyc = _pending_nonces[nonce]
+    if attributes != verified_ekyc:
+        raise ValueError("attributes không khớp dữ liệu eKYC đã xác thực")
 
     u = int(proof["u"])
 
@@ -217,4 +188,6 @@ def sign_blindly(attributes: dict, proof: dict) -> dict:
 
     a = pow(q_val, d, n)
 
+    del _pending_nonces[nonce]
+    find_ekyc_record(**attributes)["credential_issued"] = True
     return {"a": a, "e": e, "v_prime_prime": v2}
