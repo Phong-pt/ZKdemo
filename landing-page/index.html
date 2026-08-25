@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minh Chứng — Xác thực danh tính bằng Zero-Knowledge Proof</title>
+<meta name="description" content="Bản demo mã nguồn mở minh họa mô hình xác thực danh tính Issuer, Holder, Verifier dựa trên Zero-Knowledge Proof, theo tinh thần chuẩn Bhutan NDI.">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L21 6.5V12C21 17 17.5 21 12 22.5C6.5 21 3 17 3 12V6.5L12 2Z" fill="currentColor"/>
+          <path d="M8.5 12.2L10.8 14.6L15.7 9.4" stroke="var(--bg)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span class="brand-name">Minh Chứng</span>
+    </a>
+    <nav class="nav-links" aria-label="Điều hướng chính">
+      <a href="#gioi-thieu">Giới thiệu</a>
+      <a href="#kien-truc">Kiến trúc</a>
+      <a href="#quy-trinh">Quy trình</a>
+    </nav>
+    <a class="btn btn-small btn-primary" href="#tai-xuong">Tải xuống</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Mở menu" aria-expanded="false">
+      <i class="ph ph-list"></i>
+    </button>
+  </div>
+  <div class="nav-mobile" id="navMobile">
+    <a href="#gioi-thieu">Giới thiệu</a>
+    <a href="#kien-truc">Kiến trúc</a>
+    <a href="#quy-trinh">Quy trình</a>
+    <a href="#tai-xuong" class="btn btn-primary">Tải xuống</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">Dựa trên tinh thần chuẩn Bhutan NDI / AnonCreds</p>
+        <h1>Chứng minh danh tính,<br>không tiết lộ thông tin.</h1>
+        <p class="hero-sub">Xác thực CCCD một lần. Sau đó chứng minh mọi thuộc tính bằng Zero-Knowledge Proof, không lộ dữ liệu gốc.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary btn-large" href="#tai-xuong">
+            <i class="ph ph-download-simple"></i>
+            Tải xuống
+          </a>
+          <a class="btn btn-ghost btn-large" href="#quy-trinh">
+            Cách hoạt động
+            <i class="ph ph-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-visual" aria-hidden="true">
+        <div class="float-card terminal reveal" data-reveal>
+          <div class="terminal-bar">
+            <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+            <span class="terminal-title">run_flow.py</span>
+          </div>
+          <pre class="terminal-body"><code><span class="tk-muted">$</span> python run_flow.py
+<span class="tk-comment">[issuer]</span>   eKYC hợp lệ, phát nonce
+<span class="tk-comment">[holder]</span>   sinh link secret cục bộ
+<span class="tk-comment">[holder]</span>   gửi commitment kèm proof
+<span class="tk-comment">[issuer]</span>   proof hợp lệ, ký mù credential
+<span class="tk-comment">[holder]</span>   gỡ mù, lưu credential cục bộ
+<span class="tk-ok">[verifier] proof hợp lệ: True</span></code></pre>
+        </div>
+
+        <div class="float-card flow-card reveal" data-reveal>
+          <p class="flow-card-label">Ba bên tham gia</p>
+          <div class="flow-card-row">
+            <div class="flow-node">
+              <i class="ph ph-seal-check"></i>
+              <span>Issuer</span>
+            </div>
+            <i class="ph ph-arrow-right flow-arrow"></i>
+            <div class="flow-node">
+              <i class="ph ph-wallet"></i>
+              <span>Holder</span>
+            </div>
+            <i class="ph ph-arrow-right flow-arrow"></i>
+            <div class="flow-node">
+              <i class="ph ph-eye"></i>
+              <span>Verifier</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="gioi-thieu">
+    <div class="section-inner why-grid">
+      <div class="why-copy reveal" data-reveal>
+        <h2>Không cần lộ CCCD để chứng minh bạn đủ điều kiện.</h2>
+        <p>Mô hình cũ bắt bạn nộp ảnh CCCD cho từng bên thứ ba, dữ liệu bị nhân bản và dễ rò rỉ khi một trong số đó bị tấn công. Với Zero-Knowledge Proof, bên xác minh chỉ kiểm tra một cam kết toán học, không bao giờ thấy dữ liệu gốc của bạn.</p>
+      </div>
+      <div class="why-visual reveal" data-reveal>
+        <div class="compare-card compare-old">
+          <i class="ph ph-x-circle"></i>
+          <div>
+            <p class="compare-title">Cách cũ</p>
+            <p class="compare-desc">Ảnh CCCD được gửi và lưu ở nhiều nơi khác nhau.</p>
+          </div>
+        </div>
+        <i class="ph ph-arrow-down compare-arrow"></i>
+        <div class="compare-card compare-new">
+          <i class="ph ph-shield-check"></i>
+          <div>
+            <p class="compare-title">Với Zero-Knowledge Proof</p>
+            <p class="compare-desc">Chỉ một cam kết mật mã được xác minh, off-chain.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="kien-truc">
+    <div class="section-inner">
+      <p class="eyebrow center">Kiến trúc hệ thống</p>
+      <h2 class="section-title center">Bốn thành phần, mỗi bên chỉ biết đủ.</h2>
+      <div class="bento reveal" data-reveal>
+        <div class="bento-cell bento-issuer">
+          <i class="ph ph-seal-check"></i>
+          <h3>Issuer</h3>
+          <p>Cơ quan có thẩm quyền, xác minh eKYC và ký credential cho người dùng.</p>
+        </div>
+        <div class="bento-cell bento-holder">
+          <i class="ph ph-wallet"></i>
+          <h3>Holder (Wallet)</h3>
+          <p>Ứng dụng người dùng. Toàn bộ dữ liệu nhạy cảm được xử lý và lưu trữ cục bộ.</p>
+        </div>
+        <div class="bento-cell bento-verifier">
+          <i class="ph ph-eye"></i>
+          <h3>Verifier</h3>
+          <p>Bên thứ ba kiểm tra proof, biết chắc bạn hợp lệ nhưng không biết bạn là ai.</p>
+        </div>
+        <div class="bento-cell bento-chain">
+          <i class="ph ph-link"></i>
+          <h3>Sổ cái công khai</h3>
+          <p>Lưu khóa công khai và schema của Issuer. Không lưu bất kỳ giao dịch xác minh nào.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="quy-trinh">
+    <div class="section-inner">
+      <h2 class="section-title center">Từ xác thực CCCD đến trình diện, năm bước.</h2>
+      <ol class="steps reveal" data-reveal>
+        <li class="step">
+          <span class="step-icon"><i class="ph ph-identification-card"></i></span>
+          <p class="step-title">Xác thực CCCD</p>
+          <p class="step-desc">Xác thực bằng CCCD và khuôn mặt, chỉ một lần duy nhất.</p>
+        </li>
+        <li class="step">
+          <span class="step-icon"><i class="ph ph-key"></i></span>
+          <p class="step-title">Xin cấp credential</p>
+          <p class="step-desc">Ví tự sinh khóa bí mật cục bộ, gửi cam kết cho Issuer.</p>
+        </li>
+        <li class="step">
+          <span class="step-icon"><i class="ph ph-pen-nib"></i></span>
+          <p class="step-title">Issuer ký mù</p>
+          <p class="step-desc">Issuer xác minh và ký mà không nhìn thấy khóa bí mật của bạn.</p>
+        </li>
+        <li class="step">
+          <span class="step-icon"><i class="ph ph-lock-key"></i></span>
+          <p class="step-title">Lưu trên thiết bị</p>
+          <p class="step-desc">Credential hoàn chỉnh chỉ lưu cục bộ, mở khóa bằng passkey.</p>
+        </li>
+        <li class="step">
+          <span class="step-icon"><i class="ph ph-check-circle"></i></span>
+          <p class="step-title">Trình diện &amp; xác minh</p>
+          <p class="step-desc">Verifier kiểm tra một bằng chứng toán học, không cần biết bạn là ai.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section download" id="tai-xuong">
+    <div class="section-inner download-inner reveal" data-reveal>
+      <h2>Dùng thử bản demo trên máy của bạn.</h2>
+      <p>Mã nguồn mở, chạy bằng Python. Bản cài đặt đầy đủ sẽ sớm có tại đây.</p>
+      <!-- TODO: thay href bên dưới bằng liên kết bản phát hành thật khi có -->
+      <a class="btn btn-primary btn-large" href="#" id="downloadBtn">
+        <i class="ph ph-download-simple"></i>
+        Tải xuống
+      </a>
+      <p class="download-note">Liên kết tải xuống sẽ được cập nhật khi bản phát hành đầu tiên ra mắt.</p>
+      <div class="tech-chips">
+        <span class="chip"><i class="ph ph-code"></i>Python</span>
+        <span class="chip"><i class="ph ph-lightning"></i>FastAPI</span>
+        <span class="chip"><i class="ph ph-hash"></i>gmpy2</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L21 6.5V12C21 17 17.5 21 12 22.5C6.5 21 3 17 3 12V6.5L12 2Z" fill="currentColor"/>
+          <path d="M8.5 12.2L10.8 14.6L15.7 9.4" stroke="var(--bg)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span>Minh Chứng</span>
+    </div>
+    <nav class="footer-links" aria-label="Điều hướng chân trang">
+      <a href="#gioi-thieu">Giới thiệu</a>
+      <a href="#kien-truc">Kiến trúc</a>
+      <a href="#quy-trinh">Quy trình</a>
+      <a href="#tai-xuong">Tải xuống</a>
+    </nav>
+    <p class="footer-note">Demo giáo dục, minh họa khái niệm Zero-Knowledge Proof. Không dùng cho môi trường sản xuất.</p>
+  </div>
+  <div class="footer-bottom">© 2026 Minh Chứng.</div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
