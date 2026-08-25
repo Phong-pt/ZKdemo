@@ -7,6 +7,7 @@ locally bundled copy.
 """
 
 import io
+import threading
 import time
 from urllib.parse import quote
 
@@ -24,6 +25,21 @@ router = APIRouter()
 ATTR_NAMES = ["cccd", "name", "dob", "nationality", "address"]
 
 _cred_def_cache: dict = {"value": None, "fetched_at": 0.0}
+
+# FastAPI runs sync `def` routes in a thread pool — a slow /submit (Render
+# cold start on the wallet side, network hiccups) plus an impatient retry
+# from the browser can land two concurrent submits for the same n_v. Without
+# this, both could pass the "still waiting" check before either resolves,
+# race inside verifier.verify_presentation's one-shot session pop, and the
+# LOSING request's resolve() could overwrite an already-successful result.
+# One lock per n_v, serializing just that request's critical section.
+_submit_locks: dict[str, threading.Lock] = {}
+_submit_locks_guard = threading.Lock()
+
+
+def _lock_for(n_v: str) -> threading.Lock:
+    with _submit_locks_guard:
+        return _submit_locks.setdefault(n_v, threading.Lock())
 
 
 def _get_cred_def() -> dict:
@@ -89,6 +105,25 @@ def check_status(n_v: str):
     return {"status": session["status"], "result": session["result"]}
 
 
+def _presentation_from_json_safe(p: dict) -> dict:
+    """Reverses webapp/routes/present.py's _presentation_to_json_safe — the
+    wallet sends every big-int field as a string specifically so the
+    browser's JSON.parse/stringify round trip in between doesn't corrupt
+    it; verify_presentation needs real Python ints for the modexp math."""
+    return {
+        "a_prime": int(p["a_prime"]),
+        "c": int(p["c"]),
+        "e_hat": int(p["e_hat"]),
+        "v_hat": int(p["v_hat"]),
+        "m_ls_hat": int(p["m_ls_hat"]),
+        "m_hats": {k: int(v) for k, v in p["m_hats"].items()},
+        "revealed": {
+            k: {"raw": v["raw"], "encoded": int(v["encoded"])}
+            for k, v in p["revealed"].items()
+        },
+    }
+
+
 @router.post("/api/check/{n_v}/submit")
 def submit_check(n_v: str, body: dict):
     """Public, cross-origin: the wallet's browser POSTs the built
@@ -96,24 +131,33 @@ def submit_check(n_v: str, body: dict):
     session = store.get(n_v)
     if session is None:
         raise HTTPException(404, "Yêu cầu đã hết hạn.")
-    if session["status"] != "waiting":
-        # Already resolved (e.g. a retried request) — don't re-consume
-        # verifier.verifier's one-shot session and flip a success to a
-        # false rejection.
-        return {"ok": session["status"] == "done"}
 
-    presentation = body.get("presentation")
-    if not isinstance(presentation, dict):
+    raw_presentation = body.get("presentation")
+    if not isinstance(raw_presentation, dict):
         raise HTTPException(400, "Thiếu presentation.")
-
     try:
-        cred_def = _get_cred_def()
-    except requests.RequestException as exc:
-        raise HTTPException(502, f"Không lấy được cred-def từ ví: {exc}") from exc
+        presentation = _presentation_from_json_safe(raw_presentation)
+    except (KeyError, ValueError, TypeError) as exc:
+        raise HTTPException(400, f"Presentation không đúng định dạng: {exc}") from exc
 
-    ok = verifier_core.verify_presentation(presentation, cred_def, n_v)
-    revealed = presentation.get("revealed") or {}
-    result = {k: v.get("raw") for k, v in revealed.items()} if ok else None
+    with _lock_for(n_v):
+        session = store.get(n_v)
+        if session is None:
+            raise HTTPException(404, "Yêu cầu đã hết hạn.")
+        if session["status"] != "waiting":
+            # Already resolved by an earlier (possibly concurrent) submit
+            # for this same n_v — don't re-consume verifier.verifier's
+            # one-shot session and risk flipping a success to a rejection.
+            return {"ok": session["status"] == "done"}
 
-    store.resolve(n_v, ok, result)
-    return {"ok": ok}
+        try:
+            cred_def = _get_cred_def()
+        except requests.RequestException as exc:
+            raise HTTPException(502, f"Không lấy được cred-def từ ví: {exc}") from exc
+
+        ok = verifier_core.verify_presentation(presentation, cred_def, n_v)
+        revealed = presentation.get("revealed") or {}
+        result = {k: v.get("raw") for k, v in revealed.items()} if ok else None
+
+        store.resolve(n_v, ok, result)
+        return {"ok": ok}

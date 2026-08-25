@@ -33,8 +33,12 @@ def get(n_v: str) -> dict | None:
 
 
 def resolve(n_v: str, ok: bool, result: dict | None) -> None:
+    """Idempotent on purpose: once a session leaves "waiting", further calls
+    are no-ops. routes.py already serializes this per n_v with a lock, but
+    keeping this defensive means a resolved result can never be clobbered
+    even if something else calls resolve() without holding that lock."""
     session = _sessions.get(n_v)
-    if session is None:
+    if session is None or session["status"] != "waiting":
         return
     session["status"] = "done" if ok else "rejected"
     session["result"] = result
