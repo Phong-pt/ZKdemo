@@ -1,0 +1,94 @@
+/* Minh Chứng — Passkey gate. Extends unlock.css tokens/layout. */
+
+.unlock-mark i{ font-size: 22px; }
+
+.pk-state{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.pk-email-chip{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+.pk-email-chip i{ color: var(--accent-strong); font-size: 14px; }
+
+.pk-desc{
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 34ch;
+}
+
+.pk-warning{
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  text-align: left;
+  margin: 0 0 24px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.pk-warning i{ color: var(--danger); font-size: 16px; flex: none; margin-top: 1px; }
+
+.pk-action{ width: 100%; justify-content: center; }
+.pk-action .btn-label{ display: inline-flex; align-items: center; gap: 8px; }
+
+.pk-error{ margin-top: 14px; text-align: center; }
+
+.pk-lost-note{
+  margin: 22px 0 0;
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+  max-width: 34ch;
+}
+.pk-lost-note .unlock-link{ font-size: 12.5px; }
+
+/* ---------- unlocked profile card ---------- */
+.pk-profile-card{
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 6px 18px;
+  margin-bottom: 22px;
+  text-align: left;
+}
+.pk-profile-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+}
+.pk-profile-row:last-child{ border-bottom: none; }
+.pk-profile-label{ font-size: 12.5px; color: var(--text-tertiary); }
+.pk-profile-value{ font-size: 13px; font-weight: 600; color: var(--text-primary); text-align: right; }
+.pk-mono{ font-family: var(--font-mono); font-weight: 500; }
+.pk-status{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent-strong);
+  font-size: 12px;
+}
+.pk-status i{ font-size: 14px; }

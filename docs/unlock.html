@@ -98,22 +98,12 @@
       </div>
     </div>
 
-    <!-- ===== success state ===== -->
+    <!-- ===== success state: hands off to the passkey gate ===== -->
     <div class="unlock-success" id="unlockSuccess" hidden>
-      <span class="unlock-success-icon"><i class="ph ph-check-circle"></i></span>
+      <span class="unlock-success-icon"><i class="ph ph-circle-notch spinner"></i></span>
       <p class="unlock-success-title" id="successTitle">Đã đăng nhập</p>
-      <p class="unlock-success-desc">Đây là giao diện minh họa. Ứng dụng thực chạy cục bộ bằng mã nguồn Python trong repo, không đồng bộ với trang này.</p>
-
-      <div class="cred-empty">
-        <i class="ph ph-identification-badge"></i>
-        <p class="cred-empty-title">Chưa có credential nào</p>
-        <p class="cred-empty-desc">Chạy <code>python run_flow.py</code> trong repo để thử cấp và xác minh một credential.</p>
-      </div>
-
-      <a class="btn btn-ghost btn-large" href="index.html">
-        <i class="ph ph-arrow-left"></i>
-        Về trang chủ
-      </a>
+      <p class="unlock-success-desc">Đang chuyển sang bước xác thực Passkey…</p>
+      <a class="unlock-link" id="continueToPasskey" href="passkey.html">Chuyển ngay</a>
     </div>
 
   </div>

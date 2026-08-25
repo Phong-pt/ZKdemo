@@ -35,7 +35,6 @@
   var unlockAuth = document.getElementById("unlockAuth");
   var unlockSuccess = document.getElementById("unlockSuccess");
   var successTitle = document.getElementById("successTitle");
-  var successDesc = document.querySelector(".unlock-success-desc");
 
   var mode = "login"; // "login" | "register"
   var step = "email"; // "email" | "password" (register always shows both at once)
@@ -93,11 +92,17 @@
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   }
 
-  function showSuccess(title, desc) {
+  function goToPasskey(mail) {
+    var url = "passkey.html?email=" + encodeURIComponent(mail);
+    document.getElementById("continueToPasskey").href = url;
+    window.setTimeout(function () { location.href = url; }, 900);
+  }
+
+  function showSuccess(title, mail) {
     successTitle.textContent = title;
-    if (desc) successDesc.textContent = desc;
     unlockAuth.hidden = true;
     unlockSuccess.hidden = false;
+    goToPasskey(mail);
   }
 
   changeEmailBtn.addEventListener("click", function () {
@@ -172,15 +177,9 @@
           STORAGE_KEY,
           JSON.stringify({ email: mail, password: btoa(pwd) })
         );
-        showSuccess(
-          "Tài khoản đã được tạo",
-          "Đây là giao diện minh họa. Ứng dụng thực chạy cục bộ bằng mã nguồn Python trong repo, không đồng bộ với trang này."
-        );
+        showSuccess("Tài khoản đã được tạo", mail);
       } else {
-        showSuccess(
-          "Đã đăng nhập",
-          "Đây là giao diện minh họa. Ứng dụng thực chạy cục bộ bằng mã nguồn Python trong repo, không đồng bộ với trang này."
-        );
+        showSuccess("Đã đăng nhập", mail);
       }
     }, 500);
   });
@@ -207,10 +206,7 @@
     })
       .then(function (r) { return r.json(); })
       .then(function (profile) {
-        showSuccess(
-          "Đã đăng nhập bằng Google",
-          "Xin chào " + (profile.name || profile.email) + ". Đây vẫn là bản xem trước tĩnh, chưa nối với ứng dụng Python thật."
-        );
+        showSuccess("Đã đăng nhập bằng Google", profile.email);
       })
       .catch(function () {
         googleNote.hidden = false;

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Passkey — Minh Chứng</title>
+<meta name="description" content="Bảo vệ và mở khóa hồ sơ Minh Chứng bằng Passkey của thiết bị.">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="unlock.css">
+<link rel="stylesheet" href="passkey.css">
+</head>
+<body class="unlock-body">
+
+<div class="grain" aria-hidden="true"></div>
+
+<a class="unlock-back" href="index.html">
+  <i class="ph ph-arrow-left"></i>
+  Minh Chứng
+</a>
+
+<main class="unlock-screen">
+  <div class="unlock-panel">
+
+    <div class="unlock-brand">
+      <span class="unlock-mark" aria-hidden="true">
+        <i class="ph ph-fingerprint"></i>
+      </span>
+      <p class="unlock-title">Passkey</p>
+      <p class="unlock-subtitle" id="pkSubtitle">Đang kiểm tra hồ sơ của bạn…</p>
+    </div>
+
+    <!-- ===== no email context ===== -->
+    <div class="pk-state" id="stateNoEmail" hidden>
+      <p class="pk-desc">Bạn cần đăng nhập bằng email hoặc Google trước khi thiết lập Passkey.</p>
+      <a class="btn btn-primary btn-large" href="unlock.html">
+        <i class="ph ph-arrow-right"></i>
+        Đến trang đăng nhập
+      </a>
+    </div>
+
+    <!-- ===== unsupported browser ===== -->
+    <div class="pk-state" id="stateUnsupported" hidden>
+      <p class="pk-desc">Trình duyệt hoặc thiết bị này chưa hỗ trợ Passkey (WebAuthn). Hãy thử bằng Chrome, Edge hoặc Safari bản mới trên máy có vân tay/khuôn mặt/mã PIN.</p>
+      <a class="btn btn-ghost btn-large" href="index.html">Về trang chủ</a>
+    </div>
+
+    <!-- ===== register a new passkey for this email ===== -->
+    <div class="pk-state" id="stateRegister" hidden>
+      <div class="pk-email-chip"><i class="ph ph-envelope-simple"></i><span id="registerEmail"></span></div>
+      <p class="pk-desc">Hồ sơ này chưa có Passkey. Mỗi email chỉ gắn với đúng một Passkey trên một thiết bị — đây sẽ là cách duy nhất để mở lại hồ sơ này.</p>
+      <p class="pk-warning"><i class="ph ph-warning"></i>Mất Passkey nghĩa là không thể đăng nhập lại email này. Không có cách khôi phục.</p>
+      <button type="button" class="btn btn-primary btn-large pk-action" id="createPasskeyBtn">
+        <span class="btn-label"><i class="ph ph-fingerprint"></i> Tạo Passkey</span>
+        <i class="ph ph-circle-notch spinner" hidden></i>
+      </button>
+      <p class="field-error pk-error" id="registerError" hidden></p>
+    </div>
+
+    <!-- ===== verify an existing passkey ===== -->
+    <div class="pk-state" id="stateVerify" hidden>
+      <div class="pk-email-chip"><i class="ph ph-envelope-simple"></i><span id="verifyEmail"></span></div>
+      <p class="pk-desc">Hồ sơ này đã được khoá bằng Passkey. Dùng vân tay, khuôn mặt hoặc mã PIN của thiết bị để mở khoá.</p>
+      <button type="button" class="btn btn-primary btn-large pk-action" id="verifyPasskeyBtn">
+        <span class="btn-label"><i class="ph ph-fingerprint"></i> Dùng Passkey</span>
+        <i class="ph ph-circle-notch spinner" hidden></i>
+      </button>
+      <p class="field-error pk-error" id="verifyError" hidden></p>
+      <p class="pk-lost-note">
+        Không dùng được Passkey trên thiết bị này (đổi máy, xoá dữ liệu…)? Hồ sơ này không thể khôi phục — bạn sẽ cần
+        <button type="button" class="unlock-link" id="resetProfileBtn">tạo một hồ sơ mới</button>.
+      </p>
+    </div>
+
+    <!-- ===== unlocked profile ===== -->
+    <div class="pk-state" id="stateUnlocked" hidden>
+      <span class="unlock-success-icon"><i class="ph ph-check-circle"></i></span>
+      <p class="unlock-success-title" id="unlockedTitle">Đã mở khoá hồ sơ</p>
+      <p class="unlock-success-desc">Passkey đứng vai trò xác thực thiết bị. Từ đây, trang có thể để tĩnh — không cần thao tác thêm.</p>
+
+      <div class="pk-profile-card">
+        <div class="pk-profile-row">
+          <span class="pk-profile-label">Email</span>
+          <span class="pk-profile-value" id="profileEmail"></span>
+        </div>
+        <div class="pk-profile-row">
+          <span class="pk-profile-label">Link secret cục bộ</span>
+          <span class="pk-profile-value pk-mono" id="profileSecret"></span>
+        </div>
+        <div class="pk-profile-row">
+          <span class="pk-profile-label">Trạng thái</span>
+          <span class="pk-profile-value pk-status"><i class="ph ph-check-circle"></i>1 email · 1 Passkey · 1 link secret</span>
+        </div>
+      </div>
+
+      <div class="cred-empty">
+        <i class="ph ph-identification-badge"></i>
+        <p class="cred-empty-title">Chưa có credential nào</p>
+        <p class="cred-empty-desc">Chạy <code>python run_flow.py</code> trong repo để thử cấp và xác minh một credential thật.</p>
+      </div>
+
+      <a class="btn btn-ghost btn-large" href="index.html">
+        <i class="ph ph-arrow-left"></i>
+        Về trang chủ
+      </a>
+    </div>
+
+  </div>
+
+  <div class="unlock-glow" aria-hidden="true">
+    <svg viewBox="0 0 400 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M200 0L392 96V150C392 190 320 216 200 220C80 216 8 190 8 150V96L200 0Z" fill="url(#pkGradient)"/>
+      <defs>
+        <linearGradient id="pkGradient" x1="200" y1="0" x2="200" y2="220" gradientUnits="userSpaceOnUse">
+          <stop stop-color="var(--accent)" stop-opacity="0.22"/>
+          <stop offset="1" stop-color="var(--accent)" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+</main>
+
+<script src="passkey.js"></script>
+</body>
+</html>
