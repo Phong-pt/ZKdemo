@@ -1,0 +1,285 @@
+/* Minh Chứng — unlock/register screen
+   Reuses tokens from style.css. Centered auth layout, single accent,
+   same radius/shape system as the landing page. */
+
+.unlock-body{
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.unlock-back{
+  position: absolute;
+  top: 26px;
+  left: 26px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14.5px;
+  color: var(--text-secondary);
+}
+.unlock-back:hover{ color: var(--text-primary); }
+.unlock-back i{ font-size: 15px; }
+
+.unlock-screen{
+  flex: 1;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 100px 24px 60px;
+}
+
+.unlock-panel{
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 360px;
+}
+
+.unlock-brand{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 32px;
+}
+.unlock-mark{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+.unlock-title{
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 6px;
+}
+.unlock-subtitle{
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+}
+
+.unlock-auth{ display: flex; flex-direction: column; }
+
+.google-btn{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 18px;
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.16s ease, transform 0.18s cubic-bezier(0.16,1,0.3,1);
+}
+.google-btn:hover{ border-color: var(--text-tertiary); }
+.google-btn:active{ transform: translateY(1px) scale(0.98); }
+
+.google-note{
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.unlock-divider{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0;
+  color: var(--text-tertiary);
+  font-size: 12.5px;
+}
+.unlock-divider::before,
+.unlock-divider::after{
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-strong);
+}
+
+.unlock-form{ display: flex; flex-direction: column; gap: 16px; }
+
+.field{ display: flex; flex-direction: column; gap: 7px; text-align: left; }
+.field label{
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.field-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.field-change{ font-size: 12.5px; }
+.field input:disabled{
+  color: var(--text-tertiary);
+  background: var(--surface-2);
+  cursor: default;
+}
+.field input{
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.field input::placeholder{ color: var(--text-tertiary); }
+.field input:focus{
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.field input[aria-invalid="true"]{
+  border-color: var(--danger);
+}
+.field-error{
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--danger);
+}
+
+.unlock-submit{
+  justify-content: center;
+  width: 100%;
+  margin-top: 4px;
+  position: relative;
+}
+.unlock-submit .spinner{
+  animation: unlock-spin 0.8s linear infinite;
+}
+@keyframes unlock-spin{
+  from{ transform: rotate(0deg); }
+  to{ transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce){
+  .unlock-submit .spinner{ animation: none; }
+}
+
+.unlock-link{
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--accent-strong);
+  cursor: pointer;
+  text-align: center;
+}
+.unlock-link:hover{ text-decoration: underline; }
+
+.unlock-form .unlock-link{ margin-top: -2px; }
+
+.unlock-forgot-note{
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.unlock-switch{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 26px;
+  font-size: 13.5px;
+  color: var(--text-tertiary);
+}
+
+/* ---------- success state ---------- */
+.unlock-success{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.unlock-success-icon{
+  width: 56px; height: 56px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: 28px;
+  margin-bottom: 18px;
+}
+.unlock-success-title{
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+.unlock-success-desc{
+  margin: 0 0 26px;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  line-height: 1.6;
+  max-width: 34ch;
+}
+
+.cred-empty{
+  width: 100%;
+  padding: 22px 20px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-strong);
+  margin-bottom: 26px;
+}
+.cred-empty i{ font-size: 22px; color: var(--text-tertiary); }
+.cred-empty-title{ font-weight: 600; font-size: 14px; margin: 10px 0 4px; }
+.cred-empty-desc{ margin: 0; color: var(--text-secondary); font-size: 12.5px; line-height: 1.6; }
+.cred-empty-desc code{
+  font-family: var(--font-mono);
+  background: var(--surface-2);
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.unlock-success .btn{ width: 100%; justify-content: center; }
+
+/* ---------- decorative glow ---------- */
+.unlock-glow{
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(640px, 140vw);
+  z-index: 1;
+  pointer-events: none;
+}
+
+@media (max-width: 480px){
+  .unlock-screen{ padding: 88px 20px 48px; }
+}

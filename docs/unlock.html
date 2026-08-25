@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đăng nhập — Minh Chứng</title>
+<meta name="description" content="Đăng nhập bằng Google hoặc tạo tài khoản bằng email để dùng thử Minh Chứng.">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="unlock.css">
+<!-- Google Identity Services: chỉ dùng khi GOOGLE_CLIENT_ID trong unlock.js được điền -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body class="unlock-body">
+
+<div class="grain" aria-hidden="true"></div>
+
+<a class="unlock-back" href="index.html">
+  <i class="ph ph-arrow-left"></i>
+  Minh Chứng
+</a>
+
+<main class="unlock-screen">
+
+  <div class="unlock-panel">
+
+    <div class="unlock-brand">
+      <span class="unlock-mark" aria-hidden="true">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L21 6.5V12C21 17 17.5 21 12 22.5C6.5 21 3 17 3 12V6.5L12 2Z" fill="currentColor"/>
+          <path d="M8.5 12.2L10.8 14.6L15.7 9.4" stroke="var(--bg)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <p class="unlock-title">Minh Chứng</p>
+      <p class="unlock-subtitle" id="unlockSubtitle">Đăng nhập để dùng thử ví danh tính</p>
+    </div>
+
+    <!-- ===== auth state ===== -->
+    <div class="unlock-auth" id="unlockAuth">
+
+      <button type="button" class="google-btn" id="googleBtn">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+          <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.87 2.7-6.62z"/>
+          <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.81.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.33A9 9 0 0 0 9 18z"/>
+          <path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.67 9c0-.59.1-1.17.28-1.7V4.97H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.03l2.99-2.33z"/>
+          <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.97l2.99 2.33C4.66 5.17 6.65 3.58 9 3.58z"/>
+        </svg>
+        Tiếp tục với Google
+      </button>
+
+      <p class="google-note" id="googleNote" hidden>
+        Đăng nhập Google cần một OAuth Client ID thật và một backend xác thực, chưa được kết nối trong bản demo tĩnh này.
+      </p>
+
+      <div class="unlock-divider"><span>hoặc dùng email</span></div>
+
+      <form class="unlock-form" id="unlockForm" novalidate>
+        <div class="field">
+          <div class="field-head">
+            <label for="email">Email</label>
+            <button type="button" class="unlock-link field-change" id="changeEmailBtn" hidden>Dùng email khác</button>
+          </div>
+          <input type="email" id="email" name="email" placeholder="ban@vidu.com" autocomplete="email" required>
+          <p class="field-error" id="emailError" hidden></p>
+        </div>
+
+        <div class="field" id="passwordWrap" hidden>
+          <label for="password">Mật khẩu</label>
+          <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" autocomplete="current-password">
+          <p class="field-error" id="passwordError" hidden></p>
+        </div>
+
+        <div class="field" id="confirmWrap" hidden>
+          <label for="confirmPassword">Nhập lại mật khẩu</label>
+          <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Nhập lại mật khẩu" autocomplete="new-password">
+          <p class="field-error" id="confirmError" hidden></p>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-large unlock-submit" id="unlockSubmit">
+          <span class="btn-label">Tiếp tục</span>
+          <i class="ph ph-circle-notch spinner" hidden></i>
+        </button>
+
+        <button type="button" class="unlock-link" id="forgotBtn" hidden>Quên mật khẩu?</button>
+      </form>
+
+      <p class="unlock-forgot-note" id="forgotNote" hidden>
+        Đây là tài khoản demo lưu cục bộ trên trình duyệt của bạn, không có máy chủ khôi phục. Quên mật khẩu thì tạo lại tài khoản mới.
+      </p>
+
+      <div class="unlock-switch">
+        <span id="switchCopy">Chưa có tài khoản?</span>
+        <button type="button" class="unlock-link" id="switchModeBtn">Tạo tài khoản</button>
+      </div>
+    </div>
+
+    <!-- ===== success state ===== -->
+    <div class="unlock-success" id="unlockSuccess" hidden>
+      <span class="unlock-success-icon"><i class="ph ph-check-circle"></i></span>
+      <p class="unlock-success-title" id="successTitle">Đã đăng nhập</p>
+      <p class="unlock-success-desc">Đây là giao diện minh họa. Ứng dụng thực chạy cục bộ bằng mã nguồn Python trong repo, không đồng bộ với trang này.</p>
+
+      <div class="cred-empty">
+        <i class="ph ph-identification-badge"></i>
+        <p class="cred-empty-title">Chưa có credential nào</p>
+        <p class="cred-empty-desc">Chạy <code>python run_flow.py</code> trong repo để thử cấp và xác minh một credential.</p>
+      </div>
+
+      <a class="btn btn-ghost btn-large" href="index.html">
+        <i class="ph ph-arrow-left"></i>
+        Về trang chủ
+      </a>
+    </div>
+
+  </div>
+
+  <div class="unlock-glow" aria-hidden="true">
+    <svg viewBox="0 0 400 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M200 0L392 96V150C392 190 320 216 200 220C80 216 8 190 8 150V96L200 0Z" fill="url(#unlockGradient)"/>
+      <defs>
+        <linearGradient id="unlockGradient" x1="200" y1="0" x2="200" y2="220" gradientUnits="userSpaceOnUse">
+          <stop stop-color="var(--accent)" stop-opacity="0.22"/>
+          <stop offset="1" stop-color="var(--accent)" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+</main>
+
+<script src="unlock.js"></script>
+</body>
+</html>
