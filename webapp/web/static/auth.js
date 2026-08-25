@@ -108,12 +108,19 @@ window.addEventListener("load", () => {
     client_id: GOOGLE_CLIENT_ID,
     callback: onGoogleCredential,
   });
-  google.accounts.id.renderButton(document.getElementById("googleBtnContainer"), {
+  const container = document.getElementById("googleBtnContainer");
+  // Google's button width is a fixed pixel value, not responsive — a
+  // hardcoded 320 renders wider than most phone screens (minus padding),
+  // forcing the whole page to scale out like a desktop site. Measure the
+  // actual available width instead, clamped to what Google's API accepts
+  // (200-400).
+  const width = Math.max(200, Math.min(400, container.clientWidth || 320));
+  google.accounts.id.renderButton(container, {
     theme: "outline",
     size: "large",
     shape: "pill",
     text: "continue_with",
-    width: 320,
+    width,
   });
 });
 
