@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ví của tôi — Minh Chứng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <span class="topbar-email" id="userEmail">…</span>
+    <div class="topbar-actions">
+      <button type="button" class="link-btn" id="logoutBtn">Đăng xuất</button>
+    </div>
+  </header>
+
+  <main class="wallet-main">
+
+    <!-- ===== empty state ===== -->
+    <div id="emptyState" hidden style="display:flex; flex-direction:column; align-items:center; gap:22px;">
+      <div class="empty-slot">
+        <i class="ph ph-identification-badge"></i>
+        <p>Chưa có credential nào</p>
+      </div>
+      <a class="btn btn-primary" href="/issue">
+        <i class="ph ph-qr-code"></i>
+        Xác thực CCCD để nhận credential
+      </a>
+    </div>
+
+    <!-- ===== card state ===== -->
+    <div id="cardState" hidden style="display:flex; flex-direction:column; align-items:center; gap:16px; width:100%;">
+      <div class="cred-card" id="credCard">
+        <div class="cred-card-top">
+          <span class="cred-card-schema" id="cardSchema">CCCD</span>
+          <span class="cred-card-issuer"><i class="ph ph-seal-check"></i><span id="cardIssuer"></span></span>
+        </div>
+        <div class="cred-card-name" id="cardName"></div>
+        <div class="cred-card-number" id="cardNumber"></div>
+      </div>
+      <p class="field-hint">Bấm vào thẻ để xem đủ thông tin</p>
+
+      <div class="cred-detail" id="credDetail" hidden></div>
+    </div>
+
+  </main>
+
+  <footer class="footer-banner">
+    Demo mô phỏng — link secret hiện lưu tại server. Bản ứng dụng di động sẽ giữ trong Android Keystore.
+  </footer>
+</div>
+
+<script src="/static/api.js"></script>
+<script src="/static/wallet.js"></script>
+</body>
+</html>

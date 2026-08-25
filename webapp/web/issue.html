@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xác thực CCCD — Minh Chứng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <a class="brand" href="/wallet">
+      <span class="brand-mark"><i class="ph ph-arrow-left"></i></span>
+      Ví của tôi
+    </a>
+  </header>
+
+  <main class="center-screen">
+
+    <!-- ===== [5] chờ quét QR ===== -->
+    <div class="panel" id="screenQr" hidden>
+      <h1>Quét mã để chụp CCCD</h1>
+      <p class="desc">Dùng camera điện thoại quét mã QR bên dưới để tiếp tục trên điện thoại.</p>
+      <div class="qr-box"><img id="qrImg" alt="QR code"></div>
+      <p class="countdown" id="qrCountdown">05:00</p>
+      <p class="capture-status"><span class="dot"></span><span id="captureStatusText">Chờ quét</span></p>
+      <button type="button" class="link-btn" id="manualEntryBtn">Nhập tay thay thế</button>
+    </div>
+
+    <!-- ===== [6] xác nhận thông tin ===== -->
+    <div class="panel" id="screenConfirm" hidden style="max-width:400px;">
+      <h1>Xác nhận thông tin</h1>
+      <p class="desc">Kiểm tra lại các trường bên dưới trước khi tạo credential.</p>
+      <form class="confirm-form" id="confirmForm">
+        <div class="field">
+          <label for="f_cccd">Số CCCD</label>
+          <input type="text" id="f_cccd" required>
+        </div>
+        <div class="field">
+          <label for="f_name">Họ tên</label>
+          <input type="text" id="f_name" required>
+        </div>
+        <div class="field">
+          <label for="f_dob">Ngày sinh</label>
+          <input type="text" id="f_dob" required>
+        </div>
+        <div class="field">
+          <label for="f_nationality">Quốc tịch</label>
+          <input type="text" id="f_nationality" required>
+        </div>
+        <div class="field">
+          <label for="f_address">Địa chỉ</label>
+          <input type="text" id="f_address" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="ph ph-check"></i>
+          Xác nhận và tạo credential
+        </button>
+      </form>
+    </div>
+
+    <!-- ===== [7] đang cấp credential / [9] từ chối ===== -->
+    <div class="panel" id="screenProgress" hidden>
+      <div id="progressView">
+        <h1>Đang cấp credential</h1>
+        <ul class="progress-list" id="progressList">
+          <li class="progress-item" data-step="1"><span class="mark"><i class="ph ph-circle"></i></span>Đối chiếu cơ sở dữ liệu</li>
+          <li class="progress-item" data-step="2"><span class="mark"><i class="ph ph-circle"></i></span>Tạo commitment che link secret</li>
+          <li class="progress-item" data-step="3"><span class="mark"><i class="ph ph-circle"></i></span>Chứng minh zero-knowledge</li>
+          <li class="progress-item" data-step="4"><span class="mark"><i class="ph ph-circle"></i></span>Nhận chữ ký mù từ issuer</li>
+          <li class="progress-item" data-step="5"><span class="mark"><i class="ph ph-circle"></i></span>Giải mù và kiểm tra chữ ký</li>
+        </ul>
+        <details class="tech-panel">
+          <summary><i class="ph ph-code"></i> Xem giá trị kỹ thuật</summary>
+          <div class="tech-panel-body" id="techPanelBody">
+            <div><span class="k">u</span> = <span id="techU">…</span></div>
+            <div><span class="k">c</span> = <span id="techC">…</span></div>
+            <div><span class="k">a</span> = <span id="techA">…</span></div>
+          </div>
+        </details>
+      </div>
+
+      <div id="rejectView" hidden>
+        <span class="panel-icon" style="background:rgba(229,118,106,0.14); border-color:rgba(229,118,106,0.32); color:var(--danger);">
+          <i class="ph ph-x-circle"></i>
+        </span>
+        <h1>Không thể cấp credential</h1>
+        <p class="desc" id="rejectMessage"></p>
+        <button type="button" class="btn btn-primary btn-block" id="retryBtn">Thử lại</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="/static/api.js"></script>
+<script src="/static/issue.js"></script>
+</body>
+</html>

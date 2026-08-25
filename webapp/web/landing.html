@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minh Chứng — Ví danh tính</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <span class="brand">
+      <span class="brand-mark">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L21 6.5V12C21 17 17.5 21 12 22.5C6.5 21 3 17 3 12V6.5L12 2Z" fill="currentColor"/>
+          <path d="M8.5 12.2L10.8 14.6L15.7 9.4" stroke="var(--bg)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      Minh Chứng
+    </span>
+  </header>
+
+  <main class="center-screen">
+    <div class="panel">
+      <span class="panel-icon"><i class="ph ph-fingerprint"></i></span>
+      <h1>Ví danh tính Minh Chứng</h1>
+      <p class="desc">Chứng minh danh tính bằng Zero-Knowledge Proof, không lộ dữ liệu gốc. Bản demo webapp của mô hình Issuer, Holder, Verifier.</p>
+
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <a class="btn btn-primary btn-block" href="/auth?mode=register">
+          <i class="ph ph-user-plus"></i>
+          Tạo tài khoản
+        </a>
+        <a class="btn btn-ghost btn-block" href="/auth?mode=login">
+          <i class="ph ph-sign-in"></i>
+          Đăng nhập
+        </a>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

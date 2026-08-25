@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chụp CCCD — Minh Chứng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <span class="brand">
+      <span class="brand-mark"><i class="ph ph-camera"></i></span>
+      Chụp CCCD
+    </span>
+  </header>
+
+  <main class="center-screen">
+    <div class="panel" id="captureForm">
+      <p class="desc">Chụp rõ mặt trước và mặt sau CCCD. Ảnh chỉ được xử lý tạm thời, không lưu lại.</p>
+
+      <div class="field">
+        <label for="frontInput">Mặt trước</label>
+        <input type="file" id="frontInput" accept="image/*" capture="environment" required>
+      </div>
+      <div class="field">
+        <label for="backInput">Mặt sau</label>
+        <input type="file" id="backInput" accept="image/*" capture="environment" required>
+      </div>
+
+      <button type="button" class="btn btn-primary btn-block" id="submitPhotosBtn">
+        <span id="submitLabel"><i class="ph ph-upload-simple"></i> Gửi ảnh</span>
+        <i class="ph ph-circle-notch spinner" id="submitSpinner" hidden></i>
+      </button>
+      <p class="notice danger" id="captureError" hidden></p>
+    </div>
+
+    <div class="panel" id="captureDone" hidden>
+      <span class="panel-icon"><i class="ph ph-check-circle"></i></span>
+      <h1>Đã gửi ảnh</h1>
+      <p class="desc">Quay lại máy tính để xem và xác nhận thông tin. Bạn có thể đóng tab này.</p>
+    </div>
+
+    <div class="panel" id="captureExpired" hidden>
+      <span class="panel-icon" style="color:var(--danger); border-color:rgba(229,118,106,0.32); background:rgba(229,118,106,0.14);"><i class="ph ph-clock-countdown"></i></span>
+      <h1>Phiên đã hết hạn</h1>
+      <p class="desc">Quay lại máy tính và quét lại mã QR mới.</p>
+    </div>
+  </main>
+</div>
+
+<script src="/static/api.js"></script>
+<script src="/static/capture.js"></script>
+</body>
+</html>

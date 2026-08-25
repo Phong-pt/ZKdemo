@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đăng nhập — Minh Chứng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="/static/app.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <a class="brand" href="/">
+      <span class="brand-mark">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L21 6.5V12C21 17 17.5 21 12 22.5C6.5 21 3 17 3 12V6.5L12 2Z" fill="currentColor"/>
+          <path d="M8.5 12.2L10.8 14.6L15.7 9.4" stroke="var(--bg)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      Minh Chứng
+    </a>
+  </header>
+
+  <main class="center-screen">
+    <div class="panel">
+      <span class="panel-icon"><i class="ph ph-fingerprint" id="modeIcon"></i></span>
+      <h1 id="modeTitle">Tạo tài khoản</h1>
+      <p class="desc" id="modeDesc">Xác minh email rồi tạo Passkey cho thiết bị này — không cần mật khẩu.</p>
+
+      <div id="googleBtnContainer" style="display:flex; justify-content:center; min-height:44px;"></div>
+      <p class="field-hint" id="googleFallbackNote" hidden>Google Sign-In chưa sẵn sàng trên trình duyệt này — dùng email bên dưới.</p>
+
+      <div class="divider"><span>hoặc nhập email</span></div>
+
+      <form id="authForm">
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="ban@vidu.com" autocomplete="email" required>
+          <p class="field-error" id="emailError" hidden></p>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
+          <span id="submitLabel"><i class="ph ph-fingerprint"></i> Tạo Passkey</span>
+          <i class="ph ph-circle-notch spinner" id="submitSpinner" hidden></i>
+        </button>
+      </form>
+
+      <p class="notice danger" id="errorNotice" hidden></p>
+
+      <div style="margin-top:22px; font-size:13.5px; color:var(--text-tertiary);">
+        <span id="switchCopy">Đã có tài khoản?</span>
+        <button type="button" class="link-btn" id="switchModeBtn">Đăng nhập</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/static/api.js"></script>
+<script src="/static/webauthn.js"></script>
+<script src="/static/auth.js"></script>
+</body>
+</html>
