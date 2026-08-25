@@ -26,6 +26,10 @@
 }
 
 *{ box-sizing: border-box; }
+/* An element-specific `display` rule (flex/grid/...) has higher priority
+   than the `hidden` attribute's UA-stylesheet `display:none`, so any class
+   below that sets display must not fight it — force hidden to always win. */
+[hidden]{ display: none !important; }
 html{ background: var(--bg); }
 body{
   margin: 0;
@@ -172,6 +176,9 @@ img{ max-width: 100%; display: block; }
 
 /* ---------- wallet screens ---------- */
 .wallet-main{ flex: 1; display: flex; flex-direction: column; align-items: center; padding: 48px 24px; gap: 28px; }
+
+.wallet-empty{ display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.wallet-card-wrap{ display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; }
 
 .empty-slot{
   width: 100%; max-width: 360px;

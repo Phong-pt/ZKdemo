@@ -22,7 +22,7 @@
   <main class="wallet-main">
 
     <!-- ===== empty state ===== -->
-    <div id="emptyState" hidden style="display:flex; flex-direction:column; align-items:center; gap:22px;">
+    <div id="emptyState" class="wallet-empty" hidden>
       <div class="empty-slot">
         <i class="ph ph-identification-badge"></i>
         <p>Chưa có credential nào</p>
@@ -34,7 +34,7 @@
     </div>
 
     <!-- ===== card state ===== -->
-    <div id="cardState" hidden style="display:flex; flex-direction:column; align-items:center; gap:16px; width:100%;">
+    <div id="cardState" class="wallet-card-wrap" hidden>
       <div class="cred-card" id="credCard">
         <div class="cred-card-top">
           <span class="cred-card-schema" id="cardSchema">CCCD</span>
