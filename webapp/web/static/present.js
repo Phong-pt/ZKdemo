@@ -91,7 +91,12 @@ async function boot() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ presentation }),
       });
-      if (!res.ok) throw new Error("Bên xác minh từ chối nhận bằng chứng.");
+      const data = await res.json().catch(() => null);
+      // HTTP 200 only means the request was accepted for processing — the
+      // actual crypto result is in the body's `ok` field, not the status.
+      if (!res.ok || !data || !data.ok) {
+        throw new Error("Bên xác minh báo bằng chứng không hợp lệ.");
+      }
       showView("done");
     } catch (err) {
       submitError.hidden = false;
