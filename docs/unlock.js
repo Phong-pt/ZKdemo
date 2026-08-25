@@ -8,7 +8,7 @@
 // Client ID (see docs/README-google-oauth.md for the setup steps).
 
 (function () {
-  var GOOGLE_CLIENT_ID = ""; // TODO: dán OAuth Client ID thật vào đây
+  var GOOGLE_CLIENT_ID = "477011472862-pcc371j0kpd2fe17a2unqujou7iffgr2.apps.googleusercontent.com";
   var STORAGE_KEY = "mc_account_demo";
 
   var subtitle = document.getElementById("unlockSubtitle");
