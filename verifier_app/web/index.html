@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trạm Xác Minh</title>
+<meta name="description" content="Tạo yêu cầu kiểm tra credential Zero-Knowledge Proof — độc lập với ví Holder.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <i class="ph ph-scan"></i>
+    Trạm Xác Minh
+  </header>
+
+  <main class="center-screen">
+
+    <!-- ===== create request ===== -->
+    <div class="panel" id="createView">
+      <span class="panel-icon"><i class="ph ph-shield-check"></i></span>
+      <h1>Tạo yêu cầu kiểm tra</h1>
+      <p class="desc">Chọn thông tin cần xem. Các trường còn lại vẫn được chứng minh thuộc cùng một credential hợp lệ, chỉ không hiển thị giá trị.</p>
+
+      <div class="check-list" id="checkList">
+        <label class="check-row"><input type="checkbox" value="name" checked><span>Họ tên</span></label>
+        <label class="check-row"><input type="checkbox" value="dob"><span>Ngày sinh</span></label>
+        <label class="check-row"><input type="checkbox" value="nationality" checked><span>Quốc tịch</span></label>
+        <label class="check-row"><input type="checkbox" value="cccd"><span>Số CCCD</span></label>
+        <label class="check-row"><input type="checkbox" value="address"><span>Địa chỉ</span></label>
+      </div>
+
+      <button type="button" class="btn btn-primary" id="createBtn">
+        <span id="createLabel"><i class="ph ph-qr-code"></i> Tạo yêu cầu</span>
+        <i class="ph ph-circle-notch spinner" id="createSpinner" hidden></i>
+      </button>
+      <p class="desc" id="createError" style="color:var(--danger); margin-top:14px; margin-bottom:0;" hidden></p>
+    </div>
+
+    <!-- ===== waiting for wallet ===== -->
+    <div class="panel" id="checkView" hidden>
+      <h1>Quét để trình diện</h1>
+      <p class="desc">Người được kiểm tra quét mã này bằng ví Minh Chứng đã đăng nhập.</p>
+      <div class="qr-box"><img id="qrImg" alt="QR code"></div>
+      <div class="link-row">
+        <input type="text" id="linkInput" readonly>
+        <button type="button" id="copyLinkBtn" title="Sao chép"><i class="ph ph-copy"></i></button>
+      </div>
+      <p class="status-row"><i class="ph ph-circle-notch spinner"></i><span id="statusText">Đang chờ...</span></p>
+      <button type="button" class="btn btn-ghost" id="cancelBtn">Huỷ, tạo yêu cầu khác</button>
+    </div>
+
+    <!-- ===== result ===== -->
+    <div class="panel" id="resultView" hidden>
+      <span class="panel-icon" id="resultIcon"><i class="ph ph-check-circle"></i></span>
+      <h1 id="resultTitle">Hợp lệ</h1>
+      <p class="desc" id="resultDesc"></p>
+      <div class="result-card" id="resultCard"></div>
+      <button type="button" class="btn btn-primary" id="newCheckBtn">Tạo yêu cầu mới</button>
+    </div>
+
+  </main>
+</div>
+
+<script src="/static/index.js"></script>
+</body>
+</html>
