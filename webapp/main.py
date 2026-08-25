@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import db
-from .routes import auth, capture, issuance, wallet as wallet_routes
+from .routes import auth, capture, issuance, present, wallet as wallet_routes
 
 WEB_DIR = Path(__file__).resolve().parent / "web"
 
@@ -28,6 +28,7 @@ app.include_router(auth.router)
 app.include_router(wallet_routes.router)
 app.include_router(capture.router)
 app.include_router(issuance.router)
+app.include_router(present.router)
 
 app.mount("/static", StaticFiles(directory=WEB_DIR / "static"), name="static")
 
@@ -59,3 +60,8 @@ def issue_page():
 @app.get("/capture/{capture_id}")
 def capture_page(capture_id: str):
     return _page("capture.html")
+
+
+@app.get("/present")
+def present_page():
+    return _page("present.html")

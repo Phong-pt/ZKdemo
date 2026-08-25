@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trình diện credential — Minh Chứng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <a class="brand" href="/wallet">
+      <span class="brand-mark"><i class="ph ph-arrow-left"></i></span>
+      Ví của tôi
+    </a>
+  </header>
+
+  <main class="center-screen">
+
+    <div class="panel" id="loadingView">
+      <i class="ph ph-circle-notch spinner" style="font-size:24px; color:var(--text-tertiary);"></i>
+    </div>
+
+    <div class="panel" id="errorView" hidden>
+      <span class="panel-icon" style="background:rgba(229,118,106,0.14); border-color:rgba(229,118,106,0.32); color:var(--danger);">
+        <i class="ph ph-x-circle"></i>
+      </span>
+      <h1>Không thể mở yêu cầu</h1>
+      <p class="desc" id="errorMessage"></p>
+      <a class="btn btn-ghost btn-block" href="/wallet">Về ví</a>
+    </div>
+
+    <div class="panel" id="noCredView" hidden>
+      <span class="panel-icon"><i class="ph ph-identification-badge"></i></span>
+      <h1>Chưa có credential</h1>
+      <p class="desc">Bạn cần được cấp credential trước khi có thể trình diện cho bên xác minh.</p>
+      <a class="btn btn-primary btn-block" href="/issue">Xác thực CCCD để nhận credential</a>
+    </div>
+
+    <div class="panel" id="consentView" hidden style="max-width:400px;">
+      <span class="panel-icon"><i class="ph ph-eye"></i></span>
+      <h1>Yêu cầu xác minh</h1>
+      <p class="desc"><span id="verifierOrigin"></span> muốn kiểm tra một số thông tin trong credential của bạn.</p>
+
+      <div class="cred-detail" style="margin-bottom:20px;" id="revealList"></div>
+
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button type="button" class="btn btn-primary btn-block" id="approveBtn">
+          <span id="approveLabel"><i class="ph ph-check"></i> Đồng ý & Gửi</span>
+          <i class="ph ph-circle-notch spinner" id="approveSpinner" hidden></i>
+        </button>
+        <a class="btn btn-ghost btn-block" href="/wallet">Từ chối</a>
+      </div>
+      <p class="notice danger" id="submitError" hidden></p>
+    </div>
+
+    <div class="panel" id="doneView" hidden>
+      <span class="panel-icon"><i class="ph ph-check-circle"></i></span>
+      <h1>Đã gửi thông tin</h1>
+      <p class="desc">Kết quả xác minh sẽ hiện trên màn hình của bên yêu cầu.</p>
+      <a class="btn btn-ghost btn-block" href="/wallet">Về ví</a>
+    </div>
+
+  </main>
+</div>
+
+<script src="/static/api.js"></script>
+<script src="/static/present.js"></script>
+</body>
+</html>

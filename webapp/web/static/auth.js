@@ -5,6 +5,7 @@ const GOOGLE_CLIENT_ID = "477011472862-pcc371j0kpd2fe17a2unqujou7iffgr2.apps.goo
 
 const params = new URLSearchParams(location.search);
 let mode = params.get("mode") === "login" ? "login" : "register";
+const nextUrl = params.get("next") || "/wallet";
 
 const modeTitle = document.getElementById("modeTitle");
 const modeDesc = document.getElementById("modeDesc");
@@ -30,7 +31,8 @@ function render() {
   switchCopy.textContent = registering ? "Đã có tài khoản?" : "Chưa có tài khoản?";
   switchModeBtn.textContent = registering ? "Đăng nhập" : "Tạo tài khoản";
   errorNotice.hidden = true;
-  history.replaceState(null, "", `/auth?mode=${mode}`);
+  const nextParam = nextUrl === "/wallet" ? "" : `&next=${encodeURIComponent(nextUrl)}`;
+  history.replaceState(null, "", `/auth?mode=${mode}${nextParam}`);
 }
 
 switchModeBtn.addEventListener("click", () => {
@@ -75,7 +77,7 @@ authForm.addEventListener("submit", async (e) => {
       const credential = await webauthnAuthenticate(options);
       await apiPost("/api/auth/login/verify", { email, credential });
     }
-    location.href = "/wallet";
+    location.href = nextUrl;
   } catch (err) {
     if (err.name === "NotAllowedError") {
       showError("Bạn đã huỷ thao tác Passkey, hoặc thiết bị từ chối yêu cầu.");
