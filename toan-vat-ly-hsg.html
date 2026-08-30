@@ -1,0 +1,1139 @@
+<title>Toán Trong Vật Lý HSG Quốc Gia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Roboto+Mono:wght@400;500&display=swap">
+
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']],
+    processEscapes: false
+  },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
+  startup: {
+    pageReady: function () {
+      return MathJax.startup.defaultPageReady().then(function () {
+        document.documentElement.classList.add('mj-ready');
+      });
+    }
+  }
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-svg.js"></script>
+
+<style>
+:root {
+  --bg:         #ecf0f2;
+  --surface:    #ffffff;
+  --surface-2:  #f3f7f8;
+  --ink:        #0f181d;
+  --ink-2:      #42505a;
+  --ink-3:      #73828b;
+  --rule:       #d1dbdf;
+  --rule-soft:  #e2eaec;
+  --accent:     #0e4a5b;
+  --accent-soft:#dcebef;
+  --gold:       #8a6110;
+  --gold-soft:  #f6ecd6;
+  --code-bg:    #e5ecee;
+
+  --f-display: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-body:    "Literata", Georgia, "Times New Roman", serif;
+  --f-mono:    "Roboto Mono", ui-monospace, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:         #0f1416;
+    --surface:    #161d20;
+    --surface-2:  #1c2427;
+    --ink:        #e1e9ec;
+    --ink-2:      #9fadb3;
+    --ink-3:      #74848a;
+    --rule:       #273135;
+    --rule-soft:  #1e2629;
+    --accent:     #5cbfd3;
+    --accent-soft:#14313899;
+    --gold:       #d8a74b;
+    --gold-soft:  #2a231599;
+    --code-bg:    #1e2629;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg:         #0f1416;
+  --surface:    #161d20;
+  --surface-2:  #1c2427;
+  --ink:        #e1e9ec;
+  --ink-2:      #9fadb3;
+  --ink-3:      #74848a;
+  --rule:       #273135;
+  --rule-soft:  #1e2629;
+  --accent:     #5cbfd3;
+  --accent-soft:#14313899;
+  --gold:       #d8a74b;
+  --gold-soft:  #2a231599;
+  --code-bg:    #1e2629;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16.5px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+#doc { opacity: 0; transition: opacity .28s ease; }
+html.mj-ready #doc, html.mj-failsafe #doc { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { #doc { transition: none; } }
+
+.wrap { max-width: 1020px; margin: 0 auto; padding: 0 24px 110px; }
+
+/* ---------- masthead ---------- */
+
+.masthead { padding: 64px 0 26px; border-bottom: 1px solid var(--rule); }
+
+.kicker {
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 18px;
+}
+
+h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 5.4vw, 2.9rem);
+  line-height: 1.06;
+  letter-spacing: -.024em;
+  margin: 0 0 16px;
+  text-wrap: balance;
+  max-width: 17ch;
+}
+
+.lede { font-size: 1.08rem; color: var(--ink-2); max-width: 62ch; margin: 0; }
+
+/* ---------- facts ---------- */
+
+.facts {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  margin: 30px 0 46px;
+  padding: 24px 26px;
+}
+.facts h2 {
+  font-family: var(--f-display);
+  font-size: .95rem;
+  font-weight: 600;
+  margin: 0 0 16px;
+  letter-spacing: -.005em;
+}
+.facts dl { margin: 0; display: grid; gap: 13px; }
+@media (min-width: 700px) { .facts dl { grid-template-columns: 168px 1fr; gap: 13px 22px; } }
+.facts dt {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding-top: 4px;
+}
+.facts dd { margin: 0; font-size: .95rem; color: var(--ink-2); }
+.facts dd b { color: var(--ink); font-weight: 600; }
+
+/* ---------- blocks ---------- */
+
+.block { margin: 0 0 60px; scroll-margin-top: 20px; }
+
+.block > h2 {
+  font-family: var(--f-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -.022em;
+  margin: 0 0 10px;
+  padding-bottom: 12px;
+  border-bottom: 3px solid var(--ink);
+  text-wrap: balance;
+}
+.block > .intro { font-size: .97rem; color: var(--ink-2); max-width: 66ch; margin: 16px 0 26px; }
+
+/* ---------- comparison table (only table on the page) ---------- */
+
+.t-scroll { overflow-x: auto; margin: 0 0 14px; }
+table { border-collapse: collapse; width: 100%; min-width: 620px; }
+th {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  text-align: left;
+  padding: 0 18px 8px 0;
+  border-bottom: 1px solid var(--ink-3);
+  white-space: nowrap;
+}
+th:last-child, td:last-child { padding-right: 0; }
+td {
+  padding: 11px 18px 11px 0;
+  border-bottom: 1px solid var(--rule-soft);
+  vertical-align: top;
+  font-size: .92rem;
+  color: var(--ink-2);
+}
+td.a { width: 20%; color: var(--ink); font-weight: 600; }
+td.f { width: 42%; color: var(--ink); }
+tbody tr:last-child td { border-bottom: 1px solid var(--rule); }
+td b { color: var(--ink); font-weight: 600; }
+
+/* ---------- tool sections ---------- */
+
+.tool { margin: 0 0 48px; scroll-margin-top: 20px; }
+
+.tool-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 11px;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 10px;
+}
+.tool-head .n { font-family: var(--f-mono); font-size: 12.5px; color: var(--gold); font-weight: 500; }
+.tool-head h3 {
+  font-family: var(--f-display);
+  font-size: 1.24rem;
+  font-weight: 600;
+  letter-spacing: -.016em;
+  margin: 0;
+  flex: 1 1 auto;
+}
+.lvl {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  white-space: nowrap;
+}
+.tool > .why { font-size: .94rem; color: var(--ink-2); margin: 13px 0 8px; max-width: 66ch; }
+
+/* ---------- formula entries ---------- */
+
+.fx { border-bottom: 1px solid var(--rule-soft); padding: 17px 0; }
+.tool > .fx:last-child { border-bottom: 1px solid var(--rule); }
+
+.fx-top { display: grid; grid-template-columns: 1fr; gap: 7px; }
+@media (min-width: 800px) {
+  .fx-top { grid-template-columns: minmax(0, 46%) minmax(0, 1fr); gap: 28px; }
+}
+.fx-form { color: var(--ink); font-size: .94rem; overflow-x: auto; overflow-y: hidden; padding-bottom: 2px; }
+.fx-use { color: var(--ink-2); font-size: .91rem; }
+.fx-use b { color: var(--ink); font-weight: 600; }
+
+.fx-ex {
+  margin-top: 12px;
+  background: var(--surface-2);
+  border-left: 2px solid var(--accent);
+  padding: 11px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  overflow-x: auto;
+}
+.fx-ex p { margin: 0; font-size: .88rem; color: var(--ink-2); line-height: 1.56; }
+.exn {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-right: 8px;
+  white-space: nowrap;
+}
+.ans { color: var(--ink); font-weight: 600; }
+
+.pin {
+  display: inline-block;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .05em;
+  color: var(--gold);
+  background: var(--gold-soft);
+  padding: 1px 6px;
+  margin-right: 5px;
+  white-space: nowrap;
+}
+
+/* ---------- jump chips ---------- */
+
+.jump { margin: 0 0 50px; }
+.jump h2 {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+  margin: 0 0 14px;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  font-family: var(--f-display);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 5px 10px;
+}
+.chip .cn { font-family: var(--f-mono); font-size: 10.5px; font-weight: 400; color: var(--accent); }
+.chip:hover { border-color: var(--accent); color: var(--ink); }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- map rows ---------- */
+
+.rows { display: flex; flex-direction: column; }
+.row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--rule-soft);
+}
+@media (min-width: 740px) {
+  .row { grid-template-columns: 250px 1fr; gap: 24px; align-items: baseline; }
+}
+.rows > .row:last-child { border-bottom: 1px solid var(--rule); }
+.row > .name { font-weight: 600; font-size: .95rem; color: var(--ink); }
+.row > .needs { display: flex; flex-wrap: wrap; gap: 6px; }
+.mini {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  text-decoration: none;
+  color: var(--ink-2);
+  border: 1px solid var(--rule);
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+.mini:hover { border-color: var(--accent); color: var(--accent); }
+.mini:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- scope ---------- */
+
+.scope {
+  background: var(--surface-2);
+  border-left: 3px solid var(--gold);
+  padding: 18px 22px;
+  margin: 24px 0 0;
+  max-width: 68ch;
+}
+.scope p { margin: 0 0 10px; font-size: .93rem; color: var(--ink-2); }
+.scope p:last-child { margin: 0; }
+.scope b { color: var(--ink); font-weight: 600; }
+
+.note { margin: 26px 0 0; max-width: 68ch; }
+.note h3 { font-family: var(--f-display); font-size: 1.04rem; font-weight: 600; margin: 0 0 8px; }
+.note p { margin: 0 0 11px; color: var(--ink-2); font-size: .95rem; }
+.note p:last-child { margin: 0; }
+
+code {
+  font-family: var(--f-mono);
+  font-size: .85em;
+  background: var(--code-bg);
+  padding: .1em .36em;
+}
+
+.src { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; }
+.src li { font-size: .89rem; color: var(--ink-3); }
+.src a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
+.src a:hover { border-bottom-color: var(--accent); }
+.src a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+footer {
+  margin-top: 60px;
+  padding-top: 22px;
+  border-top: 1px solid var(--rule);
+  font-size: .87rem;
+  color: var(--ink-3);
+  max-width: 70ch;
+}
+</style>
+
+<div id="doc">
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">Tra cứu · Cấp tỉnh → Quốc gia</p>
+    <h1>Toán Trong Vật Lý HSG Quốc Gia</h1>
+    <p class="lede">
+      Bước nhảy toán học giữa chương trình chuẩn và đề thi học sinh giỏi Việt Nam:
+      12 nhóm công cụ mà lời giải HSG thực sự dùng, mỗi công thức kèm bài toán minh hoạ,
+      và ranh giới của những thứ không cần học.
+    </p>
+  </header>
+
+  <section class="facts">
+    <h2>Bối cảnh kỳ thi</h2>
+    <dl>
+      <dt>Hình thức</dt>
+      <dd><b>Hai buổi thi viết</b>, mỗi buổi <b>180 phút</b>.</dd>
+
+      <dt>Phần thực hành</dt>
+      <dd>
+        Từ năm học <b>2023–2024</b>, buổi thi thực hành riêng đã bị bỏ; thay bằng
+        <b>câu hỏi đánh giá kỹ năng thí nghiệm – thực hành nằm ngay trong bài thi viết</b>
+        (Thông tư 17/2023/TT-BGDĐT). Hệ quả trực tiếp: toán xử lý số liệu không còn là
+        "phần phụ ở phòng thí nghiệm" mà là điểm ăn chắc trong đề viết.
+      </dd>
+
+      <dt>Đề gần nhất</dt>
+      <dd>
+        Kỳ 2025–2026 thi ngày 25–26/12/2025, gần 680 thí sinh môn Vật lí. Ngày 1 có
+        <b>5 bài</b>, mỗi bài có tên gọi riêng gắn với một hiện tượng hoặc ứng dụng kỹ thuật.
+      </dd>
+
+      <dt>Mức độ toán</dt>
+      <dd>
+        Giáo viên nhận định đề <b>"dài nhưng không quá khó hay nặng về mặt toán học"</b>.
+        Đây là đặc điểm ổn định của đề Việt Nam: không thi toán khó, mà thi
+        <b>chọn đúng công cụ và triển khai nhanh</b>.
+      </dd>
+    </dl>
+  </section>
+
+  <!-- ============ THE JUMP ============ -->
+  <section class="block" id="jump">
+    <h2>Bước nhảy: cùng một chủ đề, hai mức yêu cầu</h2>
+    <p class="intro">
+      Phần lớn chuyên đề HSG <em>không</em> mới về vật lý — chúng là chuyên đề THPT bị gỡ bỏ
+      các giả thiết đơn giản hoá. Khi giả thiết bị gỡ, công cụ toán tương ứng phải nâng cấp.
+      Bảng này là bản đồ của chính bước nhảy đó.
+    </p>
+    <div class="t-scroll">
+      <table>
+        <thead><tr><th>Chủ đề</th><th>Chương trình chuẩn</th><th>HSG / HSGQG</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="a">Dao động</td>
+            <td>Cho sẵn nghiệm \(x=A\cos(\omega t+\varphi)\)</td>
+            <td class="f">Tự lập rồi <b>giải</b> \(\ddot{x}+2\gamma\dot{x}+\omega_0^2x=0\), phân ba chế độ tắt dần</td>
+          </tr>
+          <tr>
+            <td class="a">Vật rắn</td>
+            <td>Cho sẵn \(I\) của vài hình quen</td>
+            <td class="f">Tự tính \(I=\int r^2\,dm\); dùng định lý trục song song</td>
+          </tr>
+          <tr>
+            <td class="a">Phép gần đúng</td>
+            <td>Học thuộc \(\sin\alpha\approx\alpha\)</td>
+            <td class="f">Khai triển Taylor thế năng tới bậc 2, và <b>biết dừng ở bậc nào</b></td>
+          </tr>
+          <tr>
+            <td class="a">Chuyển động cong</td>
+            <td>Tròn đều, \(a=v^2/R\)</td>
+            <td class="f">Tọa độ cực đầy đủ: \(\vec{a}=(\ddot r-r\dot\varphi^2)\hat{e}_r+(r\ddot\varphi+2\dot r\dot\varphi)\hat{e}_\varphi\)</td>
+          </tr>
+          <tr>
+            <td class="a">Hệ quy chiếu</td>
+            <td>Chỉ hệ quán tính</td>
+            <td class="f">Hệ quay: lực Coriolis, lực li tâm, công thức đạo hàm vectơ quay</td>
+          </tr>
+          <tr>
+            <td class="a">Hấp dẫn</td>
+            <td>Quỹ đạo tròn; Kepler phát biểu suông</td>
+            <td class="f">Thế năng hiệu dụng, quỹ đạo conic \(r=\dfrac{p}{1+e\cos\varphi}\)</td>
+          </tr>
+          <tr>
+            <td class="a">Nhiệt</td>
+            <td>\(pV/T\) và vài quá trình đặc biệt</td>
+            <td class="f">\(A=\int p\,dV\) cho quá trình bất kỳ; đa biến \(pV^n\); đạo hàm riêng</td>
+          </tr>
+          <tr>
+            <td class="a">Điện xoay chiều</td>
+            <td>Giản đồ vectơ Fresnel</td>
+            <td class="f">Số phức; mạch <b>quá độ</b> phải giải bằng phương trình vi phân</td>
+          </tr>
+          <tr>
+            <td class="a">Vật lý phân tử</td>
+            <td>Thuyết động học sơ lược</td>
+            <td class="f">Phân bố Maxwell, tích phân Gauss để lấy \(\langle v\rangle\), \(\langle v^2\rangle\)</td>
+          </tr>
+          <tr>
+            <td class="a">Xử lý số liệu</td>
+            <td>Cộng sai số tương đối</td>
+            <td class="f">Tuyến tính hoá, bình phương tối thiểu, truyền sai số bằng đạo hàm riêng</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <nav class="jump" aria-label="Mục lục công cụ">
+    <h2>12 nhóm công cụ</h2>
+    <ul class="chips">
+      <li><a class="chip" href="#t1"><span class="cn">01</span>Phương trình vi phân</a></li>
+      <li><a class="chip" href="#t2"><span class="cn">02</span>Khai triển Taylor</a></li>
+      <li><a class="chip" href="#t3"><span class="cn">03</span>Tích phân</a></li>
+      <li><a class="chip" href="#t4"><span class="cn">04</span>Giải tích vectơ</a></li>
+      <li><a class="chip" href="#t5"><span class="cn">05</span>Tọa độ cong</a></li>
+      <li><a class="chip" href="#t6"><span class="cn">06</span>Conic &amp; quỹ đạo</a></li>
+      <li><a class="chip" href="#t7"><span class="cn">07</span>Số phức</a></li>
+      <li><a class="chip" href="#t8"><span class="cn">08</span>Đại số tuyến tính</a></li>
+      <li><a class="chip" href="#t9"><span class="cn">09</span>Đạo hàm riêng</a></li>
+      <li><a class="chip" href="#t10"><span class="cn">10</span>Xác suất &amp; thống kê</a></li>
+      <li><a class="chip" href="#t11"><span class="cn">11</span>Xử lý số liệu</a></li>
+      <li><a class="chip" href="#t12"><span class="cn">12</span>Thứ nguyên &amp; ước lượng</a></li>
+    </ul>
+  </nav>
+
+  <!-- ============ TOOLS ============ -->
+  <section class="block" id="tools">
+    <h2>Chi tiết từng nhóm công cụ</h2>
+    <p class="intro">
+      Nhãn cấp độ cho biết công cụ bắt đầu <em>bắt buộc</em> từ vòng nào. Nhiều công cụ đã
+      xuất hiện sớm hơn ở dạng nhẹ; mốc ghi ở đây là nơi không còn né được.
+    </p>
+
+    <!-- 01 -->
+    <div class="tool" id="t1">
+      <div class="tool-head"><span class="n">01</span><h3>Phương trình vi phân</h3><span class="lvl">Cấp tỉnh</span></div>
+      <p class="why">
+        Nhóm quan trọng nhất, và là ranh giới rõ nhất giữa THPT và HSG. Ở THPT nghiệm luôn
+        được cho sẵn; ở HSG thí sinh phải tự viết phương trình từ định luật II Newton hoặc
+        định luật bảo toàn, rồi giải nó.
+      </p>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Tách biến bậc 1: \(m\dfrac{dv}{dt}=mg-kv\Rightarrow v=\dfrac{mg}{k}\left(1-e^{-kt/m}\right)\)</div>
+          <div class="fx-use">Rơi có lực cản, vận tốc giới hạn; nạp/phóng tụ; dòng qua cuộn cảm. <span class="pin">cơ</span><span class="pin">điện</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD 1</span> Hạt \(m=0{,}01\) kg rơi trong môi trường cản \(F=-kv\) với \(k=0{,}1\) kg/s, \(g=10\). — Vận tốc giới hạn \(v_{gh}=\dfrac{mg}{k}=\dfrac{0{,}1}{0{,}1}\); hằng số thời gian \(\tau=\dfrac{m}{k}=0{,}1\) s. <span class="ans">v_gh = 1 m/s; sau t = τ đạt 63% giá trị đó.</span></p>
+          <p><span class="exn">VD 2</span> Tụ \(C=100\ \mu\)F nạp đến \(10\) V rồi phóng qua \(R=1\) kΩ. — \(\tau=RC=0{,}1\) s, \(u=10e^{-t/0,1}\). <span class="ans">Sau 0,1 s còn 3,68 V; sau 0,3 s còn 0,50 V.</span></p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Tuyến tính bậc 2 thuần nhất: \(\ddot{x}+2\gamma\dot{x}+\omega_0^2x=0\)</div>
+          <div class="fx-use"><b>Ba chế độ theo dấu của \(\gamma^2-\omega_0^2\):</b> tắt dần yếu \(x=Ae^{-\gamma t}\cos(\omega t+\varphi)\) với \(\omega=\sqrt{\omega_0^2-\gamma^2}\); tới hạn \(x=(A+Bt)e^{-\gamma t}\); quá tắt dần (hai hàm mũ thực). <span class="pin">dao động</span><span class="pin">RLC</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD 1</span> Con lắc lò xo \(m=0{,}1\) kg, \(k=10\) N/m, lực cản \(-b v\) với \(b=0{,}1\) kg/s. — \(\omega_0=\sqrt{k/m}=10\) rad/s, \(\gamma=\dfrac{b}{2m}=0{,}5\) s⁻¹, \(\omega=\sqrt{100-0{,}25}\). <span class="ans">ω ≈ 9,99 rad/s (gần như không đổi); biên độ giảm e lần sau 1/γ = 2 s.</span></p>
+          <p><span class="exn">VD 2</span> Mạch RLC \(L=1\) H, \(C=10\ \mu\)F. Tìm \(R\) để mạch tắt dần tới hạn. — \(\gamma=\omega_0\Leftrightarrow\dfrac{R}{2L}=\dfrac{1}{\sqrt{LC}}\Rightarrow R=2\sqrt{L/C}\). <span class="ans">R ≈ 632 Ω.</span> Nhỏ hơn thì mạch dao động, lớn hơn thì trườn về 0 chậm hơn.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Có vế phải: \(\ddot{x}+2\gamma\dot{x}+\omega_0^2x=\dfrac{F_0}{m}\cos\Omega t\)</div>
+          <div class="fx-use">Biên độ cưỡng bức \(A(\Omega)=\dfrac{F_0/m}{\sqrt{(\omega_0^2-\Omega^2)^2+4\gamma^2\Omega^2}}\), cực đại tại \(\Omega=\sqrt{\omega_0^2-2\gamma^2}\) — <em>không</em> phải tại \(\omega_0\). <span class="pin">cộng hưởng</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> \(\omega_0=10\) rad/s, \(\gamma=1\) s⁻¹. Tần số cộng hưởng biên độ? — \(\Omega=\sqrt{100-2}=\sqrt{98}\). <span class="ans">Ω ≈ 9,90 rad/s, thấp hơn ω₀ khoảng 1%.</span> Cản càng lớn, đỉnh cộng hưởng càng dịch xuống và tù đi; khi \(\gamma\ge\omega_0/\sqrt2\) thì không còn đỉnh nào.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Hệ phương trình vi phân ghép — giải bằng tọa độ chuẩn tắc \(q_{1,2}=x_1\pm x_2\)</div>
+          <div class="fx-use">Hai con lắc nối lò xo; hai mạch ghép hỗ cảm. Phép đổi biến tách hệ thành hai dao động độc lập. <span class="pin">dao động ghép</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Hai vật \(m\), mỗi vật nối tường bằng lò xo \(k\), và nối với nhau bằng lò xo \(k\). — Cộng hai phương trình: \(m\ddot q_1=-kq_1\); trừ: \(m\ddot q_2=-3kq_2\). <span class="ans">Hai mode: ω₁ = √(k/m) — hai vật đi cùng pha, lò xo giữa không biến dạng; ω₂ = √(3k/m) — hai vật ngược pha.</span></p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Tách biến dạng \(\dfrac{dE}{E}=-\dfrac{3}{2}\dfrac{d\ell}{\ell}\Rightarrow E\ell^{3/2}=\)const</div>
+          <div class="fx-use">Bất biến đoạn nhiệt — con lắc Rayleigh–Lorentz bị kéo ngắn dây, cho \(E/\omega=\)const (hệ thức Einstein). Chuyên đề này có trong tài liệu bồi dưỡng HSGQG. <span class="pin">nâng cao</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Con lắc đơn được kéo ngắn dây rất chậm từ \(\ell\) xuống \(\ell/4\). Biên độ góc thay đổi thế nào? — \(\omega\propto\ell^{-1/2}\) nên \(\omega\) tăng 2 lần \(\Rightarrow E\) tăng 2 lần. Từ \(E=\tfrac12mg\ell\alpha_0^2\) suy ra \(\alpha_0^2\propto E/\ell\) tăng 8 lần. <span class="ans">Biên độ góc tăng √8 ≈ 2,83 lần.</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 02 -->
+    <div class="tool" id="t2">
+      <div class="tool-head"><span class="n">02</span><h3>Khai triển Taylor &amp; gần đúng có kiểm soát</h3><span class="lvl">Cấp tỉnh</span></div>
+      <p class="why">
+        Kỹ thuật <strong>đặc trưng nhất</strong> của vật lý olympic. Ở THPT, \(\sin\alpha\approx\alpha\)
+        là một mẹo được cho sẵn. Ở HSG nó trở thành một phương pháp tổng quát: muốn biết một hệ
+        bất kỳ dao động thế nào quanh vị trí cân bằng, cứ khai triển thế năng.
+      </p>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(U(x)\approx U(x_0)+U'(x_0)\Delta x+\tfrac12U''(x_0)\Delta x^2\)</div>
+          <div class="fx-use"><b>Cỗ máy vạn năng cho dao động nhỏ.</b> Tại cân bằng \(U'(x_0)=0\), số hạng bậc 2 cho ngay \(\omega=\sqrt{U''(x_0)/m}\). <span class="pin">dao động nhỏ</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD 1</span> Hạt trượt không ma sát trong máng parabol \(y=\dfrac{x^2}{2R}\). — \(U=mgy=\dfrac{mgx^2}{2R}\Rightarrow U''=\dfrac{mg}{R}\). <span class="ans">ω = √(g/R)</span> — đúng bằng con lắc đơn dài \(R\), như mong đợi.</p>
+          <p><span class="exn">VD 2</span> Thế Lennard-Jones \(U(r)=U_0\left[\left(\tfrac{r_0}{r}\right)^{12}-2\left(\tfrac{r_0}{r}\right)^{6}\right]\). — Kiểm tra \(U'(r_0)=0\) ✓; tính \(U''(r_0)=\dfrac{72U_0}{r_0^2}\). <span class="ans">ω = √(72U₀/(m r₀²))</span> — tần số dao động của phân tử quanh vị trí liên kết.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\((1+x)^n\approx1+nx+\tfrac{n(n-1)}{2}x^2\)</div>
+          <div class="fx-use">Lực thủy triều; thế của lưỡng cực; hiệu chỉnh chu kỳ con lắc theo độ cao. <span class="pin">gần đúng bậc cao</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD 1</span> Lưỡng cực điện gồm \(\pm q\) cách nhau \(2a\), tính thế trên trục ở khoảng cách \(r\gg a\). — \(V=kq\left(\dfrac{1}{r-a}-\dfrac{1}{r+a}\right)=\dfrac{kq}{r}\left[(1-\tfrac{a}{r})^{-1}-(1+\tfrac{a}{r})^{-1}\right]\approx\dfrac{kq}{r}\cdot\dfrac{2a}{r}\). <span class="ans">V ≈ 2kqa/r² — giảm theo 1/r², nhanh hơn điện tích điểm.</span></p>
+          <p><span class="exn">VD 2</span> Lực thủy triều: chênh lệch lực hấp dẫn giữa hai mặt Trái Đất do Mặt Trăng gây ra. — \(\Delta F=GMm\left[\dfrac{1}{(d-R)^2}-\dfrac{1}{(d+R)^2}\right]\approx\dfrac{4GMmR}{d^3}\). <span class="ans">Tỉ lệ 1/d³ — vì thế Mặt Trăng gây thủy triều mạnh hơn Mặt Trời dù lực hấp dẫn nhỏ hơn.</span></p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(e^x\approx1+x\), \(\ln(1+x)\approx x-\tfrac{x^2}{2}\)</div>
+          <div class="fx-use">Khí quyển đẳng nhiệt; entropy trộn khí; các biểu thức có hàm mũ ở số mũ nhỏ. <span class="pin">nhiệt</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Khí quyển đẳng nhiệt \(p=p_0e^{-mgh/kT}\). Với \(h\) nhỏ thì sao? — \(p\approx p_0\left(1-\dfrac{mgh}{kT}\right)=p_0-\rho_0 gh\). <span class="ans">Khôi phục đúng công thức áp suất tuyến tính của chất lỏng</span> — hai mô hình khớp nhau ở giới hạn.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(\cos\alpha\approx1-\tfrac{\alpha^2}{2}\), \(\sin\alpha\approx\alpha-\tfrac{\alpha^3}{6}\)</div>
+          <div class="fx-use">Giữ tới bậc 3 mới ra được hiệu chỉnh phi tuyến của chu kỳ con lắc. <span class="pin">con lắc</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Con lắc đơn biên độ \(\alpha_0=30^\circ\). Chu kỳ lệch bao nhiêu so với công thức \(T_0=2\pi\sqrt{\ell/g}\)? — Kết quả kinh điển \(T\approx T_0\left(1+\dfrac{\alpha_0^2}{16}\right)\), với \(\alpha_0=0{,}524\) rad. <span class="ans">T lớn hơn T₀ khoảng 1,7%.</span> Đây là lý do "biên độ nhỏ" phải được nêu rõ trong đề.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03 -->
+    <div class="tool" id="t3">
+      <div class="tool-head"><span class="n">03</span><h3>Tích phân</h3><span class="lvl">Cấp tỉnh</span></div>
+      <p class="why">
+        Ở THPT tích phân bị thay bằng "diện tích dưới đồ thị". Ở HSG phải tính thật, thường là
+        tích phân một biến có đổi biến, đôi khi tích phân bội đơn giản cho vật thể đối xứng.
+      </p>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Momen quán tính \(I=\displaystyle\int r^2\,dm\), với \(dm=\rho\,dV\)</div>
+          <div class="fx-use">Thanh quanh tâm \(\tfrac{1}{12}mL^2\); đĩa \(\tfrac12mR^2\); cầu đặc \(\tfrac25mR^2\). Đề HSG hay hỏi vật ghép hoặc khoét lỗ. <span class="pin">vật rắn</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD 1</span> Thanh đồng chất \(m\), dài \(L\), trục qua một đầu. — \(I=\displaystyle\int_0^L x^2\dfrac{m}{L}dx=\dfrac{m}{L}\cdot\dfrac{L^3}{3}\). <span class="ans">I = mL²/3</span> (gấp 4 lần giá trị quanh tâm).</p>
+          <p><span class="exn">VD 2</span> Đĩa đặc \(M\), bán kính \(R\), bị khoét một lỗ tròn bán kính \(R/2\) có tâm cách tâm đĩa \(R/2\). Tính \(I\) quanh trục qua tâm đĩa. — Phần khoét có khối lượng \(M/4\), đóng góp \(\tfrac12\cdot\tfrac{M}{4}\left(\tfrac{R}{2}\right)^2+\tfrac{M}{4}\left(\tfrac{R}{2}\right)^2=\dfrac{3MR^2}{32}\). Lấy \(\tfrac12MR^2\) trừ đi. <span class="ans">I = 13MR²/32.</span></p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Định lý trục song song \(I=I_C+md^2\)</div>
+          <div class="fx-use">Con lắc vật lý \(T=2\pi\sqrt{I/(mgd)}\); vật lăn không trượt. <span class="pin">vật rắn</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Thanh đồng chất dài \(L=1\) m treo ở một đầu, dao động nhỏ, \(g=10\). — \(I=\tfrac13mL^2\), \(d=\tfrac{L}{2}\Rightarrow T=2\pi\sqrt{\dfrac{2L}{3g}}\). <span class="ans">T ≈ 1,62 s</span> — ngắn hơn con lắc đơn cùng chiều dài (1,99 s), vì khối lượng phân bố gần trục hơn.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(A=\displaystyle\int\vec{F}\cdot d\vec{s}\), \(A=\displaystyle\int p\,dV\)</div>
+          <div class="fx-use">Công trên đường cong bất kỳ; công khí trong chu trình có đoạn đa biến. <span class="pin">năng lượng</span><span class="pin">nhiệt</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Khí giãn theo \(pV^n=\)const từ \((p_1,V_1)\) tới \((p_2,V_2)\). — \(A=\displaystyle\int_{V_1}^{V_2}\dfrac{C}{V^n}dV\). <span class="ans">A = (p₁V₁ − p₂V₂)/(n − 1).</span> Kiểm tra: với \(n=1\) công thức suy biến, phải quay lại \(A=p_1V_1\ln\dfrac{V_2}{V_1}\) của quá trình đẳng nhiệt.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Tích phân theo chu kỳ \(I=\dfrac{1}{2\pi}\oint p\,dq\)</div>
+          <div class="fx-use">Bất biến đoạn nhiệt — đại lượng gần như không đổi khi tham số hệ biến thiên chậm. <span class="pin">nâng cao</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Dao động điều hòa biên độ \(A\), tần số \(\omega\). Quỹ đạo trong không gian pha \((x,p)\) là elip bán trục \(A\) và \(m\omega A\). — Diện tích \(=\pi\cdot A\cdot m\omega A=\pi m\omega A^2=\dfrac{2\pi E}{\omega}\). <span class="ans">I = E/ω</span> — chính là bất biến dùng ở mục 01.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Tích phân mặt kín (Gauss), tích phân đường kín (Ampère)</div>
+          <div class="fx-use">Điện trường của vật tích điện đối xứng; từ trường trong ống dây, trong dây dẫn đặc. <span class="pin">điện–từ</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Quả cầu bán kính \(R\) tích điện đều mật độ \(\rho\). Tìm \(E\) bên trong. — Mặt Gauss cầu bán kính \(r&lt;R\) bao \(Q=\rho\cdot\tfrac43\pi r^3\); \(E\cdot4\pi r^2=Q/\varepsilon_0\). <span class="ans">E = ρr/(3ε₀) — tăng tuyến tính theo r,</span> rồi giảm theo \(1/r^2\) khi ra ngoài.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04 -->
+    <div class="tool" id="t4">
+      <div class="tool-head"><span class="n">04</span><h3>Giải tích vectơ sơ cấp</h3><span class="lvl">Quốc gia</span></div>
+      <p class="why">
+        Không phải giải tích vectơ đầy đủ (không cần div, curl, các phương trình Maxwell dạng
+        vi phân), mà là <em>đạo hàm vectơ theo thời gian</em> và tích có hướng dùng thành thạo.
+      </p>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(\vec{L}=\vec{r}\times\vec{p}\), \(\vec{M}=\vec{r}\times\vec{F}\), \(\dfrac{d\vec L}{dt}=\vec M\)</div>
+          <div class="fx-use">Bảo toàn \(\vec{L}\) trong trường xuyên tâm (vì \(\vec{M}=0\)) — nền của toàn bộ bài toán Kepler. <span class="pin">cơ thiên thể</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Trái Đất ở cận nhật \(r_1=1{,}471\times10^{11}\) m, viễn nhật \(r_2=1{,}521\times10^{11}\) m. Tỉ số tốc độ? — Tại hai điểm này \(\vec v\perp\vec r\) nên \(L=mrv\) cho \(r_1v_1=r_2v_2\). <span class="ans">v₁/v₂ = r₂/r₁ ≈ 1,034 — nhanh hơn 3,4% vào tháng 1.</span></p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(\left(\dfrac{d\vec{A}}{dt}\right)_{\!0}=\left(\dfrac{d\vec{A}}{dt}\right)_{\!'}+\vec{\omega}\times\vec{A}\)</div>
+          <div class="fx-use">Công thức nền để chuyển giữa hệ đứng yên và hệ quay. <span class="pin">hệ phi quán tính</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Áp cho chính \(\vec A=\hat e_r\) (vectơ đơn vị quay cùng hệ, nên đạo hàm trong hệ quay bằng 0). — \(\dfrac{d\hat e_r}{dt}=\vec\omega\times\hat e_r\). <span class="ans">dê_r/dt = ω ê_φ</span> — kết quả này dùng lại ngay ở mục 05 để lập công thức gia tốc trong tọa độ cực.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(\vec{F}_{C}=-2m\,\vec{\omega}\times\vec{v}\,'\); li tâm \(-m\,\vec{\omega}\times(\vec{\omega}\times\vec{r})\)</div>
+          <div class="fx-use">Lệch hướng của vật rơi tự do; con lắc Foucault; dòng khí trên Trái Đất. Chuyên đề hệ quy chiếu không quán tính là nội dung bồi dưỡng chuẩn từ lớp 10 chuyên. <span class="pin">hệ phi quán tính</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Vật rơi tự do từ \(h=100\) m tại xích đạo (\(\omega=7{,}27\times10^{-5}\) rad/s). Lệch bao nhiêu và về hướng nào? — \(t=\sqrt{2h/g}\approx4{,}52\) s; độ lệch \(\Delta x=\tfrac13\omega g t^3\cos\varphi\). <span class="ans">Δx ≈ 2,2 cm về phía đông.</span> Nhỏ, nhưng là câu hỏi kinh điển vì kiểm tra được cả hướng lẫn bậc độ lớn.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Tuế sai của con quay: \(\vec{M}=\dfrac{d\vec{L}}{dt}\Rightarrow\Omega=\dfrac{M}{L}=\dfrac{mgd}{I\omega}\)</div>
+          <div class="fx-use">Con quay hồi chuyển, bánh xe treo lệch trục. <span class="pin">vật rắn</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Con quay \(I=0{,}01\) kg·m² quay \(\omega=100\) rad/s, khối tâm cách điểm tựa \(d=0{,}1\) m, \(m=0{,}5\) kg, \(g=10\). — \(\Omega=\dfrac{0{,}5\cdot10\cdot0{,}1}{0{,}01\cdot100}\). <span class="ans">Ω = 0,5 rad/s — trục quay tiến động một vòng sau ≈ 12,6 s.</span> Quay càng nhanh, tiến động càng chậm.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 05 -->
+    <div class="tool" id="t5">
+      <div class="tool-head"><span class="n">05</span><h3>Tọa độ cong</h3><span class="lvl">Quốc gia</span></div>
+      <p class="why">
+        Tọa độ Descartes không đủ cho chuyển động trong trường xuyên tâm. Hai công thức dưới đây
+        là thứ phải thuộc, vì mọi bài quỹ đạo đều bắt đầu từ chúng.
+      </p>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(\vec{v}=\dot r\,\hat{e}_r+r\dot\varphi\,\hat{e}_\varphi\)</div>
+          <div class="fx-use">Tách vận tốc thành thành phần hướng tâm và tiếp tuyến. <span class="pin">tọa độ cực</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Kiến bò đều ra xa tâm với tốc độ \(u\) dọc một nan hoa, trong khi bánh xe quay đều \(\omega\). — \(r=ut\), \(\dot\varphi=\omega\): \(v_r=u\), \(v_\varphi=u\omega t\). <span class="ans">Tốc độ v = u√(1 + ω²t²), tăng dần dù kiến bò đều.</span></p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(\vec{a}=(\ddot r-r\dot\varphi^2)\hat{e}_r+(r\ddot\varphi+2\dot r\dot\varphi)\hat{e}_\varphi\)</div>
+          <div class="fx-use">Số hạng \(-r\dot\varphi^2\) chính là gia tốc hướng tâm quen thuộc; \(2\dot r\dot\varphi\) là số hạng Coriolis. <span class="pin">tọa độ cực</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Kiểm tra với chuyển động tròn đều: \(\dot r=\ddot r=0\), \(\ddot\varphi=0\). — Chỉ còn \(\vec a=-r\omega^2\hat e_r\). <span class="ans">a = ω²R hướng vào tâm ✓</span> — công thức THPT là trường hợp riêng. Còn ở ví dụ con kiến phía trên: \(a_\varphi=2u\omega\), đúng bằng gia tốc Coriolis.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Thế năng hiệu dụng \(U_{\text{eff}}(r)=U(r)+\dfrac{L^2}{2mr^2}\)</div>
+          <div class="fx-use"><b>Kỹ thuật rút bài toán 2 chiều về 1 chiều.</b> Vẽ đồ thị, đọc ra quỹ đạo đóng hay mở, điểm cận/viễn, điều kiện quỹ đạo tròn. <span class="pin">trường xuyên tâm</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Trường hấp dẫn \(U=-\dfrac{k}{r}\). Tìm bán kính quỹ đạo tròn ứng với momen động lượng \(L\). — Quỹ đạo tròn ⟺ \(U'_{\text{eff}}=0\): \(\dfrac{k}{r^2}-\dfrac{L^2}{mr^3}=0\). <span class="ans">r₀ = L²/(mk).</span> Đọc thêm từ đồ thị: \(E&lt;0\) cho quỹ đạo đóng, \(E\ge0\) cho quỹ đạo mở.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 06 -->
+    <div class="tool" id="t6">
+      <div class="tool-head"><span class="n">06</span><h3>Conic &amp; hình học giải tích</h3><span class="lvl">Quốc gia</span></div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(r=\dfrac{p}{1+e\cos\varphi}\)</div>
+          <div class="fx-use">Quỹ đạo trong trường \(1/r^2\): \(e=0\) tròn, \(e&lt;1\) elip, \(e=1\) parabol, \(e&gt;1\) hypebol. <span class="pin">Kepler</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Sao chổi có \(p=2\) AU, \(e=0{,}5\). — \(r_{\min}=\dfrac{p}{1+e}=\dfrac{2}{1{,}5}\), \(r_{\max}=\dfrac{p}{1-e}=\dfrac{2}{0{,}5}\). <span class="ans">Cận nhật 1,33 AU; viễn nhật 4 AU; bán trục lớn a = 2,67 AU.</span></p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Tâm sai theo cơ năng \(e=\sqrt{1+\dfrac{2EL^2}{mk^2}}\)</div>
+          <div class="fx-use">Từ \(E\) và \(L\) ban đầu suy ra ngay loại quỹ đạo, không cần giải phương trình chuyển động. <span class="pin">Kepler</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Vệ tinh có \(E=0\) chính xác. — Thay vào: \(e=1\). <span class="ans">Quỹ đạo parabol — đúng ngưỡng thoát ly.</span> Đây là cách gọn nhất để thấy điều kiện vận tốc thoát ly \(v=\sqrt{2GM/r}\) tương đương với \(E=0\).</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(b^2=a^2(1-e^2)\); định luật 3 Kepler \(T^2\propto a^3\)</div>
+          <div class="fx-use">Bài toán chuyển quỹ đạo vệ tinh, quỹ đạo Hohmann. <span class="pin">cơ thiên thể</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD 1</span> Sao Hỏa có \(a=1{,}524\) AU. Chu kỳ? — \(T=a^{3/2}\) (năm, AU). <span class="ans">T ≈ 1,88 năm.</span></p>
+          <p><span class="exn">VD 2</span> Quỹ đạo Hohmann từ Trái Đất (1 AU) tới Sao Hỏa: \(a=\dfrac{1+1{,}524}{2}=1{,}262\) AU. — Thời gian bay là nửa chu kỳ: \(\tfrac12 a^{3/2}\). <span class="ans">≈ 0,71 năm ≈ 8,5 tháng.</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 07 -->
+    <div class="tool" id="t7">
+      <div class="tool-head"><span class="n">07</span><h3>Số phức</h3><span class="lvl">Cấp tỉnh</span></div>
+      <p class="why">
+        Ở chương trình chuẩn số phức chỉ là mẹo bấm máy tính. Ở HSG nó là ngôn ngữ mặc định cho
+        mọi thứ dao động — vì cộng dao động trở thành cộng số, và đạo hàm trở thành nhân \(i\omega\).
+      </p>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(\underline{Z}=R+i\!\left(\omega L-\dfrac{1}{\omega C}\right)\)</div>
+          <div class="fx-use">Mạch RLC bất kỳ, kể cả nhiều nhánh — ghép nối tiếp/song song như điện trở thuần. <span class="pin">điện xoay chiều</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> \(R=40\,\Omega\), \(Z_L=80\,\Omega\), \(Z_C=50\,\Omega\). — \(\underline{Z}=40+30i\). <span class="ans">|Z| = 50 Ω, φ ≈ 36,87°, cosφ = 0,8.</span> Nếu mắc thêm một nhánh song song, chỉ việc lấy \(\underline{Z}_{td}^{-1}=\underline{Z}_1^{-1}+\underline{Z}_2^{-1}\) — điều mà giản đồ vectơ làm rất chật vật.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(A\cos(\omega t+\varphi)\to Ae^{i\varphi}\); \(\dfrac{d}{dt}\to i\omega\)</div>
+          <div class="fx-use">Biến phương trình vi phân dao động cưỡng bức thành phương trình đại số. <span class="pin">dao động</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Giải \(\ddot x+2\gamma\dot x+\omega_0^2x=\dfrac{F_0}{m}e^{i\Omega t}\). — Đặt \(x=\underline{X}e^{i\Omega t}\), mọi đạo hàm thành nhân \(i\Omega\): \((-\Omega^2+2i\gamma\Omega+\omega_0^2)\underline{X}=\dfrac{F_0}{m}\). <span class="ans">Lấy môđun ra ngay công thức biên độ A(Ω) ở mục 01, lấy acgumen ra độ lệch pha.</span> Ba dòng thay cho cả trang biến đổi lượng giác.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(\displaystyle\sum_{k=0}^{N-1}e^{ik\delta}=\dfrac{1-e^{iN\delta}}{1-e^{i\delta}}\)</div>
+          <div class="fx-use">Giao thoa \(N\) khe và cách tử nhiễu xạ. <span class="pin">quang</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Cách tử \(N=5\) khe. — Lấy môđun bình phương tổng trên: \(I\propto\dfrac{\sin^2(N\delta/2)}{\sin^2(\delta/2)}\). <span class="ans">Cực đại chính I = 25 I₀ (gấp N² lần một khe); cực tiểu đầu tiên tại δ = 2π/5; giữa hai cực đại chính có N − 2 = 3 cực đại phụ rất mờ.</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 08 -->
+    <div class="tool" id="t8">
+      <div class="tool-head"><span class="n">08</span><h3>Đại số tuyến tính sơ cấp</h3><span class="lvl">Quốc gia</span></div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Hệ tuyến tính nhiều ẩn, quy tắc Cramer</div>
+          <div class="fx-use">Mạch điện nhiều vòng với Kirchhoff; hệ vật nối dây qua nhiều ròng rọc. <span class="pin">điện</span><span class="pin">cơ</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Mạch hai nguồn \(E_1,r_1\) và \(E_2,r_2\) mắc song song cùng cấp cho \(R\). — Ba ẩn \(I_1,I_2,I\) với hệ: \(I=I_1+I_2\); \(E_1-I_1r_1=E_2-I_2r_2=IR\). <span class="ans">Giải ra I = (E₁r₂ + E₂r₁)/(r₁r₂ + R(r₁+r₂)).</span> Với mạch ba vòng trở lên thì Cramer nhanh hơn thế lần lượt.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Định thức đặc trưng \(\det(\mathbf{K}-\omega^2\mathbf{M})=0\)</div>
+          <div class="fx-use">Tần số riêng của hệ dao động ghép nhiều bậc tự do. <span class="pin">dao động ghép</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Hệ hai vật ở mục 01, viết dạng ma trận với \(\mathbf{K}=\begin{pmatrix}2k&amp;-k\\-k&amp;2k\end{pmatrix}\), \(\mathbf{M}=m\mathbf{I}\). — \(\det\!\begin{pmatrix}2k-m\omega^2&amp;-k\\-k&amp;2k-m\omega^2\end{pmatrix}=0\Rightarrow(2k-m\omega^2)^2=k^2\). <span class="ans">ω² = k/m hoặc 3k/m — khớp đúng kết quả tọa độ chuẩn tắc.</span> Với hệ 3 vật trở lên thì chỉ còn cách này.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Ma trận truyền tia \(2\times2\) (ABCD)</div>
+          <div class="fx-use">Hệ nhiều thấu kính trong quang hình. Hiếm gặp nhưng có trong tài liệu chuyên. <span class="pin">quang</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Truyền qua khoảng trống \(d\) rồi qua thấu kính \(f\). — \(\mathbf{M}=\begin{pmatrix}1&amp;0\\-1/f&amp;1\end{pmatrix}\begin{pmatrix}1&amp;d\\0&amp;1\end{pmatrix}\). <span class="ans">Nhân hai ma trận cho toàn hệ, phần tử C của tích cho ngay tiêu cự tương đương: 1/f_td = 1/f₁ + 1/f₂ − d/(f₁f₂).</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 09 -->
+    <div class="tool" id="t9">
+      <div class="tool-head"><span class="n">09</span><h3>Đạo hàm riêng &amp; vi phân toàn phần</h3><span class="lvl">Quốc gia</span></div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(df=\dfrac{\partial f}{\partial x}dx+\dfrac{\partial f}{\partial y}dy\)</div>
+          <div class="fx-use">Nguyên lý I nhiệt động \(dU=\delta Q-p\,dV\); phân biệt vi phân toàn phần và không toàn phần. <span class="pin">nhiệt động</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Vì sao viết \(dU\) nhưng \(\delta Q\)? — \(U\) là hàm trạng thái nên \(\oint dU=0\) qua mọi chu trình; còn \(Q\) và \(A\) phụ thuộc đường đi, \(\oint\delta Q\ne0\). <span class="ans">Qua một chu trình kín: ΔU = 0, nên Q_thu = A_sinh.</span> Đây là toàn bộ nội dung "hiệu suất động cơ nhiệt".</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Đạo hàm riêng có ràng buộc \(\left(\dfrac{\partial U}{\partial V}\right)_T\)</div>
+          <div class="fx-use">Quá trình đẳng nhiệt, đẳng tích; hệ số nở, hệ số nén của chất khí. <span class="pin">nhiệt động</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Khí lí tưởng giãn đẳng nhiệt. Nội năng đổi bao nhiêu? — Với khí lí tưởng \(\left(\dfrac{\partial U}{\partial V}\right)_T=0\) vì \(U\) chỉ phụ thuộc \(T\). <span class="ans">ΔU = 0, do đó Q = A = nRT ln(V₂/V₁).</span> Toàn bộ nhiệt nhận vào biến thành công.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(\vec{F}=-\nabla U\), một chiều \(F=-\dfrac{dU}{dx}\)</div>
+          <div class="fx-use">Đi ngược từ thế năng ra lực; kết hợp với mục 02 cho tần số dao động nhỏ. <span class="pin">cơ</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Cho \(U(x)=\dfrac{a}{x^{12}}-\dfrac{b}{x^{6}}\). Tìm vị trí cân bằng. — \(F=-U'=0\Rightarrow\dfrac{12a}{x^{13}}=\dfrac{6b}{x^{7}}\). <span class="ans">x₀ = (2a/b)^{1/6}.</span> Sau đó tính \(U''(x_0)\) để ra tần số dao động nhỏ — đúng quy trình hai bước của mục 02.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10 -->
+    <div class="tool" id="t10">
+      <div class="tool-head"><span class="n">10</span><h3>Xác suất &amp; thống kê sơ cấp</h3><span class="lvl">Quốc gia</span></div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(\langle g\rangle=\displaystyle\int g(v)f(v)\,dv\)</div>
+          <div class="fx-use">Phân bố Maxwell cho ba tốc độ đặc trưng khác nhau — đề hay hỏi phân biệt. <span class="pin">vật lý phân tử</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Khí O₂ (\(M=32\) g/mol) ở \(T=300\) K. — \(v_p=\sqrt{2RT/M}\), \(\langle v\rangle=\sqrt{8RT/(\pi M)}\), \(v_{\text{rms}}=\sqrt{3RT/M}\). <span class="ans">v_p ≈ 395 m/s, ⟨v⟩ ≈ 445 m/s, v_rms ≈ 484 m/s.</span> Tỉ lệ cố định 1 : 1,128 : 1,225 với mọi khí và mọi nhiệt độ.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(\displaystyle\int_0^{\infty}e^{-ax^2}dx=\tfrac12\sqrt{\dfrac{\pi}{a}}\)</div>
+          <div class="fx-use">Chuẩn hoá phân bố Maxwell; các tích phân moment \(\int x^ne^{-ax^2}dx\). <span class="pin">vật lý phân tử</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Đề thường cho sẵn giá trị tích phân này trong phần dữ kiện. — Mẹo: các moment bậc cao lấy được bằng cách đạo hàm theo tham số \(a\): \(\displaystyle\int_0^\infty x^2e^{-ax^2}dx=-\dfrac{d}{da}\int_0^\infty e^{-ax^2}dx\). <span class="ans">= ¼√(π/a³).</span></p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Thừa số Boltzmann \(e^{-E/kT}\)</div>
+          <div class="fx-use">Khí quyển đẳng nhiệt; tỉ lệ chiếm mức năng lượng. <span class="pin">nhiệt</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Ở độ cao nào áp suất khí quyển còn một nửa? Lấy \(T=273\) K, không khí \(M=29\) g/mol. — Chiều cao đặc trưng \(H=\dfrac{RT}{Mg}\approx7{,}99\) km; \(h_{1/2}=H\ln2\). <span class="ans">h ≈ 5,5 km.</span> Khớp tốt với thực tế dù mô hình bỏ qua gradien nhiệt độ.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 11 -->
+    <div class="tool" id="t11">
+      <div class="tool-head"><span class="n">11</span><h3>Xử lý số liệu thực nghiệm</h3><span class="lvl">Quốc gia</span></div>
+      <p class="why">
+        Nhóm này <strong>tăng trọng số</strong> từ năm học 2023–2024, khi buổi thi thực hành riêng
+        bị bỏ và kỹ năng thí nghiệm được hỏi ngay trong bài viết. Đây là phần dễ ăn điểm nhất
+        vì thuần kỹ thuật, nhưng cũng dễ mất điểm nhất vì ít được luyện.
+      </p>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Tuyến tính hoá: \(y=Ax^{b}\Rightarrow\ln y=\ln A+b\ln x\)</div>
+          <div class="fx-use"><b>Bước đầu tiên của mọi bài xử lý số liệu.</b> Đưa quan hệ mũ về đường thẳng để đọc hệ số góc. <span class="pin">thực hành</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD 1</span> Đo \(g\) bằng con lắc: \(T=2\pi\sqrt{\ell/g}\). — Bình phương hai vế: \(T^2=\dfrac{4\pi^2}{g}\ell\). Vẽ \(T^2\) theo \(\ell\). <span class="ans">Đường thẳng qua gốc, hệ số góc 4π²/g.</span> Vẽ \(T\) theo \(\ell\) trực tiếp là sai lầm phổ biến — được đường cong, không đọc được gì.</p>
+          <p><span class="exn">VD 2</span> Nghi ngờ \(T\propto\ell^{b}\) nhưng chưa biết \(b\). — Vẽ \(\ln T\) theo \(\ln\ell\), hệ số góc chính là \(b\). <span class="ans">Nếu ra b ≈ 0,5 thì xác nhận quy luật căn bậc hai.</span></p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(a=\dfrac{n\sum x_iy_i-\sum x_i\sum y_i}{n\sum x_i^2-\left(\sum x_i\right)^2}\), \(b=\bar y-a\bar x\)</div>
+          <div class="fx-use">Bình phương tối thiểu — tìm hệ số góc tối ưu thay vì "kẻ đường thẳng bằng mắt". <span class="pin">thực hành</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Bốn cặp \((\ell, T^2)\): \((0{,}4;\,1{,}60)\), \((0{,}6;\,2{,}40)\), \((0{,}8;\,3{,}22)\), \((1{,}0;\,4{,}00)\) theo m và s². — Áp công thức với \(n=4\): hệ số góc \(a\approx4{,}01\) s²/m. <span class="ans">g = 4π²/a ≈ 9,84 m/s².</span></p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">\(\Delta f=\sqrt{\displaystyle\sum_i\left(\dfrac{\partial f}{\partial x_i}\right)^{\!2}(\Delta x_i)^2}\)</div>
+          <div class="fx-use">Truyền sai số. Thay cho quy tắc cộng sai số tương đối của THPT — cộng theo bình phương vì các sai số ngẫu nhiên độc lập. <span class="pin">thực hành</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> \(g=\dfrac{4\pi^2\ell}{T^2}\) với \(\ell=1{,}000\pm0{,}002\) m, \(T=2{,}006\pm0{,}004\) s. — \(\delta g=\sqrt{(\delta\ell)^2+(2\delta T)^2}=\sqrt{0{,}002^2+0{,}00399^2}=0{,}00446\). <span class="ans">g = (9,811 ± 0,044) m/s².</span> Quy tắc THPT (cộng thẳng) cho ±0,059 — <em>ước lượng quá bi quan</em>, đó là lý do HSG dùng căn bậc hai của tổng bình phương.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Sai số của giá trị trung bình \(\Delta\bar x=\dfrac{\sigma}{\sqrt{n}}\)</div>
+          <div class="fx-use">Giải thích vì sao đo nhiều lần thì chính xác hơn — và chỉ tốt lên theo \(\sqrt{n}\). <span class="pin">thực hành</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Muốn giảm sai số ngẫu nhiên đi một nửa thì phải đo thêm bao nhiêu lần? — \(\dfrac{1}{\sqrt{n'}}=\dfrac{1}{2\sqrt{n}}\). <span class="ans">Phải đo gấp 4 lần.</span> Đây cũng là lý do sau một ngưỡng nào đó, cải thiện dụng cụ có lợi hơn hẳn đo thêm.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 12 -->
+    <div class="tool" id="t12">
+      <div class="tool-head"><span class="n">12</span><h3>Phân tích thứ nguyên &amp; ước lượng</h3><span class="lvl">Cấp tỉnh</span></div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Cân bằng thứ nguyên để đoán dạng công thức</div>
+          <div class="fx-use">Ra được dạng công thức mà không cần giải phương trình chuyển động. <span class="pin">mọi chương</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Chu kỳ con lắc phụ thuộc \(m,\ell,g\) như thế nào? — Đặt \(T\sim m^a\ell^bg^c\): \([T]=M^aL^{b+c}T^{-2c}\). Đồng nhất: \(a=0\), \(-2c=1\), \(b+c=0\). <span class="ans">T ∝ √(ℓ/g), và không phụ thuộc khối lượng.</span> Chỉ hệ số \(2\pi\) là phải tính thật.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Kiểm tra thứ nguyên kết quả</div>
+          <div class="fx-use">Công cụ sửa lỗi rẻ nhất trong phòng thi: một biểu thức sai thứ nguyên chắc chắn sai. <span class="pin">kỹ năng thi</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Ra kết quả \(v=\sqrt{2gh^2}\). — Vế phải có thứ nguyên \(\sqrt{LT^{-2}\cdot L^2}=L^{3/2}T^{-1}\), không phải \(LT^{-1}\). <span class="ans">Sai — chắc chắn đã nhầm một chỗ nào đó.</span> Mất 5 giây, cứu được cả câu.</p>
+        </div>
+      </div>
+
+      <div class="fx">
+        <div class="fx-top">
+          <div class="fx-form">Ước lượng bậc độ lớn</div>
+          <div class="fx-use">Câu hỏi dạng Fermi và các ý "hãy đánh giá độ lớn" xuất hiện trong đề gắn với ứng dụng kỹ thuật. <span class="pin">kỹ năng thi</span></div>
+        </div>
+        <div class="fx-ex">
+          <p><span class="exn">VD</span> Ước lượng số phân tử khí trong một phòng \(5\times4\times3\) m ở điều kiện thường. — \(V=60\) m³ \(=6\times10^4\) L; mỗi mol chiếm 24 L nên có \(2{,}5\times10^3\) mol. <span class="ans">N ≈ 2,5 × 10³ × 6 × 10²³ ≈ 1,5 × 10²⁷ phân tử.</span> Chấm điểm ở đây thường chỉ yêu cầu đúng bậc \(10^{27}\).</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MAP ============ -->
+  <section class="block" id="map">
+    <h2>Tra ngược: chuyên đề HSG cần công cụ nào</h2>
+    <p class="intro">
+      Sắp theo chuyên đề vật lý, dùng khi đang luyện một mảng cụ thể và muốn biết phải chuẩn bị
+      công cụ toán nào trước.
+    </p>
+    <div class="rows">
+      <div class="row"><span class="name">Cơ học vật rắn</span><span class="needs"><a class="mini" href="#t3">03 Tích phân</a><a class="mini" href="#t4">04 Vectơ</a><a class="mini" href="#t1">01 PT vi phân</a></span></div>
+      <div class="row"><span class="name">Dao động tắt dần &amp; cưỡng bức</span><span class="needs"><a class="mini" href="#t1">01 PT vi phân</a><a class="mini" href="#t7">07 Số phức</a><a class="mini" href="#t2">02 Taylor</a></span></div>
+      <div class="row"><span class="name">Hệ dao động ghép</span><span class="needs"><a class="mini" href="#t8">08 Định thức</a><a class="mini" href="#t1">01 Hệ ODE</a></span></div>
+      <div class="row"><span class="name">Trường xuyên tâm &amp; cơ thiên thể</span><span class="needs"><a class="mini" href="#t5">05 Tọa độ cực</a><a class="mini" href="#t6">06 Conic</a><a class="mini" href="#t4">04 Momen động lượng</a></span></div>
+      <div class="row"><span class="name">Hệ quy chiếu phi quán tính</span><span class="needs"><a class="mini" href="#t4">04 Vectơ quay</a><a class="mini" href="#t5">05 Tọa độ cực</a></span></div>
+      <div class="row"><span class="name">Nhiệt động lực học &amp; chu trình</span><span class="needs"><a class="mini" href="#t3">03 Tích phân</a><a class="mini" href="#t9">09 Đạo hàm riêng</a><a class="mini" href="#t2">02 Taylor</a></span></div>
+      <div class="row"><span class="name">Vật lý phân tử &amp; thuyết động học</span><span class="needs"><a class="mini" href="#t10">10 Thống kê</a><a class="mini" href="#t3">03 Tích phân</a></span></div>
+      <div class="row"><span class="name">Tĩnh điện &amp; từ trường (đối xứng cao)</span><span class="needs"><a class="mini" href="#t3">03 Gauss/Ampère</a><a class="mini" href="#t5">05 Tọa độ cong</a></span></div>
+      <div class="row"><span class="name">Mạch quá độ RC, RL, RLC</span><span class="needs"><a class="mini" href="#t1">01 PT vi phân</a><a class="mini" href="#t7">07 Số phức</a></span></div>
+      <div class="row"><span class="name">Giao thoa, nhiễu xạ, cách tử</span><span class="needs"><a class="mini" href="#t7">07 Số phức</a><a class="mini" href="#t2">02 Gần đúng</a><a class="mini" href="#t8">08 Ma trận</a></span></div>
+      <div class="row"><span class="name">Thuyết tương đối hẹp</span><span class="needs"><a class="mini" href="#t2">02 Khai triển</a><a class="mini" href="#t8">08 Đại số</a></span></div>
+      <div class="row"><span class="name">Câu hỏi thí nghiệm trong bài viết</span><span class="needs"><a class="mini" href="#t11">11 Xử lý số liệu</a><a class="mini" href="#t12">12 Thứ nguyên</a></span></div>
+    </div>
+  </section>
+
+  <!-- ============ SCOPE ============ -->
+  <section class="block" id="scope">
+    <h2>Ranh giới: những thứ không cần học</h2>
+
+    <div class="note">
+      <h3>Đề Việt Nam không thi toán khó</h3>
+      <p>
+        Đây là điểm dễ hiểu sai nhất. Nhận định của giáo viên về đề 2025–2026 —
+        <em>"dài nhưng không quá khó hay nặng về mặt toán học"</em> — phản ánh đúng thiết kế đề
+        HSGQG Việt Nam: độ khó nằm ở <strong>mô hình hoá hiện tượng</strong> và ở khối lượng,
+        không nằm ở kỹ thuật tính toán.
+      </p>
+      <p>
+        Hệ quả thực tế cho việc ôn: học sâu 12 nhóm ở trên tới mức <em>dùng phản xạ</em> có giá
+        trị hơn nhiều so với học thêm công cụ mới. Một thí sinh giải được phương trình vi phân
+        bậc hai trong ba mươi giây sẽ hơn hẳn một thí sinh biết thêm chuỗi Fourier nhưng phải
+        mất mười phút cho cùng bước đó.
+      </p>
+    </div>
+
+    <div class="scope">
+      <p>
+        <b>Không xuất hiện trong đề HSGQG Việt Nam:</b> phương trình đạo hàm riêng (phương trình
+        sóng, phương trình nhiệt dạng vi phân), chuỗi Fourier, hàm Bessel và các hàm đặc biệt,
+        giải tích vectơ đầy đủ (div, curl, các định lý Stokes/Ostrogradsky, Maxwell dạng vi phân),
+        tensor momen quán tính đầy đủ, cơ học Lagrange và Hamilton, biến đổi Laplace,
+        giải tích phức (tích phân đường trong mặt phẳng phức).
+      </p>
+      <p>
+        <b>Một ngoại lệ nên biết mặt:</b> tích phân tác dụng \(\oint p\,dq\) trong chuyên đề bất
+        biến đoạn nhiệt mượn ký hiệu của cơ học Hamilton, nhưng ở mức HSG nó được dùng như một
+        công thức tính diện tích trong không gian pha, không đòi hỏi học cơ học giải tích.
+      </p>
+    </div>
+
+    <div class="note">
+      <h3>Khoảng cách tới IPhO</h3>
+      <p>
+        Nếu mục tiêu là đội tuyển quốc tế thì danh sách trên vẫn giữ nguyên, chỉ tăng độ thành
+        thạo và thêm hai thứ: <strong>khai triển gần đúng ở bậc cao hơn</strong> (đề IPhO
+        thường yêu cầu số hạng hiệu chỉnh, không chỉ số hạng chính), và
+        <strong>ước lượng bậc độ lớn</strong> cho các câu không có lời giải đóng.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ SOURCES ============ -->
+  <section class="block" id="nguon">
+    <h2>Nguồn</h2>
+    <ul class="src">
+      <li><a href="https://thuvienphapluat.vn/chinh-sach-phap-luat-moi/vn/ho-tro-phap-luat/chinh-sach-moi/54381/quy-che-thi-hoc-sinh-gioi-cap-quoc-gia-moi-nhat">Quy chế thi chọn học sinh giỏi cấp quốc gia</a> — hai buổi thi viết 180 phút; phần thực hành được thay bằng câu hỏi trong bài viết từ 2023–2024 (Thông tư 17/2023/TT-BGDĐT).</li>
+      <li><a href="https://vnexpress.net/loi-giai-de-thi-mon-vat-ly-hoc-sinh-gioi-quoc-gia-nam-hoc-2025-2026-4998394.html">Gợi ý giải đề Vật lý HSG quốc gia 2025–2026, ngày 1</a> — cấu trúc 5 bài có tên riêng; nhận định về mức độ toán học của đề.</li>
+      <li><a href="https://xaydungchinhsach.chinhphu.vn/de-thi-va-dap-an-mon-vat-ly-chon-hoc-sinh-gioi-quoc-gia-thpt-nam-hoc-2024-2025-119250121085055383.htm">Đề thi và đáp án môn Vật lý HSG quốc gia THPT 2024–2025</a> — bản công bố của Bộ GD&amp;ĐT.</li>
+      <li><a href="https://locthanhbaoloc.lamdong.edu.vn/home/vi/news/To-Vat-Ly/De-va-bai-giai-chi-tiet-thi-hoc-sinh-gioi-Quoc-gia-nam-2024-mon-Vat-li-723/">Đề và bài giải chi tiết HSG quốc gia 2024 môn Vật lí</a>.</li>
+      <li><a href="https://www.dayhocsangtao.com/2026/07/bat-bien-doan-nhiet.html">Chuyên đề bồi dưỡng HSGQG: Bất biến đoạn nhiệt</a> — nguồn cho tích phân tác dụng và con lắc Rayleigh–Lorentz.</li>
+      <li><a href="https://thi247.com/chuyen-de-chuyen-dong-trong-he-quy-chieu-khong-quan-tinh-boi-duong-hsg-vat-li-10/">Chuyên đề chuyển động trong hệ quy chiếu không quán tính, bồi dưỡng HSG Vật lí 10</a>.</li>
+      <li><a href="https://www.slideshare.net/slideshow/tng-hp-chuyn-t-gii-bi-ton-chuyn-ng-lin-kt-ca-vt-rn-phc-v-vic-bi-dng-hc-sinh-gii-quc-gia-vt-l-400-trangpdf/266294543">Chuyên đề chuyển động liên kết của vật rắn phục vụ bồi dưỡng HSGQG Vật lý</a>.</li>
+      <li><a href="https://www.slideshare.net/slideshow/chuyn-n-thi-hc-sinh-gii-quc-gia-hsgqg-mn-vt-l-lp-12-nm-2023-12-chng-c-gii-chi-titpdf/263294904">Chuyên đề ôn thi HSGQG môn Vật lý lớp 12 — 12 chương có giải chi tiết</a>.</li>
+    </ul>
+  </section>
+
+  <footer>
+    Danh sách công cụ tổng hợp từ cấu trúc đề, quy chế thi và các bộ chuyên đề bồi dưỡng nêu ở
+    trên. Đề HSGQG thay đổi nhẹ theo năm và các sở tổ chức thi cấp tỉnh với độ khó rất khác nhau,
+    nên nhãn cấp độ chỉ mang tính định hướng. Với các đề chỉ công bố dưới dạng ảnh hoặc PDF, phần
+    nội dung chi tiết chưa được đối chiếu trực tiếp. Các ví dụ lấy \(g=10\) m/s² trừ khi ghi rõ khác;
+    số liệu được làm tròn ở chữ số có nghĩa cuối.
+  </footer>
+
+</div>
+</div>
+
+<script>
+setTimeout(function () {
+  document.documentElement.classList.add('mj-failsafe');
+}, 2500);
+</script>
