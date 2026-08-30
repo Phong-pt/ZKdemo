@@ -1,0 +1,1104 @@
+<title>Toán Trong Vật Lý Cấp 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']],
+    processEscapes: false
+  },
+  svg: { fontCache: 'global' },
+  options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
+  startup: {
+    pageReady: function () {
+      return MathJax.startup.defaultPageReady().then(function () {
+        document.documentElement.classList.add('mj-ready');
+      });
+    }
+  }
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-svg.js"></script>
+
+<style>
+:root {
+  --bg:         #ecefed;
+  --surface:    #ffffff;
+  --surface-2:  #f5f7f6;
+  --ink:        #161f1b;
+  --ink-2:      #47544e;
+  --ink-3:      #77837d;
+  --rule:       #d2dbd6;
+  --rule-soft:  #e2e8e5;
+  --accent:     #1a5b45;
+  --accent-soft:#dfeae5;
+  --marker:     #ab4f18;
+  --marker-soft:#f5e6da;
+  --code-bg:    #e5eae7;
+
+  --f-display: "Bitter", Georgia, serif;
+  --f-body:    "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:    "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:         #121614;
+    --surface:    #1a1f1c;
+    --surface-2:  #202724;
+    --ink:        #e3e9e6;
+    --ink-2:      #a2ada8;
+    --ink-3:      #76827c;
+    --rule:       #2a322e;
+    --rule-soft:  #212824;
+    --accent:     #6fc5a3;
+    --accent-soft:#17302699;
+    --marker:     #e0924f;
+    --marker-soft:#2e231899;
+    --code-bg:    #212824;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg:         #121614;
+  --surface:    #1a1f1c;
+  --surface-2:  #202724;
+  --ink:        #e3e9e6;
+  --ink-2:      #a2ada8;
+  --ink-3:      #76827c;
+  --rule:       #2a322e;
+  --rule-soft:  #212824;
+  --accent:     #6fc5a3;
+  --accent-soft:#17302699;
+  --marker:     #e0924f;
+  --marker-soft:#2e231899;
+  --code-bg:    #212824;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16.5px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+#doc { opacity: 0; transition: opacity .28s ease; }
+html.mj-ready #doc, html.mj-failsafe #doc { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { #doc { transition: none; } }
+
+.wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px 110px; }
+
+/* ---------- masthead ---------- */
+
+.masthead { padding: 66px 0 30px; border-bottom: 3px solid var(--ink); }
+
+.kicker {
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--marker);
+  margin: 0 0 18px;
+}
+
+h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 5.6vw, 3rem);
+  line-height: 1.08;
+  letter-spacing: -.02em;
+  margin: 0 0 16px;
+  text-wrap: balance;
+  max-width: 16ch;
+}
+
+.lede {
+  font-size: 1.1rem;
+  color: var(--ink-2);
+  max-width: 60ch;
+  margin: 0;
+}
+
+/* ---------- summary panel ---------- */
+
+.summary {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 26px 28px;
+  margin: 34px 0 44px;
+}
+.summary h2 {
+  font-family: var(--f-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 14px;
+}
+.summary p { margin: 0 0 14px; max-width: 66ch; color: var(--ink-2); font-size: .97rem; }
+.summary p:last-child { margin: 0; }
+
+/* ---------- index chips ---------- */
+
+.index-nav { margin: 0 0 52px; }
+.index-nav h2 {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+  margin: 0 0 14px;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 5px 11px;
+}
+.chip .cn { font-family: var(--f-mono); font-size: 11px; font-weight: 400; color: var(--accent); }
+.chip:hover { border-color: var(--accent); color: var(--ink); }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- sections ---------- */
+
+.topic { margin: 0 0 56px; scroll-margin-top: 20px; }
+
+.topic-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 11px;
+  margin-bottom: 8px;
+}
+.topic-head .n {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  color: var(--marker);
+  font-weight: 500;
+}
+.topic-head h2 {
+  font-family: var(--f-display);
+  font-size: 1.36rem;
+  font-weight: 600;
+  letter-spacing: -.012em;
+  margin: 0;
+  flex: 1 1 auto;
+  text-wrap: balance;
+}
+
+.grades { display: flex; gap: 5px; }
+.g {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border: 1px solid var(--rule);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.g.on { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+
+.topic > .intro {
+  font-size: .95rem;
+  color: var(--ink-2);
+  margin: 12px 0 20px;
+  max-width: 66ch;
+}
+
+/* ---------- formula tables ---------- */
+
+.t-scroll { overflow-x: auto; margin: 0 0 16px; }
+
+table { border-collapse: collapse; width: 100%; min-width: 560px; }
+
+th {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  text-align: left;
+  padding: 0 18px 8px 0;
+  border-bottom: 1px solid var(--ink-3);
+  white-space: nowrap;
+}
+th:last-child, td:last-child { padding-right: 0; }
+
+td {
+  padding: 11px 18px 11px 0;
+  border-bottom: 1px solid var(--rule-soft);
+  vertical-align: top;
+  font-size: .93rem;
+}
+td.f { width: 44%; color: var(--ink); }
+td.u { color: var(--ink-2); }
+tbody tr:last-child td { border-bottom: 1px solid var(--rule); }
+
+td.u b { font-weight: 600; color: var(--ink); }
+
+.tag-phys {
+  display: inline-block;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .06em;
+  color: var(--marker);
+  background: var(--marker-soft);
+  padding: 1px 6px;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+/* ---------- reverse index ---------- */
+
+.reverse { margin: 76px 0 0; }
+.reverse > h2 {
+  font-family: var(--f-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  border-bottom: 3px solid var(--ink);
+  padding-bottom: 12px;
+}
+.reverse > .intro { font-size: .95rem; color: var(--ink-2); max-width: 66ch; margin: 14px 0 30px; }
+
+.year { margin: 0 0 34px; }
+.year > h3 {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--marker);
+  font-weight: 500;
+  margin: 0 0 16px;
+}
+
+.rows { display: flex; flex-direction: column; gap: 0; }
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--rule-soft);
+}
+@media (min-width: 720px) {
+  .row { grid-template-columns: 240px 1fr; gap: 24px; align-items: baseline; }
+}
+.row:last-child { border-bottom: 1px solid var(--rule); }
+.row > .name { font-weight: 600; font-size: .96rem; }
+.row > .needs { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.mini {
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  text-decoration: none;
+  color: var(--ink-2);
+  border: 1px solid var(--rule);
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+.mini:hover { border-color: var(--accent); color: var(--accent); }
+.mini:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- closing notes ---------- */
+
+.notes { margin: 72px 0 0; }
+.notes > h2 {
+  font-family: var(--f-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  border-bottom: 3px solid var(--ink);
+  padding-bottom: 12px;
+}
+.note { margin: 28px 0 0; max-width: 68ch; }
+.note h3 {
+  font-family: var(--f-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+.note p { margin: 0 0 12px; color: var(--ink-2); font-size: .96rem; }
+.note p:last-child { margin: 0; }
+
+.out {
+  background: var(--surface-2);
+  border-left: 3px solid var(--marker);
+  padding: 16px 20px;
+  margin: 20px 0 0;
+  max-width: 68ch;
+}
+.out p { margin: 0; font-size: .93rem; color: var(--ink-2); }
+.out b { color: var(--ink); font-weight: 600; }
+
+code {
+  font-family: var(--f-mono);
+  font-size: .86em;
+  background: var(--code-bg);
+  padding: .1em .36em;
+}
+
+footer {
+  margin-top: 70px;
+  padding-top: 22px;
+  border-top: 1px solid var(--rule);
+  font-size: .88rem;
+  color: var(--ink-3);
+  max-width: 70ch;
+}
+</style>
+
+<div id="doc">
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">Tra cứu · Toán ↔ Vật lý</p>
+    <h1>Toán Trong Vật Lý Cấp 3</h1>
+    <p class="lede">
+      Toàn bộ mảng toán mà vật lý THPT thực sự dùng tới — 12 nhóm kiến thức, kèm công thức
+      cụ thể và chỗ nó xuất hiện trong từng chuyên đề vật lý.
+    </p>
+  </header>
+
+  <section class="summary">
+    <h2>Trả lời ngắn</h2>
+    <p>
+      Vật lý cấp 3 dùng gần như trọn vẹn phần <b>đại số</b>, <b>vectơ</b>, <b>lượng giác</b> và
+      <b>hàm số</b> của chương trình Toán, cộng thêm <b>đạo hàm</b> và <b>tích phân</b> ở mức cơ bản,
+      <b>mũ – logarit</b>, và một nhóm riêng về <b>sai số</b> mà môn Toán không dạy.
+    </p>
+    <p>
+      Ba mảng chiếm khối lượng lớn nhất, theo thứ tự: <b>vectơ</b> (toàn bộ cơ học lớp 10),
+      <b>lượng giác</b> (dao động, sóng, điện xoay chiều), và <b>hàm số – đồ thị</b> (có mặt ở
+      mọi chương). Đạo hàm và tích phân thì xuất hiện nhiều nhưng thường bị "giấu" dưới dạng
+      hình học — xem ghi chú cuối trang.
+    </p>
+  </section>
+
+  <nav class="index-nav" aria-label="Mục lục nhóm kiến thức">
+    <h2>12 nhóm kiến thức</h2>
+    <ul class="chips">
+      <li><a class="chip" href="#m1"><span class="cn">01</span>Đại số &amp; biến đổi</a></li>
+      <li><a class="chip" href="#m2"><span class="cn">02</span>Vectơ</a></li>
+      <li><a class="chip" href="#m3"><span class="cn">03</span>Lượng giác</a></li>
+      <li><a class="chip" href="#m4"><span class="cn">04</span>Hàm số &amp; đồ thị</a></li>
+      <li><a class="chip" href="#m5"><span class="cn">05</span>Đạo hàm</a></li>
+      <li><a class="chip" href="#m6"><span class="cn">06</span>Tích phân</a></li>
+      <li><a class="chip" href="#m7"><span class="cn">07</span>Xấp xỉ góc nhỏ</a></li>
+      <li><a class="chip" href="#m8"><span class="cn">08</span>Hình học</a></li>
+      <li><a class="chip" href="#m9"><span class="cn">09</span>Mũ &amp; logarit</a></li>
+      <li><a class="chip" href="#m10"><span class="cn">10</span>Số phức</a></li>
+      <li><a class="chip" href="#m11"><span class="cn">11</span>Sai số</a></li>
+      <li><a class="chip" href="#m12"><span class="cn">12</span>Dãy số</a></li>
+    </ul>
+  </nav>
+
+  <!-- ================= 01 ================= -->
+  <section class="topic" id="m1">
+    <div class="topic-head">
+      <span class="n">01</span>
+      <h2>Đại số &amp; biến đổi công thức</h2>
+      <span class="grades"><span class="g on">10</span><span class="g on">11</span><span class="g on">12</span></span>
+    </div>
+    <p class="intro">
+      Nhóm nền. Kỹ năng thật sự cần không phải là giải phương trình khó, mà là <em>rút một ẩn
+      bất kỳ ra khỏi một công thức bất kỳ</em> — thứ mà mọi bài vật lý đều đòi hỏi.
+    </p>
+    <div class="t-scroll">
+      <table>
+        <thead><tr><th>Công thức toán</th><th>Xuất hiện ở đâu trong vật lý</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="f">Phương trình bậc nhất \(ax+b=0 \Rightarrow x=-\tfrac{b}{a}\)</td>
+            <td class="u">Rút ẩn khỏi mọi công thức. <span class="tag-phys">mọi chương</span></td>
+          </tr>
+          <tr>
+            <td class="f">Bậc hai \(ax^2+bx+c=0\), \(\Delta=b^2-4ac\), \(x=\dfrac{-b\pm\sqrt{\Delta}}{2a}\)</td>
+            <td class="u"><b>Rất hay gặp.</b> Từ \(s=v_0t+\tfrac12 at^2\) tìm \(t\); ném xiên tìm thời điểm chạm đất. <span class="tag-phys">động học</span></td>
+          </tr>
+          <tr>
+            <td class="f">Viète \(x_1+x_2=-\tfrac{b}{a}\), \(x_1x_2=\tfrac{c}{a}\)</td>
+            <td class="u">Hai thời điểm vật đi qua cùng một vị trí (lên và xuống). <span class="tag-phys">ném thẳng đứng</span></td>
+          </tr>
+          <tr>
+            <td class="f">Hệ phương trình bậc nhất 2–3 ẩn</td>
+            <td class="u">Định luật Kirchhoff cho mạch nhiều nhánh; hệ vật nối bằng dây; va chạm (giải đồng thời bảo toàn động lượng và động năng). <span class="tag-phys">mạch điện</span><span class="tag-phys">va chạm</span></td>
+          </tr>
+          <tr>
+            <td class="f">Bất đẳng thức Cauchy \(a+b\ge 2\sqrt{ab}\), dấu \(=\) khi \(a=b\)</td>
+            <td class="u">Tìm cực trị mà không cần đạo hàm: công suất mạch RLC lớn nhất khi \(R=|Z_L-Z_C|\); công suất mạch ngoài lớn nhất khi \(R=r\). <span class="tag-phys">điện xoay chiều</span></td>
+          </tr>
+          <tr>
+            <td class="f">Tỉ lệ thuận \(y=kx\) / nghịch \(y=\tfrac{k}{x}\) / nghịch bình phương \(y=\tfrac{k}{x^2}\)</td>
+            <td class="u">Định luật Ohm; Boyle–Mariotte \(pV=\)const; Coulomb và hấp dẫn \(\sim 1/r^2\). <span class="tag-phys">khí</span><span class="tag-phys">điện trường</span></td>
+          </tr>
+          <tr>
+            <td class="f">Lũy thừa \(a^m a^n=a^{m+n}\), \((a^m)^n=a^{mn}\), \(a^{-n}=\tfrac1{a^n}\)</td>
+            <td class="u">Ký hiệu khoa học \(3\times10^8\,\text{m/s}\); đổi đơn vị; tính với hằng số rất nhỏ/lớn. <span class="tag-phys">mọi chương</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= 02 ================= -->
+  <section class="topic" id="m2">
+    <div class="topic-head">
+      <span class="n">02</span>
+      <h2>Vectơ</h2>
+      <span class="grades"><span class="g on">10</span><span class="g on">11</span><span class="g on">12</span></span>
+    </div>
+    <p class="intro">
+      Mảng toán <strong>đặc trưng nhất</strong> của vật lý phổ thông. Gần như toàn bộ cơ học lớp 10
+      là bài toán vectơ. Học kỳ I Toán 10 dạy vectơ chính là để phục vụ việc này.
+    </p>
+    <div class="t-scroll">
+      <table>
+        <thead><tr><th>Công thức toán</th><th>Xuất hiện ở đâu trong vật lý</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="f">Quy tắc hình bình hành &amp; quy tắc tam giác để cộng \(\vec{a}+\vec{b}\)</td>
+            <td class="u">Tổng hợp lực, tổng hợp vận tốc (bơi qua sông, máy bay gặp gió). <span class="tag-phys">động lực học</span></td>
+          </tr>
+          <tr>
+            <td class="f">Độ lớn tổng hợp \(|\vec{F}_1+\vec{F}_2|=\sqrt{F_1^2+F_2^2+2F_1F_2\cos\alpha}\)</td>
+            <td class="u">Hai lực hợp góc \(\alpha\). Ba hệ quả hay dùng: cùng chiều \(F_1+F_2\); ngược chiều \(|F_1-F_2|\); vuông góc \(\sqrt{F_1^2+F_2^2}\). <span class="tag-phys">tổng hợp lực</span></td>
+          </tr>
+          <tr>
+            <td class="f">Phân tích vectơ theo hai phương vuông góc: \(F_x=F\cos\alpha\), \(F_y=F\sin\alpha\)</td>
+            <td class="u"><b>Kỹ thuật quan trọng nhất.</b> Vật trên mặt phẳng nghiêng; ném xiên tách thành ném ngang + rơi tự do. <span class="tag-phys">mặt nghiêng</span><span class="tag-phys">ném xiên</span></td>
+          </tr>
+          <tr>
+            <td class="f">Hiệu hai vectơ \(\Delta\vec{v}=\vec{v}_2-\vec{v}_1\)</td>
+            <td class="u">Độ biến thiên động lượng \(\Delta\vec{p}=\vec{F}\Delta t\); gia tốc trong chuyển động tròn. <span class="tag-phys">động lượng</span></td>
+          </tr>
+          <tr>
+            <td class="f">Tích vô hướng \(\vec{a}\cdot\vec{b}=ab\cos\theta\) (kết quả là <em>số</em>)</td>
+            <td class="u">Công của lực \(A=F s\cos\alpha\). Giải thích vì sao lực vuông góc chuyển động không sinh công. <span class="tag-phys">công &amp; năng lượng</span></td>
+          </tr>
+          <tr>
+            <td class="f">Tích có hướng \(|\vec{a}\times\vec{b}|=ab\sin\theta\) (kết quả là <em>vectơ</em>, vuông góc cả hai)</td>
+            <td class="u">Momen lực \(M=Fd\); lực từ \(F=BIl\sin\theta\); lực Lorentz \(f=|q|vB\sin\theta\). Ở phổ thông không viết ký hiệu \(\times\) mà thay bằng quy tắc bàn tay trái / nắm tay phải. <span class="tag-phys">từ trường</span></td>
+          </tr>
+          <tr>
+            <td class="f">Điều kiện \(\sum\vec{F}=\vec{0} \iff \sum F_x=0\) và \(\sum F_y=0\)</td>
+            <td class="u">Mọi bài cân bằng: vật treo trên hai dây, thang dựa tường, vật trên mặt nghiêng đứng yên. <span class="tag-phys">cân bằng</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= 03 ================= -->
+  <section class="topic" id="m3">
+    <div class="topic-head">
+      <span class="n">03</span>
+      <h2>Lượng giác</h2>
+      <span class="grades"><span class="g on">10</span><span class="g on">11</span><span class="g on">12</span></span>
+    </div>
+    <p class="intro">
+      Chia làm hai tầng: <em>hệ thức lượng trong tam giác</em> (lớp 10, dùng cho cơ học) và
+      <em>biến đổi lượng giác</em> (lớp 11, dùng cho dao động – sóng – điện xoay chiều).
+      Tầng thứ hai là nơi vật lý đòi hỏi nhiều nhất.
+    </p>
+    <div class="t-scroll">
+      <table>
+        <thead><tr><th>Công thức toán</th><th>Xuất hiện ở đâu trong vật lý</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="f">\(\sin\alpha\) = đối/huyền, \(\cos\alpha\) = kề/huyền, \(\tan\alpha\) = đối/kề</td>
+            <td class="u">Nền cho mọi phép chiếu lực. <span class="tag-phys">cơ học</span></td>
+          </tr>
+          <tr>
+            <td class="f">\(\sin^2\alpha+\cos^2\alpha=1\)</td>
+            <td class="u">Khử pha để lập hệ thức độc lập thời gian: \(\left(\tfrac{x}{A}\right)^2+\left(\tfrac{v}{\omega A}\right)^2=1\). <span class="tag-phys">dao động</span></td>
+          </tr>
+          <tr>
+            <td class="f">Định lý hàm sin \(\tfrac{a}{\sin A}=\tfrac{b}{\sin B}=\tfrac{c}{\sin C}\)</td>
+            <td class="u">Bài cân bằng ba lực không vuông góc. <span class="tag-phys">cân bằng</span></td>
+          </tr>
+          <tr>
+            <td class="f">Định lý hàm cos \(c^2=a^2+b^2-2ab\cos C\)</td>
+            <td class="u">Chính là công thức tổng hợp hai lực ở mục 02, viết dưới dạng tam giác. <span class="tag-phys">tổng hợp lực</span></td>
+          </tr>
+          <tr>
+            <td class="f">Công thức cộng \(\sin(a\pm b)\), \(\cos(a\pm b)\)</td>
+            <td class="u">Cộng hai dao động lệch pha; biến đổi biểu thức \(u,i\). <span class="tag-phys">dao động</span></td>
+          </tr>
+          <tr>
+            <td class="f">Hạ bậc \(\cos^2 a=\tfrac{1+\cos 2a}{2}\)</td>
+            <td class="u">Lấy giá trị trung bình theo chu kỳ, dẫn ra \(P=UI\cos\varphi\) và giá trị hiệu dụng \(U=\tfrac{U_0}{\sqrt2}\). <span class="tag-phys">điện xoay chiều</span></td>
+          </tr>
+          <tr>
+            <td class="f">Tổng thành tích \(\cos A+\cos B=2\cos\tfrac{A+B}{2}\cos\tfrac{A-B}{2}\)</td>
+            <td class="u"><b>Công thức chìa khóa của giao thoa sóng.</b> Cộng hai sóng tới một điểm cho biên độ \(A_M=2a\left|\cos\tfrac{\pi(d_2-d_1)}{\lambda}\right|\) — từ đó ra điều kiện cực đại / cực tiểu. <span class="tag-phys">giao thoa sóng</span></td>
+          </tr>
+          <tr>
+            <td class="f">Tổng hợp hai dao động cùng phương cùng tần số: \(A=\sqrt{A_1^2+A_2^2+2A_1A_2\cos\Delta\varphi}\)</td>
+            <td class="u">Cùng pha \(\Rightarrow A_1+A_2\); ngược pha \(\Rightarrow |A_1-A_2|\). Cùng dạng với tổng hợp vectơ — vì thực chất là cộng vectơ quay. <span class="tag-phys">dao động</span></td>
+          </tr>
+          <tr>
+            <td class="f">Phương trình lượng giác cơ bản \(\cos(\omega t+\varphi)=m\)</td>
+            <td class="u">Tìm thời điểm vật qua li độ \(x\); đếm số lần qua trong khoảng thời gian. <span class="tag-phys">dao động</span></td>
+          </tr>
+          <tr>
+            <td class="f">Đường tròn lượng giác</td>
+            <td class="u">Công cụ giải nhanh chuẩn mực: chuyển bài dao động thành bài chuyển động tròn đều, đọc thời gian bằng góc quét \(\Delta t=\tfrac{\Delta\varphi}{\omega}\). <span class="tag-phys">dao động</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= 04 ================= -->
+  <section class="topic" id="m4">
+    <div class="topic-head">
+      <span class="n">04</span>
+      <h2>Hàm số &amp; đồ thị</h2>
+      <span class="grades"><span class="g on">10</span><span class="g on">11</span><span class="g on">12</span></span>
+    </div>
+    <p class="intro">
+      Vật lý dùng chưa tới mười dạng hàm. Nhận ra <em>bài này thuộc dạng hàm nào</em> thường
+      giải quyết được nửa bài toán.
+    </p>
+    <div class="t-scroll">
+      <table>
+        <thead><tr><th>Dạng hàm</th><th>Đại lượng vật lý tương ứng</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="f">Bậc nhất \(y=ax+b\) — hệ số góc \(a\)</td>
+            <td class="u">\(v=v_0+at\) (đồ thị \(v\!-\!t\), hệ số góc là gia tốc); \(U=E-Ir\). <span class="tag-phys">động học</span><span class="tag-phys">mạch điện</span></td>
+          </tr>
+          <tr>
+            <td class="f">Bậc hai — parabol</td>
+            <td class="u">\(x=x_0+v_0t+\tfrac12at^2\) (đồ thị \(x\!-\!t\)); quỹ đạo ném xiên \(y=x\tan\alpha-\tfrac{gx^2}{2v_0^2\cos^2\alpha}\). <span class="tag-phys">ném xiên</span></td>
+          </tr>
+          <tr>
+            <td class="f">Điều hòa \(y=A\cos(\omega t+\varphi)\)</td>
+            <td class="u">Li độ dao động; sóng \(u=A\cos(\omega t-\tfrac{2\pi x}{\lambda})\); điện áp và dòng xoay chiều. <span class="tag-phys">dao động</span><span class="tag-phys">sóng</span></td>
+          </tr>
+          <tr>
+            <td class="f">Mũ giảm \(y=y_0e^{-\lambda t}\)</td>
+            <td class="u">Phóng xạ; phóng điện của tụ qua điện trở; biên độ dao động tắt dần. <span class="tag-phys">hạt nhân</span></td>
+          </tr>
+          <tr>
+            <td class="f">Logarit \(y=k\log x\)</td>
+            <td class="u">Mức cường độ âm \(L=10\log\tfrac{I}{I_0}\) (dB). <span class="tag-phys">sóng âm</span></td>
+          </tr>
+          <tr>
+            <td class="f">Hyperbol \(y=\tfrac{k}{x}\)</td>
+            <td class="u">Đẳng nhiệt \(pV=\)const — đồ thị \(p\!-\!V\) là một nhánh hyperbol. <span class="tag-phys">khí lí tưởng</span></td>
+          </tr>
+          <tr>
+            <td class="f">Ý nghĩa hình học: hệ số góc \(=\) đạo hàm; diện tích dưới đồ thị \(=\) tích phân</td>
+            <td class="u"><b>Cách SGK né giải tích.</b> Diện tích dưới \(v\!-\!t\) là quãng đường; dưới \(F\!-\!x\) là công; dưới \(p\!-\!V\) là công của khí. <span class="tag-phys">mọi chương</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= 05 ================= -->
+  <section class="topic" id="m5">
+    <div class="topic-head">
+      <span class="n">05</span>
+      <h2>Đạo hàm</h2>
+      <span class="grades"><span class="g">10</span><span class="g on">11</span><span class="g on">12</span></span>
+    </div>
+    <p class="intro">
+      Vật lý dùng đạo hàm theo đúng một nghĩa: <strong>tốc độ biến thiên</strong>. Vấn đề là môn Toán
+      dạy đạo hàm ở cuối lớp 11, trong khi vật lý cần ý tưởng đó từ lớp 10 — nên SGK lớp 10 viết
+      \(\tfrac{\Delta x}{\Delta t}\) thay cho \(\tfrac{dx}{dt}\).
+    </p>
+    <div class="t-scroll">
+      <table>
+        <thead><tr><th>Công thức toán</th><th>Xuất hiện ở đâu trong vật lý</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="f">\(v=\dfrac{dx}{dt}\), \(a=\dfrac{dv}{dt}=\dfrac{d^2x}{dt^2}\)</td>
+            <td class="u">Định nghĩa vận tốc và gia tốc tức thời. <span class="tag-phys">động học</span></td>
+          </tr>
+          <tr>
+            <td class="f">\((\sin u)'=u'\cos u\), \((\cos u)'=-u'\sin u\)</td>
+            <td class="u">Từ \(x=A\cos(\omega t+\varphi)\) suy ra \(v=-\omega A\sin(\omega t+\varphi)\) và \(a=-\omega^2 x\) — chính là dấu hiệu nhận biết dao động điều hòa. <span class="tag-phys">dao động</span></td>
+          </tr>
+          <tr>
+            <td class="f">\(i=\dfrac{dq}{dt}\)</td>
+            <td class="u">Định nghĩa cường độ dòng điện tức thời. <span class="tag-phys">dòng điện</span></td>
+          </tr>
+          <tr>
+            <td class="f">\(e_c=-\dfrac{d\Phi}{dt}\)</td>
+            <td class="u">Định luật Faraday. Ở phổ thông viết \(e_c=-\tfrac{\Delta\Phi}{\Delta t}\). <span class="tag-phys">cảm ứng điện từ</span></td>
+          </tr>
+          <tr>
+            <td class="f">\(P=\dfrac{dA}{dt}\)</td>
+            <td class="u">Công suất tức thời. <span class="tag-phys">công suất</span></td>
+          </tr>
+          <tr>
+            <td class="f">Cực trị: giải \(y'=0\)</td>
+            <td class="u">Tầm ném xa cực đại tại \(\alpha=45^\circ\); công suất cực đại. (Nhiều bài giải nhanh hơn bằng Cauchy ở mục 01.) <span class="tag-phys">ném xiên</span></td>
+          </tr>
+          <tr>
+            <td class="f">\((x^n)'=nx^{n-1}\), \((e^u)'=u'e^u\)</td>
+            <td class="u">Công cụ nền cho các dòng trên. <span class="tag-phys">—</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= 06 ================= -->
+  <section class="topic" id="m6">
+    <div class="topic-head">
+      <span class="n">06</span>
+      <h2>Tích phân</h2>
+      <span class="grades"><span class="g">10</span><span class="g">11</span><span class="g on">12</span></span>
+    </div>
+    <p class="intro">
+      Ít khi được gọi tên trong đề thi phổ thông, nhưng có mặt <em>ngầm</em> ở mọi chỗ nói
+      "diện tích dưới đồ thị". Nắm được nó thì hiểu bản chất; không nắm thì vẫn làm bài được
+      bằng cách tính diện tích hình thang.
+    </p>
+    <div class="t-scroll">
+      <table>
+        <thead><tr><th>Công thức toán</th><th>Xuất hiện ở đâu trong vật lý</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="f">\(\displaystyle\Delta x=\int_{t_1}^{t_2} v(t)\,dt\)</td>
+            <td class="u">Độ dịch chuyển bằng diện tích dưới đồ thị \(v\!-\!t\). Với \(v\) tuyến tính thì đúng bằng diện tích hình thang — cách SGK lớp 10 dùng. <span class="tag-phys">động học</span></td>
+          </tr>
+          <tr>
+            <td class="f">\(\displaystyle A=\int_{x_1}^{x_2} F(x)\,dx\)</td>
+            <td class="u">Công của lực <em>biến đổi</em>. Áp cho lực đàn hồi \(F=kx\) ra thế năng \(W_t=\tfrac12kx^2\) — giải thích hệ số \(\tfrac12\) từ đâu ra. <span class="tag-phys">năng lượng</span></td>
+          </tr>
+          <tr>
+            <td class="f">\(\displaystyle q=\int i\,dt\)</td>
+            <td class="u">Điện lượng chuyển qua tiết diện; bài toán điện phân. <span class="tag-phys">dòng điện</span></td>
+          </tr>
+          <tr>
+            <td class="f">\(\displaystyle A=\int p\,dV\)</td>
+            <td class="u">Công của khí, bằng diện tích dưới đồ thị \(p\!-\!V\). <span class="tag-phys">nhiệt học</span></td>
+          </tr>
+          <tr>
+            <td class="f">\(\displaystyle\int x^n dx=\frac{x^{n+1}}{n+1}+C\)</td>
+            <td class="u">Đi ngược từ \(a\) ra \(v\), từ \(v\) ra \(x\). <span class="tag-phys">động học</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= 07 ================= -->
+  <section class="topic" id="m7">
+    <div class="topic-head">
+      <span class="n">07</span>
+      <h2>Xấp xỉ góc nhỏ &amp; radian</h2>
+      <span class="grades"><span class="g">10</span><span class="g on">11</span><span class="g on">12</span></span>
+    </div>
+    <p class="intro">
+      Nhóm nhỏ nhưng không thể thiếu: nếu không có xấp xỉ này thì <strong>con lắc đơn không phải
+      dao động điều hòa</strong>, và cả chương dao động sẽ sụp đổ.
+    </p>
+    <div class="t-scroll">
+      <table>
+        <thead><tr><th>Công thức toán</th><th>Xuất hiện ở đâu trong vật lý</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="f">Với \(\alpha\) nhỏ (tính bằng rad): \(\sin\alpha\approx\tan\alpha\approx\alpha\)</td>
+            <td class="u"><b>Điều kiện sống còn của con lắc đơn.</b> Lực kéo về \(F=-mg\sin\alpha\approx-mg\alpha=-\tfrac{mg}{\ell}s\) — có dạng \(F=-ks\) nên mới là dao động điều hòa. Cũng dùng ở giao thoa ánh sáng (\(\tan\theta\approx\sin\theta\)). <span class="tag-phys">con lắc đơn</span><span class="tag-phys">giao thoa ánh sáng</span></td>
+          </tr>
+          <tr>
+            <td class="f">\(\cos\alpha\approx1-\tfrac{\alpha^2}{2}\)</td>
+            <td class="u">Tính độ cao nâng lên của con lắc \(h=\ell(1-\cos\alpha)\approx\tfrac{\ell\alpha^2}{2}\), từ đó ra cơ năng. <span class="tag-phys">con lắc đơn</span></td>
+          </tr>
+          <tr>
+            <td class="f">\((1+x)^n\approx1+nx\) khi \(|x|\ll1\)</td>
+            <td class="u">Ước lượng thay đổi chu kỳ khi \(g\) hoặc \(\ell\) thay đổi rất ít (đưa lên cao, thay đổi nhiệt độ). <span class="tag-phys">con lắc</span></td>
+          </tr>
+          <tr>
+            <td class="f">Đổi đơn vị góc \(\alpha_{\text{rad}}=\alpha^\circ\cdot\tfrac{\pi}{180}\)</td>
+            <td class="u">Mọi công thức có \(\omega\), \(\varphi\) đều tính bằng rad. Nhầm đơn vị ở đây là lỗi phổ biến nhất. <span class="tag-phys">dao động</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= 08 ================= -->
+  <section class="topic" id="m8">
+    <div class="topic-head">
+      <span class="n">08</span>
+      <h2>Hình học</h2>
+      <span class="grades"><span class="g on">10</span><span class="g on">11</span><span class="g on">12</span></span>
+    </div>
+    <div class="t-scroll">
+      <table>
+        <thead><tr><th>Công thức toán</th><th>Xuất hiện ở đâu trong vật lý</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="f">Định lý Pytago \(c^2=a^2+b^2\)</td>
+            <td class="u">Tổng hợp hai đại lượng vuông góc: vận tốc ném ngang \(v=\sqrt{v_x^2+v_y^2}\); tổng trở \(Z=\sqrt{R^2+(Z_L-Z_C)^2}\). <span class="tag-phys">ném ngang</span><span class="tag-phys">RLC</span></td>
+          </tr>
+          <tr>
+            <td class="f">Tam giác đồng dạng, định lý Thales</td>
+            <td class="u">Dựng ảnh qua thấu kính và gương; bài toán bóng của vật. <span class="tag-phys">quang hình</span></td>
+          </tr>
+          <tr>
+            <td class="f">Cung tròn \(s=R\varphi\) (\(\varphi\) tính bằng rad)</td>
+            <td class="u">Liên hệ \(v=\omega R\); li độ dài và li độ góc của con lắc đơn \(s=\ell\alpha\). <span class="tag-phys">chuyển động tròn</span></td>
+          </tr>
+          <tr>
+            <td class="f">Chu kỳ – tần số góc \(\omega=\tfrac{2\pi}{T}=2\pi f\)</td>
+            <td class="u">Cầu nối giữa mô tả tròn và mô tả điều hòa. <span class="tag-phys">dao động</span></td>
+          </tr>
+          <tr>
+            <td class="f">Góc giữa vectơ và mặt phẳng</td>
+            <td class="u">Từ thông \(\Phi=BS\cos\alpha\), với \(\alpha\) là góc giữa \(\vec{B}\) và pháp tuyến mặt phẳng khung. <span class="tag-phys">cảm ứng điện từ</span></td>
+          </tr>
+          <tr>
+            <td class="f">Diện tích, thể tích các hình cơ bản</td>
+            <td class="u">Khối lượng riêng \(D=\tfrac{m}{V}\); áp suất \(p=\tfrac{F}{S}\); điện trở \(R=\rho\tfrac{\ell}{S}\). <span class="tag-phys">nhiều chương</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= 09 ================= -->
+  <section class="topic" id="m9">
+    <div class="topic-head">
+      <span class="n">09</span>
+      <h2>Mũ &amp; logarit</h2>
+      <span class="grades"><span class="g">10</span><span class="g on">11</span><span class="g on">12</span></span>
+    </div>
+    <div class="t-scroll">
+      <table>
+        <thead><tr><th>Công thức toán</th><th>Xuất hiện ở đâu trong vật lý</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="f">\(N=N_0\cdot2^{-t/T}=N_0e^{-\lambda t}\), với \(\lambda=\dfrac{\ln 2}{T}\)</td>
+            <td class="u"><b>Định luật phóng xạ.</b> Hai dạng viết là một; chuyển qua lại giữa chúng cần \(\log\). <span class="tag-phys">hạt nhân</span></td>
+          </tr>
+          <tr>
+            <td class="f">\(\log(ab)=\log a+\log b\), \(\log a^n=n\log a\)</td>
+            <td class="u">Giải \(t\) từ phương trình phóng xạ; cộng mức cường độ âm của nhiều nguồn. <span class="tag-phys">hạt nhân</span><span class="tag-phys">sóng âm</span></td>
+          </tr>
+          <tr>
+            <td class="f">\(L=10\log\dfrac{I}{I_0}\ \text{(dB)}\)</td>
+            <td class="u">Mức cường độ âm. Tăng 10 dB nghĩa là cường độ gấp 10 lần. <span class="tag-phys">sóng âm</span></td>
+          </tr>
+          <tr>
+            <td class="f">Ký hiệu khoa học \(a\times10^n\) và tiền tố đơn vị (n, µ, m, k, M)</td>
+            <td class="u">Hằng số vật lý: \(c=3\times10^8\), \(h=6{,}625\times10^{-34}\), \(e=1{,}6\times10^{-19}\). <span class="tag-phys">mọi chương</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= 10 ================= -->
+  <section class="topic" id="m10">
+    <div class="topic-head">
+      <span class="n">10</span>
+      <h2>Số phức</h2>
+      <span class="grades"><span class="g">10</span><span class="g">11</span><span class="g">12</span></span>
+    </div>
+    <p class="intro">
+      Nằm <strong>ngoài</strong> chương trình chuẩn — đưa vào đây vì nó là công cụ giải nhanh phổ biến
+      ở lớp chuyên và ôn thi học sinh giỏi, nơi bài điện xoay chiều bấm máy tính ra kết quả trong
+      một dòng.
+    </p>
+    <div class="t-scroll">
+      <table>
+        <thead><tr><th>Công thức toán</th><th>Xuất hiện ở đâu trong vật lý</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="f">Dạng lượng giác \(z=r(\cos\varphi+i\sin\varphi)=r\angle\varphi\)</td>
+            <td class="u">Biểu diễn dao động \(A\cos(\omega t+\varphi)\) thành \(A\angle\varphi\); cộng dao động trở thành cộng số phức. <span class="tag-phys">dao động</span></td>
+          </tr>
+          <tr>
+            <td class="f">Tổng trở phức \(\underline{Z}=R+i(Z_L-Z_C)\)</td>
+            <td class="u">Định luật Ohm dạng phức \(\underline{U}=\underline{I}\,\underline{Z}\) — giải mạch RLC mà không cần vẽ giản đồ vectơ. <span class="tag-phys">điện xoay chiều</span></td>
+          </tr>
+          <tr>
+            <td class="f">\(|z|=\sqrt{a^2+b^2}\), \(\tan\varphi=\dfrac{b}{a}\)</td>
+            <td class="u">Lấy lại biên độ và pha từ kết quả phức. <span class="tag-phys">điện xoay chiều</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= 11 ================= -->
+  <section class="topic" id="m11">
+    <div class="topic-head">
+      <span class="n">11</span>
+      <h2>Sai số &amp; xử lý số liệu</h2>
+      <span class="grades"><span class="g on">10</span><span class="g on">11</span><span class="g on">12</span></span>
+    </div>
+    <p class="intro">
+      Nhóm duy nhất mà <strong>môn Toán không dạy</strong> — vật lý phải tự dạy, ngay bài đầu tiên
+      của lớp 10. Bắt buộc cho phần thực hành và hay bị bỏ qua khi ôn tập.
+    </p>
+    <div class="t-scroll">
+      <table>
+        <thead><tr><th>Công thức toán</th><th>Dùng khi nào</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="f">Giá trị trung bình \(\bar{a}=\dfrac{a_1+a_2+\dots+a_n}{n}\)</td>
+            <td class="u">Xử lý bộ số liệu đo lặp lại. <span class="tag-phys">thực hành</span></td>
+          </tr>
+          <tr>
+            <td class="f">Sai số tuyệt đối \(\Delta a=\overline{\Delta a}+\Delta a'\)</td>
+            <td class="u">Cộng sai số ngẫu nhiên (trung bình các \(|a_i-\bar a|\)) với sai số dụng cụ. <span class="tag-phys">thực hành</span></td>
+          </tr>
+          <tr>
+            <td class="f">Sai số tương đối \(\delta a=\dfrac{\Delta a}{\bar a}\cdot100\%\)</td>
+            <td class="u">So sánh độ chính xác giữa các phép đo khác đơn vị. <span class="tag-phys">thực hành</span></td>
+          </tr>
+          <tr>
+            <td class="f">Tổng &amp; hiệu: \(\Delta(x\pm y)=\Delta x+\Delta y\)</td>
+            <td class="u">Sai số <em>tuyệt đối</em> cộng lại. <span class="tag-phys">thực hành</span></td>
+          </tr>
+          <tr>
+            <td class="f">Tích &amp; thương: \(\delta(xy)=\delta x+\delta y\); lũy thừa \(\delta(x^n)=n\,\delta x\)</td>
+            <td class="u">Sai số <em>tương đối</em> cộng lại. Vì có số mũ \(n\) nên đại lượng bị bình phương đóng góp sai số gấp đôi — điểm hay bị bỏ sót. <span class="tag-phys">thực hành</span></td>
+          </tr>
+          <tr>
+            <td class="f">Viết kết quả \(a=\bar a\pm\Delta a\), làm tròn theo chữ số có nghĩa</td>
+            <td class="u">Trình bày báo cáo thí nghiệm. <span class="tag-phys">thực hành</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= 12 ================= -->
+  <section class="topic" id="m12">
+    <div class="topic-head">
+      <span class="n">12</span>
+      <h2>Dãy số &amp; cấp số</h2>
+      <span class="grades"><span class="g on">10</span><span class="g">11</span><span class="g">12</span></span>
+    </div>
+    <p class="intro">
+      Xuất hiện ở đúng một chỗ, nhưng là chỗ ra đề rất thường xuyên.
+    </p>
+    <div class="t-scroll">
+      <table>
+        <thead><tr><th>Công thức toán</th><th>Xuất hiện ở đâu trong vật lý</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="f">Quãng đường trong giây thứ \(n\): \(\Delta s_n=v_0+\dfrac{a(2n-1)}{2}\)</td>
+            <td class="u">Dãy các \(\Delta s_n\) là một cấp số cộng công sai \(a\). <span class="tag-phys">động học</span></td>
+          </tr>
+          <tr>
+            <td class="f">Hiệu quãng đường trong các khoảng \(T\) liên tiếp: \(s_{k+1}-s_k=aT^2\)</td>
+            <td class="u">Dùng để xác định gia tốc từ băng giấy thí nghiệm — nối trực tiếp với bài thực hành đo \(g\). <span class="tag-phys">thực hành</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= REVERSE ================= -->
+  <section class="reverse">
+    <h2>Tra ngược: mỗi chuyên đề cần toán gì</h2>
+    <p class="intro">
+      Cùng dữ liệu trên, sắp xếp theo chiều ngược lại — hữu ích khi đang ôn một chương cụ thể
+      và muốn biết cần ôn lại phần toán nào. Bấm vào số để nhảy tới nhóm tương ứng.
+    </p>
+
+    <div class="year">
+      <h3>Lớp 10 — Cơ học</h3>
+      <div class="rows">
+        <div class="row">
+          <span class="name">Sai số &amp; thực hành mở đầu</span>
+          <span class="needs"><a class="mini" href="#m11">11 Sai số</a><a class="mini" href="#m9">09 Mũ–log</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Động học — chuyển động thẳng</span>
+          <span class="needs"><a class="mini" href="#m1">01 Đại số</a><a class="mini" href="#m4">04 Đồ thị</a><a class="mini" href="#m5">05 Đạo hàm</a><a class="mini" href="#m6">06 Tích phân</a><a class="mini" href="#m12">12 Dãy số</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Ném ngang &amp; ném xiên</span>
+          <span class="needs"><a class="mini" href="#m2">02 Vectơ</a><a class="mini" href="#m3">03 Lượng giác</a><a class="mini" href="#m4">04 Parabol</a><a class="mini" href="#m1">01 Bậc hai</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Động lực học — ba định luật Newton</span>
+          <span class="needs"><a class="mini" href="#m2">02 Vectơ</a><a class="mini" href="#m3">03 Lượng giác</a><a class="mini" href="#m1">01 Hệ pt</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Cân bằng &amp; momen lực</span>
+          <span class="needs"><a class="mini" href="#m2">02 Vectơ</a><a class="mini" href="#m3">03 Định lý sin</a><a class="mini" href="#m8">08 Hình học</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Công – Năng lượng – Công suất</span>
+          <span class="needs"><a class="mini" href="#m2">02 Tích vô hướng</a><a class="mini" href="#m6">06 Tích phân</a><a class="mini" href="#m5">05 Đạo hàm</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Động lượng &amp; va chạm</span>
+          <span class="needs"><a class="mini" href="#m2">02 Vectơ</a><a class="mini" href="#m1">01 Hệ pt</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Chuyển động tròn đều</span>
+          <span class="needs"><a class="mini" href="#m8">08 Cung tròn</a><a class="mini" href="#m2">02 Vectơ</a><a class="mini" href="#m7">07 Radian</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Biến dạng vật rắn — định luật Hooke</span>
+          <span class="needs"><a class="mini" href="#m1">01 Tỉ lệ</a><a class="mini" href="#m6">06 Tích phân</a><a class="mini" href="#m4">04 Đồ thị</a></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="year">
+      <h3>Lớp 11 — Dao động, sóng, điện</h3>
+      <div class="rows">
+        <div class="row">
+          <span class="name">Dao động điều hòa</span>
+          <span class="needs"><a class="mini" href="#m3">03 Lượng giác</a><a class="mini" href="#m4">04 Hàm cos</a><a class="mini" href="#m5">05 Đạo hàm</a><a class="mini" href="#m8">08 Đường tròn</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Con lắc lò xo &amp; con lắc đơn</span>
+          <span class="needs"><a class="mini" href="#m7">07 Xấp xỉ nhỏ</a><a class="mini" href="#m3">03 Lượng giác</a><a class="mini" href="#m8">08 Cung tròn</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Dao động tắt dần &amp; cưỡng bức</span>
+          <span class="needs"><a class="mini" href="#m4">04 Hàm mũ</a><a class="mini" href="#m1">01 Đại số</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Tổng hợp dao động</span>
+          <span class="needs"><a class="mini" href="#m3">03 Lượng giác</a><a class="mini" href="#m2">02 Vectơ quay</a><a class="mini" href="#m10">10 Số phức</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Sóng cơ &amp; giao thoa, sóng dừng</span>
+          <span class="needs"><a class="mini" href="#m3">03 Tổng→tích</a><a class="mini" href="#m8">08 Hình học</a><a class="mini" href="#m1">01 Đại số</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Sóng âm</span>
+          <span class="needs"><a class="mini" href="#m9">09 Logarit</a><a class="mini" href="#m4">04 Hàm log</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Điện trường — định luật Coulomb</span>
+          <span class="needs"><a class="mini" href="#m2">02 Vectơ</a><a class="mini" href="#m1">01 Nghịch bình phương</a><a class="mini" href="#m8">08 Hình học</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Dòng điện không đổi &amp; mạch điện</span>
+          <span class="needs"><a class="mini" href="#m1">01 Hệ pt</a><a class="mini" href="#m4">04 Bậc nhất</a><a class="mini" href="#m5">05 Đạo hàm</a></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="year">
+      <h3>Lớp 12 — Nhiệt, từ, hạt nhân</h3>
+      <div class="rows">
+        <div class="row">
+          <span class="name">Vật lí nhiệt &amp; khí lí tưởng</span>
+          <span class="needs"><a class="mini" href="#m4">04 Hyperbol</a><a class="mini" href="#m1">01 Tỉ lệ</a><a class="mini" href="#m6">06 Tích phân</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Từ trường &amp; lực Lorentz</span>
+          <span class="needs"><a class="mini" href="#m2">02 Tích có hướng</a><a class="mini" href="#m8">08 Hình học KG</a><a class="mini" href="#m3">03 Lượng giác</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Cảm ứng điện từ</span>
+          <span class="needs"><a class="mini" href="#m5">05 Đạo hàm</a><a class="mini" href="#m8">08 Từ thông</a><a class="mini" href="#m3">03 Lượng giác</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Dòng điện xoay chiều &amp; mạch RLC</span>
+          <span class="needs"><a class="mini" href="#m3">03 Hạ bậc</a><a class="mini" href="#m8">08 Pytago</a><a class="mini" href="#m1">01 Cauchy</a><a class="mini" href="#m10">10 Số phức</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Sóng ánh sáng &amp; giao thoa khe Young</span>
+          <span class="needs"><a class="mini" href="#m7">07 Xấp xỉ nhỏ</a><a class="mini" href="#m8">08 Đồng dạng</a><a class="mini" href="#m3">03 Lượng giác</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Lượng tử ánh sáng</span>
+          <span class="needs"><a class="mini" href="#m1">01 Đại số</a><a class="mini" href="#m9">09 Ký hiệu KH</a></span>
+        </div>
+        <div class="row">
+          <span class="name">Hạt nhân &amp; phóng xạ</span>
+          <span class="needs"><a class="mini" href="#m9">09 Mũ–log</a><a class="mini" href="#m4">04 Hàm mũ</a><a class="mini" href="#m1">01 Đại số</a></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= NOTES ================= -->
+  <section class="notes">
+    <h2>Ba điều đáng lưu ý</h2>
+
+    <div class="note">
+      <h3>Vật lý luôn cần toán sớm hơn lúc Toán dạy</h3>
+      <p>
+        Đây là đặc điểm gây khó chịu nhất của chương trình. Vật lý lớp 10 cần ý tưởng đạo hàm
+        (vận tốc tức thời) và tích phân (quãng đường từ đồ thị) ngay từ chương đầu, trong khi
+        Toán dạy đạo hàm cuối lớp 11 và tích phân ở lớp 12.
+      </p>
+      <p>
+        SGK giải quyết bằng cách <em>diễn đạt lại bằng hình học</em>: thay \(\tfrac{dx}{dt}\) bằng
+        \(\tfrac{\Delta x}{\Delta t}\) với \(\Delta t\) "rất nhỏ", và thay tích phân bằng
+        "diện tích dưới đồ thị". Hiểu được rằng hai cách nói đó là <strong>một</strong> sẽ giúp bạn
+        không phải học thuộc hai bộ công thức rời rạc.
+      </p>
+    </div>
+
+    <div class="note">
+      <h3>Lượng giác là mảng cho lãi cao nhất</h3>
+      <p>
+        Nếu phải chọn một phần toán để học kỹ, hãy chọn biến đổi lượng giác. Nó chi phối
+        toàn bộ dao động, sóng và điện xoay chiều — cộng lại là phần lớn nội dung lớp 11 và 12.
+        Riêng công thức tổng thành tích \(\cos A+\cos B\) là thứ sinh ra toàn bộ lý thuyết giao thoa.
+      </p>
+    </div>
+
+    <div class="note">
+      <h3>Có những mảng toán vật lý phổ thông không dùng</h3>
+      <p>
+        Để khỏi ôn thừa: <strong>tổ hợp – xác suất</strong>, <strong>thống kê</strong> (trừ phần
+        trung bình ở mục 11), <strong>hình học tọa độ trong không gian</strong>,
+        <strong>phương trình vi phân</strong>, <strong>giới hạn – liên tục</strong> ở dạng hình thức,
+        và <strong>số phức</strong> trong chương trình chuẩn đều không xuất hiện trong đề vật lý THPT.
+      </p>
+      <div class="out">
+        <p>
+          <b>Ngoại lệ đáng biết:</b> dao động điều hòa thực chất là nghiệm của phương trình vi phân
+          \(x''+\omega^2x=0\), và phóng xạ là nghiệm của \(N'=-\lambda N\). Chương trình phổ thông
+          <em>không giải</em> hai phương trình này mà cho sẵn nghiệm — nên bạn không cần học
+          phương trình vi phân, chỉ cần biết công thức từ đâu ra.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Danh sách gộp cả chương trình GDPT 2018 và chương trình cũ, nên có vài chuyên đề
+    (sóng ánh sáng, lượng tử ánh sáng) có thể không còn trong sách bạn đang học — phần toán
+    tương ứng vẫn giữ nguyên giá trị. Nhãn lớp chỉ mang tính định hướng vì thứ tự chuyên đề
+    khác nhau giữa các bộ sách.
+  </footer>
+
+</div>
+</div>
+
+<script>
+setTimeout(function () {
+  document.documentElement.classList.add('mj-failsafe');
+}, 2500);
+</script>
