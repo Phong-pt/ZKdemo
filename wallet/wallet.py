@@ -8,6 +8,7 @@ WALLET_DIR = Path(__file__).resolve().parent
 LINK_SECRET_FILE = WALLET_DIR / "link_secret.json"
 CREDENTIAL_FILE = WALLET_DIR / "credential.json"
 PENDING_REQUEST_FILE = WALLET_DIR / "pending_request.json"
+IDENTITY_FILE = WALLET_DIR / "identity.json"
 
 EKYC_DATA = {
     "cccd": "012205007445",
@@ -110,6 +111,16 @@ def get_credential() -> dict | None:
         return None
     cred = json.loads(CREDENTIAL_FILE.read_text(encoding="utf-8"))
     return {k: int(v) for k, v in cred.items()}
+
+
+def save_identity(attributes: dict) -> None:
+    IDENTITY_FILE.write_text(json.dumps(attributes, ensure_ascii=False), encoding="utf-8")
+
+
+def get_identity() -> dict | None:
+    if not IDENTITY_FILE.exists():
+        return None
+    return json.loads(IDENTITY_FILE.read_text(encoding="utf-8"))
 
 
 def receive_presentation_nonce(n_v: str) -> str:

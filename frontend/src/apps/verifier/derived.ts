@@ -1,0 +1,160 @@
+import { CLAIMS, CONDS, type Claim, type LogEntry, type VerifierState } from './types'
+
+export function revealedClaims(state: VerifierState): Claim[] {
+  return CLAIMS.filter((c) => state.reveal[c.key])
+}
+
+export function withheldClaims(state: VerifierState): Claim[] {
+  return CLAIMS.filter((c) => !state.reveal[c.key])
+}
+
+export function activeConds(state: VerifierState) {
+  return CONDS.filter((c) => state.conds[c.key])
+}
+
+export function proofCount(state: VerifierState): number {
+  return activeConds(state).length + (state.ageOn ? 1 : 0)
+}
+
+export function disclosurePercent(state: VerifierState): number {
+  return Math.round((revealedClaims(state).length / CLAIMS.length) * 100)
+}
+
+export function minimalLabel(pct: number): string {
+  if (pct <= 30) return 'Minimal disclosure'
+  if (pct <= 60) return 'Moderate disclosure'
+  return 'Broad disclosure — reconsider'
+}
+
+export function claimBoxStyle(on: boolean) {
+  return {
+    tick: on ? '✓' : '',
+    border: on ? '#16171A' : '#E6E6E2',
+    bg: on ? '#FBFBF9' : '#FFFFFF',
+    boxBorder: on ? '#16171A' : '#D8D8D2',
+    boxBg: on ? '#16171A' : 'transparent',
+  }
+}
+
+export function isSharedNow(state: VerifierState, key: string): boolean {
+  return state.disc[key] !== false && !!state.reveal[key]
+}
+
+export function predicateText(state: VerifierState): string {
+  return state.ageOn ? `age ≥ ${state.age}` : 'credential validity'
+}
+
+export interface RequestedAttrView {
+  label: string
+  value: string
+  tag: string
+  tagBg: string
+  tagFg: string
+}
+
+export function buildRequestedAttrs(state: VerifierState): RequestedAttrView[] {
+  const revealed = revealedClaims(state).map((c) => ({
+    label: c.label,
+    value: c.value,
+    tag: 'REVEAL',
+    tagBg: '#F5F5F1',
+    tagFg: '#6E7079',
+  }))
+  const ageRow = state.ageOn
+    ? [{ label: 'Age', value: `${state.age} years or older`, tag: 'PROVE', tagBg: '#EEF2FD', tagFg: '#2F5FE0' }]
+    : []
+  const condRows = activeConds(state).map((c) => ({
+    label: c.label,
+    value: 'Proven without revealing data',
+    tag: 'PROVE',
+    tagBg: '#EEF2FD',
+    tagFg: '#2F5FE0',
+  }))
+  return [...revealed, ...ageRow, ...condRows]
+}
+
+export function buildZkNote(state: VerifierState): string {
+  if (state.ageOn) {
+    return `Your exact date of birth will NOT be shared. The wallet proves you are ${state.age}+ without revealing your age.`
+  }
+  return 'Undisclosed attributes never leave your wallet.'
+}
+
+export interface DiscCardView {
+  key: string
+  label: string
+  value: string
+  valueColor: string
+  note: string
+  noteColor: string
+  switchBg: string
+  knobOn: boolean
+  border: string
+  bg: string
+  disabled: boolean
+  required: boolean
+}
+
+export function buildDiscCards(state: VerifierState): DiscCardView[] {
+  return CLAIMS.slice(0, 4).map((c) => {
+    const required = !!state.reveal[c.key]
+    const on = state.disc[c.key] !== false && required
+    return {
+      key: c.key,
+      label: c.label.toUpperCase(),
+      value: on ? c.value : c.key === 'dob' && state.ageOn ? 'Only the age requirement will be proven.' : 'Not shared',
+      valueColor: on ? '#16171A' : '#8A8C94',
+      note: required ? (on ? 'Required by this request' : 'Turned off — the verifier will see nothing') : 'Privacy protected ✓',
+      noteColor: on ? '#8A8C94' : '#17795E',
+      switchBg: on ? '#17795E' : '#DCDCD6',
+      knobOn: on,
+      border: on ? '#16171A' : '#EFEFEB',
+      bg: on ? '#FBFBF9' : '#FFFFFF',
+      disabled: !required,
+      required,
+    }
+  })
+}
+
+export function sharedNowClaims(state: VerifierState): Claim[] {
+  return revealedClaims(state).filter((c) => state.disc[c.key] !== false)
+}
+
+export function buildResultRows(state: VerifierState): Array<{ label: string; value: string; color: string }> {
+  const rows = CLAIMS.map((c) => {
+    const shared = state.reveal[c.key] && state.disc[c.key] !== false
+    return { label: c.label, value: shared ? c.value : 'Not disclosed', color: shared ? '#16171A' : '#8A8C94' }
+  })
+  if (state.ageOn) rows.push({ label: 'Age requirement', value: `${state.age}+ ✓`, color: '#17795E' })
+  return rows
+}
+
+export function buildReceivedList(state: VerifierState): string[] {
+  const shared = sharedNowClaims(state).map((c) => c.label)
+  const ageLabel = state.ageOn ? [`Proof that user is ${state.age}+`] : []
+  const conds = activeConds(state).map((c) => c.label)
+  return [...shared, ...ageLabel, ...conds]
+}
+
+export function buildWithheldList(state: VerifierState): string[] {
+  return [...withheldClaims(state).map((c) => c.label), 'ID number']
+}
+
+export function buildLogRecord(state: VerifierState, requestId: string, verified: boolean): LogEntry {
+  const revealed = revealedClaims(state)
+  const withheld = withheldClaims(state)
+  const conds = activeConds(state)
+  const proven = [...(state.ageOn ? [`Age ≥ ${state.age}`] : []), ...conds.map((c) => c.label)]
+  return {
+    id: requestId,
+    date: 'Sep 10, 2026',
+    purpose: state.name,
+    result: verified ? 'Verified' : 'Declined',
+    color: verified ? '#17795E' : '#B4763A',
+    disclosed: verified ? `${revealed.length} attribute(s) + ${conds.length + (state.ageOn ? 1 : 0)} proof(s)` : '—',
+    request: state.ageOn ? `Age ≥ ${state.age}` : 'Credential valid',
+    revealed: verified ? revealed.map((c) => c.label).join(', ') || 'None' : 'None',
+    proven: verified ? proven.join(', ') || 'None' : 'None',
+    withheld: verified ? withheld.map((c) => c.label).join(', ') : 'All attributes',
+  }
+}

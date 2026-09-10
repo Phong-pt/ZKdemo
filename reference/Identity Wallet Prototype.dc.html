@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin:0; padding:0; background:#F2F2EF; }
+  * { box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+  a { color:#2F5FE0; text-decoration:none; }
+  a:hover { color:#1E44AB; }
+  input:focus { outline:none; border-color:#2F5FE0 !important; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  @keyframes popIn { 0% { opacity:0; transform:scale(.85); } 60% { transform:scale(1.04); } 100% { opacity:1; transform:scale(1); } }
+  @keyframes slideInRight { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:none; } }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @keyframes scanline { 0% { top:8%; } 50% { top:88%; } 100% { top:8%; } }
+  @keyframes pulseRing { 0% { transform:scale(.7); opacity:.55; } 100% { transform:scale(1.5); opacity:0; } }
+  @keyframes breathe { 0%,100% { opacity:.35; } 50% { opacity:1; } }
+  @keyframes shimmer { 0% { background-position:-220% 0; } 100% { background-position:220% 0; } }
+  @keyframes floaty { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+</style>
+</helmet>
+
+<div style="min-height:100vh; background:#F2F2EF; color:#16171A; font-family:'Geist',ui-sans-serif,system-ui,sans-serif; padding:28px 24px 64px; display:flex; flex-direction:column; align-items:center; gap:24px;">
+
+  <div style="width:100%; max-width:1180px; display:flex; align-items:center; justify-content:space-between; gap:16px;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div style="width:26px; height:26px; border-radius:8px; background:linear-gradient(145deg,#2A2C33,#0E0F12); display:flex; align-items:center; justify-content:center;">
+        <div style="width:9px; height:9px; border-radius:3px; border:2px solid #F2F2EF;"></div>
+      </div>
+      <div style="font-size:14px; font-weight:600; letter-spacing:-0.01em;">{{ productName }}</div>
+    </div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#8A8C94; letter-spacing:0.04em; text-transform:uppercase;">{{ stageLabel }}</div>
+      <div onClick="{{ restart }}" style="font-size:12px; color:#6E7079; border:1px solid #E2E2DD; background:#FFFFFF; padding:7px 12px; border-radius:999px; cursor:pointer;" style-hover="border-color:#16171A; color:#16171A;">Restart demo</div>
+    </div>
+  </div>
+
+  <sc-if value="{{ isLanding }}" hint-placeholder-val="{{ true }}">
+    <div style="animation:fadeUp .5s ease both; width:100%; max-width:1000px; background:#FFFFFF; border:1px solid #E6E6E2; border-radius:28px; padding:72px 56px; display:flex; gap:56px; align-items:center; flex-wrap:wrap; box-shadow:0 30px 60px -40px rgba(20,22,28,.28);">
+      <div style="flex:1 1 340px; min-width:0;">
+        <div style="display:inline-flex; align-items:center; gap:8px; border:1px solid #E6E6E2; border-radius:999px; padding:6px 12px; font-size:12px; color:#6E7079; margin-bottom:26px;">
+          <span style="width:6px; height:6px; border-radius:50%; background:#17795E;"></span>Self-custodial · Verified identity
+        </div>
+        <div style="font-size:46px; line-height:1.05; letter-spacing:-0.035em; font-weight:500; margin-bottom:18px; text-wrap:pretty;">One wallet for your money and your identity.</div>
+        <div style="font-size:17px; line-height:1.55; color:#6E7079; max-width:440px; margin-bottom:36px; text-wrap:pretty;">Create a secure crypto wallet, verify your identity once, and carry a tamper-proof credential you control.</div>
+        <div onClick="{{ startGoogle }}" style="display:inline-flex; align-items:center; gap:12px; background:#16171A; color:#FFFFFF; padding:15px 22px; border-radius:14px; font-size:15px; font-weight:500; cursor:pointer; transition:transform .18s ease, box-shadow .18s ease;" style-hover="transform:translateY(-2px); box-shadow:0 16px 30px -18px rgba(20,22,28,.9);">
+          <span style="width:20px; height:20px; border-radius:50%; background:#FFFFFF; color:#16171A; font-weight:600; font-size:12px; display:flex; align-items:center; justify-content:center;">G</span>
+          Continue with Google
+        </div>
+        <div style="font-size:12px; color:#9A9CA3; margin-top:16px;">By continuing you agree to the Terms and Privacy Notice.</div>
+      </div>
+      <div style="flex:0 1 320px; display:flex; justify-content:center;">
+        <div style="width:300px; height:190px; border-radius:22px; background:linear-gradient(145deg,#26282F,#0D0E11); color:#FFFFFF; padding:22px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 40px 70px -40px rgba(13,14,17,.85); animation:floaty 6s ease-in-out infinite;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.18em; color:rgba(255,255,255,.62);">VERIFIED IDENTITY</div>
+            <div style="width:30px; height:22px; border-radius:5px; background:linear-gradient(140deg,#D9C9A0,#9C8A61);"></div>
+          </div>
+          <div>
+            <div style="font-size:19px; font-weight:500; letter-spacing:-0.01em;">Nguyen Minh Anh</div>
+            <div style="font-size:12px; color:rgba(255,255,255,.6); margin-top:4px;">National ID · Vietnam</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isGoogle }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeIn .3s ease both; width:100%; max-width:1000px; display:flex; justify-content:center; padding:40px 0;">
+      <div style="animation:popIn .35s ease both; width:420px; max-width:100%; background:#FFFFFF; border:1px solid #E6E6E2; border-radius:20px; overflow:hidden; box-shadow:0 40px 80px -45px rgba(20,22,28,.5);">
+        <div style="padding:26px 28px 18px; border-bottom:1px solid #F0F0EC;">
+          <div style="font-size:13px; color:#6E7079; margin-bottom:10px;">Sign in with Google</div>
+          <div style="font-size:19px; font-weight:500; letter-spacing:-0.02em;">Choose an account</div>
+          <div style="font-size:13px; color:#6E7079; margin-top:6px;">to continue to {{ productName }}</div>
+        </div>
+        <div onClick="{{ pickAccount }}" style="display:flex; align-items:center; gap:14px; padding:18px 28px; cursor:pointer; transition:background .15s ease;" style-hover="background:#F7F7F4;">
+          <div style="width:38px; height:38px; border-radius:50%; background:linear-gradient(145deg,#3D6BEA,#2438A8); color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:500;">M</div>
+          <div>
+            <div style="font-size:14px; font-weight:500;">Nguyen Minh Anh</div>
+            <div style="font-size:13px; color:#6E7079;">minhanh.nguyen@gmail.com</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:14px; padding:18px 28px; border-top:1px solid #F0F0EC; color:#6E7079; font-size:14px;">
+          <div style="width:38px; height:38px; border-radius:50%; border:1px dashed #D8D8D2;"></div>Use another account
+        </div>
+        <sc-if value="{{ googleBusy }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:16px 28px 22px; display:flex; align-items:center; gap:10px; font-size:13px; color:#6E7079;">
+            <span style="width:14px; height:14px; border-radius:50%; border:2px solid #E2E2DD; border-top-color:#16171A; animation:spin .7s linear infinite; display:inline-block;"></span>Signing you in…
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isSignedIn }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeUp .45s ease both; width:100%; max-width:520px; background:#FFFFFF; border:1px solid #E6E6E2; border-radius:26px; padding:52px 44px; text-align:center; box-shadow:0 30px 60px -45px rgba(20,22,28,.35);">
+      <div style="position:relative; width:82px; height:82px; margin:0 auto 22px;">
+        <div style="position:absolute; inset:0; border-radius:50%; background:#17795E; opacity:.18; animation:pulseRing 2s ease-out infinite;"></div>
+        <div style="position:absolute; inset:0; border-radius:50%; background:linear-gradient(145deg,#3D6BEA,#2438A8); color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:500;">M</div>
+        <div style="position:absolute; right:-4px; bottom:-4px; width:28px; height:28px; border-radius:50%; background:#17795E; border:3px solid #FFFFFF; color:#FFFFFF; font-size:14px; display:flex; align-items:center; justify-content:center; animation:popIn .4s .2s ease both;">✓</div>
+      </div>
+      <div style="font-size:26px; font-weight:500; letter-spacing:-0.025em;">You're signed in</div>
+      <div style="font-size:15px; color:#16171A; margin-top:14px;">Nguyen Minh Anh</div>
+      <div style="font-size:14px; color:#6E7079;">minhanh.nguyen@gmail.com</div>
+      <div style="margin-top:30px; height:3px; background:#EFEFEB; border-radius:2px; overflow:hidden;">
+        <div style="height:100%; width:40%; border-radius:2px; background:linear-gradient(90deg,transparent,#16171A,transparent); background-size:220% 100%; animation:shimmer 1.4s linear infinite; width:100%;"></div>
+      </div>
+      <div style="font-size:13px; color:#6E7079; margin-top:14px;">Your wallet is being prepared…</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isInstall }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeUp .45s ease both; width:100%; max-width:880px; background:#FFFFFF; border:1px solid #E6E6E2; border-radius:26px; padding:48px; display:flex; gap:44px; align-items:center; flex-wrap:wrap; box-shadow:0 30px 60px -45px rgba(20,22,28,.3);">
+      <div style="flex:1 1 300px; min-width:0;">
+        <div style="font-size:30px; font-weight:500; letter-spacing:-0.03em;">Your wallet is ready</div>
+        <div style="font-size:15px; color:#6E7079; margin-top:12px; line-height:1.55;">Install the wallet extension to continue. It keeps your keys on this device and signs requests locally.</div>
+        <div style="display:flex; flex-direction:column; gap:10px; margin:26px 0 30px;">
+          <div style="display:flex; gap:10px; align-items:center; font-size:14px; color:#3B3D45;"><span style="color:#17795E;">✓</span> Keys never leave your device</div>
+          <div style="display:flex; gap:10px; align-items:center; font-size:14px; color:#3B3D45;"><span style="color:#17795E;">✓</span> Works with your identity credential</div>
+          <div style="display:flex; gap:10px; align-items:center; font-size:14px; color:#3B3D45;"><span style="color:#17795E;">✓</span> Passkey-protected approvals</div>
+        </div>
+        <sc-if value="{{ installIdle }}" hint-placeholder-val="{{ true }}">
+          <div onClick="{{ installWallet }}" style="display:inline-flex; align-items:center; gap:10px; background:#16171A; color:#FFFFFF; padding:14px 22px; border-radius:13px; font-size:15px; font-weight:500; cursor:pointer;" style-hover="transform:translateY(-2px);">Install Wallet</div>
+        </sc-if>
+        <sc-if value="{{ installBusy }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:13px; color:#6E7079; margin-bottom:8px;"><span>{{ installLabel }}</span><span style="font-family:'JetBrains Mono',monospace;">{{ installPct }}</span></div>
+            <div style="height:6px; background:#EFEFEB; border-radius:3px; overflow:hidden;">
+              <div style="height:100%; background:#16171A; border-radius:3px; transition:width .3s ease; width:{{ installWidth }};"></div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ installDone }}" hint-placeholder-val="{{ false }}">
+          <div style="animation:popIn .35s ease both; display:inline-flex; align-items:center; gap:10px; background:#EAF4F0; color:#17795E; padding:14px 20px; border-radius:13px; font-size:15px; font-weight:500;">✓ Wallet installed</div>
+        </sc-if>
+      </div>
+      <div style="flex:0 1 300px; display:flex; justify-content:center;">
+        <div style="width:300px; border-radius:16px; border:1px solid #E6E6E2; overflow:hidden; background:#FBFBF9; box-shadow:0 24px 50px -35px rgba(20,22,28,.5);">
+          <div style="height:34px; background:#F2F2EF; border-bottom:1px solid #E6E6E2; display:flex; align-items:center; gap:6px; padding:0 12px;">
+            <span style="width:8px; height:8px; border-radius:50%; background:#DDDDD6;"></span>
+            <span style="width:8px; height:8px; border-radius:50%; background:#DDDDD6;"></span>
+            <span style="width:8px; height:8px; border-radius:50%; background:#DDDDD6;"></span>
+            <div style="flex:1;"></div>
+            <div style="width:22px; height:22px; border-radius:7px; background:linear-gradient(145deg,#2A2C33,#0E0F12); display:flex; align-items:center; justify-content:center;"><div style="width:7px; height:7px; border-radius:2px; border:2px solid #FBFBF9;"></div></div>
+          </div>
+          <div style="padding:18px;">
+            <div style="font-size:13px; font-weight:500; margin-bottom:4px;">{{ productName }} Wallet</div>
+            <div style="font-size:12px; color:#8A8C94; margin-bottom:14px;">Browser extension</div>
+            <div style="height:8px; background:#EFEFEB; border-radius:4px; margin-bottom:8px;"></div>
+            <div style="height:8px; width:70%; background:#EFEFEB; border-radius:4px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isPassword }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeUp .45s ease both; width:100%; max-width:460px; background:#FFFFFF; border:1px solid #E6E6E2; border-radius:26px; padding:40px; box-shadow:0 30px 60px -45px rgba(20,22,28,.3);">
+      <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.12em; color:#9A9CA3; margin-bottom:14px;">STEP 1 OF 2</div>
+      <div style="font-size:25px; font-weight:500; letter-spacing:-0.025em;">Create your wallet password</div>
+      <div style="font-size:14px; color:#6E7079; margin-top:10px; line-height:1.5;">This password protects access to your wallet on this device.</div>
+      <div style="margin-top:26px; display:flex; flex-direction:column; gap:14px;">
+        <input type="password" placeholder="Password" value="{{ pw }}" onChange="{{ onPw }}" style="width:100%; padding:14px 16px; border:1px solid #E2E2DD; border-radius:12px; font-size:14px; font-family:'Geist',sans-serif; background:#FBFBF9; transition:border-color .15s ease;" />
+        <input type="password" placeholder="Confirm password" value="{{ pw2 }}" onChange="{{ onPw2 }}" style="width:100%; padding:14px 16px; border:1px solid #E2E2DD; border-radius:12px; font-size:14px; font-family:'Geist',sans-serif; background:#FBFBF9; transition:border-color .15s ease;" />
+      </div>
+      <div style="display:flex; gap:6px; margin-top:16px;">
+        <div style="flex:1; height:4px; border-radius:2px; background:{{ bar1 }};"></div>
+        <div style="flex:1; height:4px; border-radius:2px; background:{{ bar2 }};"></div>
+        <div style="flex:1; height:4px; border-radius:2px; background:{{ bar3 }};"></div>
+        <div style="flex:1; height:4px; border-radius:2px; background:{{ bar4 }};"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:9px; font-size:12px; color:#8A8C94;"><span>{{ strengthLabel }}</span><span>{{ matchLabel }}</span></div>
+      <div onClick="{{ submitPassword }}" style="margin-top:26px; text-align:center; background:{{ pwBtnBg }}; color:#FFFFFF; padding:14px; border-radius:13px; font-size:15px; font-weight:500; cursor:pointer;">Create password</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isPasskey }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeUp .45s ease both; width:100%; max-width:460px; background:#FFFFFF; border:1px solid #E6E6E2; border-radius:26px; padding:40px; text-align:center; box-shadow:0 30px 60px -45px rgba(20,22,28,.3);">
+      <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.12em; color:#9A9CA3; margin-bottom:14px; text-align:left;">STEP 2 OF 2</div>
+      <div style="width:96px; height:96px; margin:8px auto 24px; border-radius:26px; background:#FBFBF9; border:1px solid #EFEFEB; display:flex; align-items:center; justify-content:center;">
+        <div style="width:44px; height:44px; border:3px solid #16171A; border-radius:14px; position:relative;">
+          <div style="position:absolute; left:9px; top:12px; width:5px; height:5px; border-radius:50%; background:#16171A;"></div>
+          <div style="position:absolute; right:9px; top:12px; width:5px; height:5px; border-radius:50%; background:#16171A;"></div>
+          <div style="position:absolute; left:11px; right:11px; bottom:9px; height:3px; border-radius:2px; background:#16171A;"></div>
+        </div>
+      </div>
+      <div style="font-size:25px; font-weight:500; letter-spacing:-0.025em;">Create your passkey</div>
+      <div style="font-size:14px; color:#6E7079; margin-top:10px; line-height:1.55;">Passkeys provide secure, passwordless access to your wallet using Face ID or Touch ID.</div>
+      <div onClick="{{ createPasskey }}" style="margin-top:28px; background:#16171A; color:#FFFFFF; padding:14px; border-radius:13px; font-size:15px; font-weight:500; cursor:pointer;">Create passkey</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ passkeyModal }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; inset:0; background:rgba(18,19,23,.55); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; z-index:50; animation:fadeIn .2s ease both;">
+      <div style="animation:popIn .3s ease both; width:340px; background:rgba(255,255,255,.92); border-radius:24px; padding:34px; text-align:center; box-shadow:0 40px 80px -30px rgba(0,0,0,.5);">
+        <sc-if value="{{ passkeyScanning }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <div style="position:relative; width:86px; height:86px; margin:0 auto 20px;">
+              <div style="position:absolute; inset:0; border-radius:50%; border:2px solid #16171A; opacity:.2; animation:pulseRing 1.6s ease-out infinite;"></div>
+              <div style="position:absolute; inset:0; border-radius:26px; border:3px solid #16171A; animation:breathe 1.6s ease-in-out infinite;"></div>
+            </div>
+            <div style="font-size:17px; font-weight:500;">Face ID</div>
+            <div style="font-size:13px; color:#6E7079; margin-top:8px;">Look at your device to create the passkey.</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ passkeyDone }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="width:66px; height:66px; margin:0 auto 18px; border-radius:50%; background:#17795E; color:#FFFFFF; font-size:28px; display:flex; align-items:center; justify-content:center; animation:popIn .35s ease both;">✓</div>
+            <div style="font-size:17px; font-weight:500;">Passkey created</div>
+            <div style="font-size:13px; color:#6E7079; margin-top:8px;">Stored securely on this device.</div>
+            <div onClick="{{ finishPasskey }}" style="margin-top:22px; background:#16171A; color:#FFFFFF; padding:13px; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer;">Continue</div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isWallet }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeUp .45s ease both; width:100%; max-width:1180px; display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap;">
+      <div style="flex:1 1 260px; min-width:240px; background:#FFFFFF; border:1px solid #E6E6E2; border-radius:24px; padding:26px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:44px; height:44px; border-radius:50%; background:linear-gradient(145deg,#3D6BEA,#2438A8); color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-size:17px;">M</div>
+          <div>
+            <div style="font-size:14px; font-weight:500;">Nguyen Minh Anh</div>
+            <div style="font-size:12px; color:#8A8C94;">minhanh.nguyen@gmail.com</div>
+          </div>
+        </div>
+        <div style="height:1px; background:#F0F0EC; margin:22px 0;"></div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; color:#9A9CA3; margin-bottom:12px;">IDENTITY</div>
+        <div style="display:flex; align-items:center; gap:8px; font-size:14px; color:{{ idStatusColor }};">{{ idStatusIcon }} {{ idStatusText }}</div>
+        <sc-if value="{{ notVerified }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <div style="font-size:12px; color:#8A8C94; margin-top:8px; line-height:1.5;">Chưa thực hiện định danh. Xác minh để nhận thẻ định danh và ký giao dịch.</div>
+            <div onClick="{{ startKyc }}" style="margin-top:16px; text-align:center; background:#16171A; color:#FFFFFF; padding:12px; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer;">Complete eKYC</div>
+          </div>
+        </sc-if>
+        <div style="height:1px; background:#F0F0EC; margin:22px 0;"></div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; color:#9A9CA3; margin-bottom:12px;">SECURITY</div>
+        <div style="display:flex; align-items:center; gap:8px; font-size:14px; color:#3B3D45; margin-bottom:8px;"><span style="color:#17795E;">✓</span> Passkey enabled</div>
+        <div style="display:flex; align-items:center; gap:8px; font-size:14px; color:#3B3D45;"><span style="color:#17795E;">✓</span> Wallet secured</div>
+        <div style="height:1px; background:#F0F0EC; margin:22px 0;"></div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; color:#9A9CA3; margin-bottom:10px;">BALANCE</div>
+        <div style="font-size:24px; font-weight:500; letter-spacing:-0.02em;">0.842 ETH</div>
+        <div style="font-size:12px; color:#8A8C94; margin-top:4px;">≈ $2,164.30</div>
+      </div>
+
+      <div style="flex:3 1 560px; min-width:300px; background:#FFFFFF; border:1px solid #E6E6E2; border-radius:24px; padding:32px;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:26px;">
+          <div style="font-size:22px; font-weight:500; letter-spacing:-0.025em;">Wallet</div>
+          <div style="font-size:12px; color:#8A8C94;">{{ cardCountLabel }}</div>
+        </div>
+
+        <sc-if value="{{ notVerified }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <div onClick="{{ startKyc }}" style="border:1px dashed #DCDCD6; border-radius:20px; height:210px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; cursor:pointer; background:#FBFBF9; transition:border-color .18s ease;" style-hover="border-color:#16171A;">
+              <div style="font-size:26px; color:#B4B6BC; font-weight:300;">+</div>
+              <div style="font-size:15px; font-weight:500;">Add identity</div>
+              <div style="font-size:13px; color:#8A8C94;">Your wallet is empty</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ verified }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div onClick="{{ openCard }}" style="animation:popIn .5s ease both; position:relative; border-radius:22px; padding:26px; color:#FFFFFF; background:linear-gradient(145deg,#2C2E36 0%,#141519 55%,#0B0C0F 100%); cursor:pointer; transition:transform .22s ease, box-shadow .22s ease; box-shadow:0 30px 60px -40px rgba(11,12,15,.9);" style-hover="transform:translateY(-6px); box-shadow:0 40px 70px -35px rgba(11,12,15,.95);">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.2em; color:rgba(255,255,255,.6);">VERIFIED IDENTITY</div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="width:34px; height:25px; border-radius:5px; background:linear-gradient(140deg,#DCCCA4,#96855E);"></div>
+                  <div style="width:30px; height:30px; border-radius:8px; background:rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; font-size:12px;">✓</div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:16px; margin-top:34px;">
+                <div style="width:56px; height:56px; border-radius:16px; background:linear-gradient(145deg,#3D6BEA,#2438A8); display:flex; align-items:center; justify-content:center; font-size:20px;">M</div>
+                <div>
+                  <div style="font-size:21px; font-weight:500; letter-spacing:-0.015em;">NGUYEN MINH ANH</div>
+                  <div style="font-size:12px; color:rgba(255,255,255,.62); margin-top:5px;">Identity verified ✓ · National ID</div>
+                </div>
+                <div style="flex:1;"></div>
+                <div style="width:52px; height:52px; border-radius:10px; background:rgba(255,255,255,.9); opacity:.85;">{{ miniQr }}</div>
+              </div>
+            </div>
+
+            <sc-if value="{{ showPlaceholderCards }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div style="border-radius:18px; padding:20px 24px; background:#F5F5F1; border:1px solid #EAEAE5; display:flex; justify-content:space-between; align-items:center; transition:transform .2s ease;" style-hover="transform:translateY(-3px);">
+                  <div><div style="font-size:15px; font-weight:500;">Membership</div><div style="font-size:12px; color:#8A8C94; margin-top:3px;">Not added</div></div>
+                  <div style="font-size:12px; color:#8A8C94;">+</div>
+                </div>
+                <div style="border-radius:18px; padding:20px 24px; background:#F5F5F1; border:1px solid #EAEAE5; display:flex; justify-content:space-between; align-items:center; transition:transform .2s ease;" style-hover="transform:translateY(-3px);">
+                  <div><div style="font-size:15px; font-weight:500;">Payment</div><div style="font-size:12px; color:#8A8C94; margin-top:3px;">Not added</div></div>
+                  <div style="font-size:12px; color:#8A8C94;">+</div>
+                </div>
+                <div style="border-radius:18px; padding:20px 24px; background:#F5F5F1; border:1px solid #EAEAE5; display:flex; justify-content:space-between; align-items:center; transition:transform .2s ease;" style-hover="transform:translateY(-3px);">
+                  <div><div style="font-size:15px; font-weight:500;">Credential</div><div style="font-size:12px; color:#8A8C94; margin-top:3px;">Not added</div></div>
+                  <div style="font-size:12px; color:#8A8C94;">+</div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <div style="height:1px; background:#F0F0EC; margin:28px 0 20px;"></div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; color:#9A9CA3; margin-bottom:14px;">RECENT ACTIVITY</div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="display:flex; justify-content:space-between; font-size:14px;"><span>Wallet created</span><span style="color:#8A8C94;">Today</span></div>
+          <div style="display:flex; justify-content:space-between; font-size:14px;"><span>Passkey registered</span><span style="color:#8A8C94;">Today</span></div>
+          <sc-if value="{{ verified }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; justify-content:space-between; font-size:14px;"><span>Identity credential issued</span><span style="color:#8A8C94;">Just now</span></div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ cardOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeCard }}" style="position:fixed; inset:0; background:rgba(18,19,23,.6); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; padding:24px; z-index:60; animation:fadeIn .2s ease both; overflow:auto;">
+      <div style="animation:popIn .35s ease both; width:440px; max-width:100%; background:#FFFFFF; border-radius:26px; overflow:hidden; box-shadow:0 50px 90px -40px rgba(0,0,0,.6);">
+        <div style="padding:28px; color:#FFFFFF; background:linear-gradient(145deg,#2C2E36,#0B0C0F);">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.2em; color:rgba(255,255,255,.6);">VERIFIED IDENTITY</div>
+          <div style="display:flex; align-items:center; gap:14px; margin-top:22px;">
+            <div style="width:50px; height:50px; border-radius:14px; background:linear-gradient(145deg,#3D6BEA,#2438A8); display:flex; align-items:center; justify-content:center; font-size:19px;">M</div>
+            <div><div style="font-size:19px; font-weight:500;">NGUYEN MINH ANH</div><div style="font-size:12px; color:rgba(255,255,255,.6); margin-top:4px;">Verified ✓</div></div>
+          </div>
+        </div>
+        <div style="padding:26px 28px 30px;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; color:#9A9CA3; margin-bottom:12px;">PERSONAL INFORMATION</div>
+          <div style="display:flex; justify-content:space-between; font-size:14px; padding:9px 0;"><span style="color:#6E7079;">Name</span><span>Nguyen Minh Anh</span></div>
+          <div style="display:flex; justify-content:space-between; font-size:14px; padding:9px 0;"><span style="color:#6E7079;">Date of birth</span><span>14 Mar 1996</span></div>
+          <div style="display:flex; justify-content:space-between; font-size:14px; padding:9px 0;"><span style="color:#6E7079;">Nationality</span><span>Vietnam</span></div>
+          <div style="display:flex; justify-content:space-between; font-size:14px; padding:9px 0;"><span style="color:#6E7079;">Document</span><span>National ID (CCCD)</span></div>
+          <div style="height:1px; background:#F0F0EC; margin:18px 0;"></div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; color:#9A9CA3; margin-bottom:12px;">VERIFICATION</div>
+          <div style="display:flex; gap:8px; font-size:14px; padding:6px 0; color:#3B3D45;"><span style="color:#17795E;">✓</span> Document verified</div>
+          <div style="display:flex; gap:8px; font-size:14px; padding:6px 0; color:#3B3D45;"><span style="color:#17795E;">✓</span> Face verified</div>
+          <div style="display:flex; gap:8px; font-size:14px; padding:6px 0; color:#3B3D45;"><span style="color:#17795E;">✓</span> Identity verified</div>
+          <div style="height:1px; background:#F0F0EC; margin:18px 0;"></div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; color:#9A9CA3; margin-bottom:12px;">SECURITY</div>
+          <div style="display:flex; gap:8px; font-size:14px; padding:6px 0; color:#3B3D45;"><span style="color:#17795E;">✓</span> Passkey enabled</div>
+          <div style="display:flex; gap:8px; font-size:14px; padding:6px 0; color:#3B3D45;"><span style="color:#17795E;">✓</span> Wallet secured</div>
+          <div onClick="{{ closeCard }}" style="margin-top:22px; text-align:center; border:1px solid #E2E2DD; padding:13px; border-radius:12px; font-size:14px; cursor:pointer;" style-hover="border-color:#16171A;">Close</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isKycDoc }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeUp .45s ease both; width:100%; max-width:720px; background:#FFFFFF; border:1px solid #E6E6E2; border-radius:26px; overflow:hidden; box-shadow:0 30px 60px -45px rgba(20,22,28,.3);">
+      <div style="padding:20px 32px; border-bottom:1px solid #F0F0EC; display:flex; align-items:center; justify-content:space-between;">
+        <div style="font-size:13px; font-weight:500;">Identity verification</div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:120px; height:4px; background:#EFEFEB; border-radius:2px; overflow:hidden;"><div style="height:100%; width:25%; background:#16171A;"></div></div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#8A8C94;">1 / 4</div>
+        </div>
+      </div>
+      <div style="padding:40px 32px;">
+        <div style="font-size:26px; font-weight:500; letter-spacing:-0.028em;">Verify your identity</div>
+        <div style="font-size:14px; color:#6E7079; margin-top:10px;">Choose a document to verify your identity.</div>
+        <div style="display:flex; flex-direction:column; gap:12px; margin-top:26px;">
+          <div onClick="{{ pickLicense }}" style="display:flex; align-items:center; gap:16px; padding:20px; border:1px solid #E6E6E2; border-radius:16px; cursor:pointer; transition:border-color .16s ease, transform .16s ease;" style-hover="border-color:#16171A; transform:translateY(-2px);">
+            <div style="width:46px; height:32px; border-radius:6px; background:#F0F0EC; border:1px solid #E2E2DD;"></div>
+            <div><div style="font-size:15px; font-weight:500;">Driver's License</div><div style="font-size:12px; color:#8A8C94; margin-top:2px;">Front and back</div></div>
+          </div>
+          <div onClick="{{ pickCccd }}" style="display:flex; align-items:center; gap:16px; padding:20px; border:2px solid #16171A; border-radius:16px; cursor:pointer; background:#FBFBF9; transition:transform .16s ease;" style-hover="transform:translateY(-2px);">
+            <div style="width:46px; height:32px; border-radius:6px; background:linear-gradient(145deg,#2C2E36,#0F1013);"></div>
+            <div style="flex:1;"><div style="font-size:15px; font-weight:500;">National ID / CCCD</div><div style="font-size:12px; color:#8A8C94; margin-top:2px;">Recommended · fastest verification</div></div>
+            <div style="width:20px; height:20px; border-radius:50%; background:#16171A; color:#FFFFFF; font-size:11px; display:flex; align-items:center; justify-content:center;">✓</div>
+          </div>
+          <div onClick="{{ pickPassport }}" style="display:flex; align-items:center; gap:16px; padding:20px; border:1px solid #E6E6E2; border-radius:16px; cursor:pointer; transition:border-color .16s ease, transform .16s ease;" style-hover="border-color:#16171A; transform:translateY(-2px);">
+            <div style="width:34px; height:44px; border-radius:5px; background:#F0F0EC; border:1px solid #E2E2DD;"></div>
+            <div><div style="font-size:15px; font-weight:500;">Passport</div><div style="font-size:12px; color:#8A8C94; margin-top:2px;">Photo page only</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isKycId }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeUp .45s ease both; width:100%; max-width:720px; background:#FFFFFF; border:1px solid #E6E6E2; border-radius:26px; overflow:hidden; box-shadow:0 30px 60px -45px rgba(20,22,28,.3);">
+      <div style="padding:20px 32px; border-bottom:1px solid #F0F0EC; display:flex; align-items:center; justify-content:space-between;">
+        <div style="font-size:13px; font-weight:500;">Identity verification</div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:120px; height:4px; background:#EFEFEB; border-radius:2px; overflow:hidden;"><div style="height:100%; width:50%; background:#16171A; transition:width .4s ease;"></div></div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#8A8C94;">2 / 4</div>
+        </div>
+      </div>
+      <div style="padding:40px 32px;">
+        <div style="font-size:26px; font-weight:500; letter-spacing:-0.028em;">Verify your ID</div>
+        <div style="font-size:14px; color:#6E7079; margin-top:10px;">Scan both sides of your ID card. Make sure all details are readable.</div>
+        <div style="margin:28px 0; display:flex; gap:16px; flex-wrap:wrap;">
+          <div style="flex:1 1 220px; height:150px; border-radius:14px; background:linear-gradient(145deg,#2C2E36,#0F1013); color:#FFFFFF; padding:18px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.16em; color:rgba(255,255,255,.55);">CĂN CƯỚC CÔNG DÂN — FRONT</div>
+            <div style="display:flex; gap:12px; align-items:flex-end;">
+              <div style="width:44px; height:56px; border-radius:6px; background:rgba(255,255,255,.14);"></div>
+              <div style="flex:1;">
+                <div style="height:7px; width:70%; border-radius:4px; background:rgba(255,255,255,.28); margin-bottom:7px;"></div>
+                <div style="height:7px; width:45%; border-radius:4px; background:rgba(255,255,255,.18);"></div>
+              </div>
+            </div>
+          </div>
+          <div style="flex:1 1 220px; height:150px; border-radius:14px; background:#F5F5F1; border:1px solid #EAEAE5; padding:18px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.16em; color:#9A9CA3;">BACK</div>
+            <div>
+              <div style="height:7px; width:80%; border-radius:4px; background:#E4E4DE; margin-bottom:7px;"></div>
+              <div style="height:7px; width:55%; border-radius:4px; background:#E4E4DE; margin-bottom:14px;"></div>
+              <div style="height:20px; border-radius:4px; background:repeating-linear-gradient(90deg,#DCDCD5 0 3px,transparent 3px 6px);"></div>
+            </div>
+          </div>
+        </div>
+        <div onClick="{{ goHandoff }}" style="background:#16171A; color:#FFFFFF; padding:14px; border-radius:13px; font-size:15px; font-weight:500; cursor:pointer; text-align:center;">Continue</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isHandoff }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeUp .45s ease both; width:100%; max-width:1180px; display:flex; gap:24px; align-items:flex-start; justify-content:center; flex-wrap:wrap;">
+      <div style="flex:1 1 520px; min-width:300px; background:#FFFFFF; border:1px solid #E6E6E2; border-radius:26px; overflow:hidden; box-shadow:0 30px 60px -45px rgba(20,22,28,.3);">
+        <div style="padding:20px 32px; border-bottom:1px solid #F0F0EC; display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-size:13px; font-weight:500;">Identity verification</div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:120px; height:4px; background:#EFEFEB; border-radius:2px; overflow:hidden;"><div style="height:100%; background:#16171A; transition:width .5s ease; width:{{ syncWidth }};"></div></div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#8A8C94;">3 / 4</div>
+          </div>
+        </div>
+        <div style="padding:40px 32px;">
+          <div style="font-size:26px; font-weight:500; letter-spacing:-0.028em;">Continue on your phone</div>
+          <div style="font-size:14px; color:#6E7079; margin-top:10px; line-height:1.55; max-width:420px;">Scan this QR code with your phone to continue identity verification. Document scanning requires a phone camera.</div>
+          <div style="display:flex; gap:28px; margin-top:28px; flex-wrap:wrap; align-items:flex-start;">
+            <div style="padding:16px; border:1px solid #E6E6E2; border-radius:18px; background:#FFFFFF;">{{ bigQr }}</div>
+            <div style="flex:1 1 220px; min-width:200px;">
+              <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; color:#9A9CA3;">PAIRING CODE</div>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:28px; letter-spacing:0.22em; margin-top:8px;">{{ pairingCode }}</div>
+              <div style="height:1px; background:#F0F0EC; margin:20px 0;"></div>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:{{ s1c }};">{{ s1i }} Connected to phone</div>
+                <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:{{ s2c }};">{{ s2i }} Front side scanned</div>
+                <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:{{ s3c }};">{{ s3i }} Back side scanned</div>
+                <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:{{ s4c }};">{{ s4i }} Face verification</div>
+                <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:{{ s5c }};">{{ s5i }} Secure verification</div>
+              </div>
+              <div style="margin-top:22px; display:flex; align-items:center; gap:10px; font-size:13px; color:#6E7079;">
+                <span style="width:8px; height:8px; border-radius:50%; background:#2F5FE0; animation:breathe 1.4s ease-in-out infinite; display:inline-block;"></span>{{ syncStatus }}
+              </div>
+              <sc-if value="{{ phoneIdle }}" hint-placeholder-val="{{ true }}">
+                <div onClick="{{ scanWithPhone }}" style="margin-top:20px; text-align:center; border:1px solid #16171A; padding:12px; border-radius:12px; font-size:13px; font-weight:500; cursor:pointer;" style-hover="background:#16171A; color:#FFFFFF;">Simulate scanning with phone →</div>
+              </sc-if>
+            </div>
+          </div>
+          <div style="font-size:12px; color:#9A9CA3; margin-top:26px;">Use your phone to scan the QR code. Keep this window open.</div>
+        </div>
+      </div>
+
+      <sc-if value="{{ phoneOn }}" hint-placeholder-val="{{ false }}">
+        <div style="animation:slideInRight .5s ease both; flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:12px;">
+          <div style="width:330px; height:680px; border-radius:46px; background:#0A0B0D; padding:11px; box-shadow:0 50px 90px -45px rgba(10,11,13,.85);">
+            <div style="width:100%; height:100%; border-radius:36px; overflow:hidden; background:#FFFFFF; position:relative; display:flex; flex-direction:column;">
+              <div style="height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12px; font-family:'JetBrains Mono',monospace; color:#16171A; flex:0 0 auto;">
+                <span>9:41</span><span>5G ▮</span>
+              </div>
+
+              <sc-if value="{{ phoneConnect }}" hint-placeholder-val="{{ true }}">
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px; text-align:center; animation:fadeIn .3s ease both;">
+                  <div style="position:relative; width:70px; height:70px; margin-bottom:22px;">
+                    <div style="position:absolute; inset:0; border-radius:50%; border:2px solid #2F5FE0; opacity:.3; animation:pulseRing 1.8s ease-out infinite;"></div>
+                    <div style="position:absolute; inset:0; border-radius:50%; border:2px solid #16171A; display:flex; align-items:center; justify-content:center; font-size:22px;">↔</div>
+                  </div>
+                  <div style="font-size:18px; font-weight:500;">Connecting to desktop</div>
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:0.18em; color:#6E7079; margin-top:10px;">{{ pairingCode }}</div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ phoneCamera }}" hint-placeholder-val="{{ false }}">
+                <div style="flex:1; display:flex; flex-direction:column; animation:fadeIn .3s ease both;">
+                  <div style="padding:8px 24px 16px; text-align:center;">
+                    <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; color:#9A9CA3;">{{ phoneStepLabel }}</div>
+                    <div style="font-size:17px; font-weight:500; margin-top:6px;">{{ phoneTitle }}</div>
+                  </div>
+                  <div style="flex:1; margin:0 16px 16px; border-radius:24px; background:linear-gradient(160deg,#1A1C20,#0A0B0D); position:relative; overflow:hidden;">
+                    <div style="position:absolute; inset:0; background:repeating-linear-gradient(115deg,rgba(255,255,255,.02) 0 12px,transparent 12px 24px);"></div>
+                    <div style="position:absolute; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,#5CE0B0,transparent); animation:scanline 2.4s ease-in-out infinite;"></div>
+                    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
+                      <div style="width:{{ frameW }}; height:{{ frameH }}; border-radius:{{ frameR }}; border:2px solid rgba(255,255,255,.85); position:relative; display:flex; align-items:center; justify-content:center;">
+                        <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:rgba(255,255,255,.5); letter-spacing:0.1em; text-align:center; padding:0 10px;">{{ frameHint }}</div>
+                      </div>
+                    </div>
+                    <div style="position:absolute; left:0; right:0; bottom:20px; text-align:center; color:rgba(255,255,255,.8); font-size:12px; padding:0 24px;">{{ phoneInstruction }}</div>
+                  </div>
+                  <div style="padding:0 24px 26px; display:flex; justify-content:center;">
+                    <div onClick="{{ capture }}" style="width:66px; height:66px; border-radius:50%; border:3px solid #16171A; padding:4px; cursor:pointer;">
+                      <div style="width:100%; height:100%; border-radius:50%; background:#16171A; transition:transform .15s ease;"></div>
+                    </div>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ phoneCaptured }}" hint-placeholder-val="{{ false }}">
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:32px; text-align:center; animation:fadeIn .25s ease both;">
+                  <div style="width:64px; height:64px; border-radius:50%; background:#17795E; color:#FFFFFF; font-size:26px; display:flex; align-items:center; justify-content:center; animation:popIn .35s ease both;">✓</div>
+                  <div style="font-size:18px; font-weight:500;">{{ capturedLabel }}</div>
+                  <div style="font-size:13px; color:#8A8C94;">Sent to your desktop session</div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ phoneDone }}" hint-placeholder-val="{{ false }}">
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:32px; text-align:center; animation:fadeIn .25s ease both;">
+                  <div style="width:64px; height:64px; border-radius:50%; background:#17795E; color:#FFFFFF; font-size:26px; display:flex; align-items:center; justify-content:center;">✓</div>
+                  <div style="font-size:18px; font-weight:500;">All steps complete</div>
+                  <div style="font-size:13px; color:#8A8C94; line-height:1.5;">Return to your desktop to finish verification.</div>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+          <div style="font-size:11px; color:#9A9CA3; font-family:'JetBrains Mono',monospace; letter-spacing:0.1em;">SIMULATED PHONE</div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isProcessing }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeUp .45s ease both; width:100%; max-width:560px; background:#FFFFFF; border:1px solid #E6E6E2; border-radius:26px; padding:52px 44px; text-align:center; box-shadow:0 30px 60px -45px rgba(20,22,28,.3);">
+      <div style="position:relative; width:130px; height:130px; margin:0 auto 30px;">
+        <div style="position:absolute; inset:0; border-radius:50%; border:1px solid #E6E6E2;"></div>
+        <div style="position:absolute; inset:14px; border-radius:50%; border:1px solid #EFEFEB; animation:pulseRing 2.4s ease-out infinite;"></div>
+        <div style="position:absolute; inset:0; border-radius:50%; border:2px solid transparent; border-top-color:#16171A; animation:spin 1.4s linear infinite;"></div>
+        <div style="position:absolute; inset:34px; border-radius:18px; background:linear-gradient(145deg,#2C2E36,#0F1013);"></div>
+      </div>
+      <div style="font-size:25px; font-weight:500; letter-spacing:-0.025em;">Securing your identity</div>
+      <div style="font-size:14px; color:#6E7079; margin-top:10px;">We're securely processing your identity information.</div>
+      <div style="margin-top:28px; display:flex; flex-direction:column; gap:11px; text-align:left;">
+        <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:{{ p1c }};">{{ p1i }} Extracting document data</div>
+        <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:{{ p2c }};">{{ p2i }} Matching face to document</div>
+        <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:{{ p3c }};">{{ p3i }} Encrypting credential</div>
+        <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:{{ p4c }};">{{ p4i }} Binding credential to wallet</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isVerified }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:fadeUp .45s ease both; width:100%; max-width:520px; background:#FFFFFF; border:1px solid #E6E6E2; border-radius:26px; padding:56px 44px; text-align:center; box-shadow:0 30px 60px -45px rgba(20,22,28,.3);">
+      <div style="position:relative; width:96px; height:96px; margin:0 auto 26px;">
+        <div style="position:absolute; inset:0; border-radius:50%; background:#17795E; opacity:.14; animation:pulseRing 2s ease-out infinite;"></div>
+        <div style="position:absolute; inset:0; border-radius:50%; background:#17795E; color:#FFFFFF; font-size:38px; display:flex; align-items:center; justify-content:center; animation:popIn .45s ease both;">✓</div>
+      </div>
+      <div style="font-size:28px; font-weight:500; letter-spacing:-0.028em;">Identity verified</div>
+      <div style="font-size:14px; color:#6E7079; margin-top:12px; line-height:1.55;">Your identity credential has been issued and added to your wallet.</div>
+      <div onClick="{{ toWallet }}" style="margin-top:30px; background:#16171A; color:#FFFFFF; padding:14px; border-radius:13px; font-size:15px; font-weight:500; cursor:pointer;">Open wallet</div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;productName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Vaulta&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showPlaceholderCards&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;fastDemo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = {
+    step: 'landing', googleBusy: false, install: 'idle', installPct: 0,
+    pw: '', pw2: '', passkey: 'idle',
+    verified: false, cardOpen: false,
+    phone: 'idle', marks: 0, proc: 0
+  };
+  timers = [];
+  componentWillUnmount() { this.timers.forEach(clearTimeout); }
+  after(ms, fn) { this.timers.push(setTimeout(fn, ms * (this.props.fastDemo ? 0.55 : 1))); }
+  go(step, extra) { this.setState(Object.assign({ step }, extra || {})); }
+
+  qr(size, cell) {
+    const n = 25, out = [];
+    const on = (r, c) => {
+      const fin = (rr, cc) => rr >= 0 && rr < 7 && cc >= 0 && cc < 7 && !(rr > 1 && rr < 5 && cc > 1 && cc < 5) === false ? null : null;
+      const inBox = (r0, c0) => r >= r0 && r < r0 + 7 && c >= c0 && c < c0 + 7;
+      const finder = (r0, c0) => {
+        const dr = r - r0, dc = c - c0, m = Math.max(Math.abs(dr - 3), Math.abs(dc - 3));
+        return m === 3 || m <= 1;
+      };
+      if (inBox(0, 0)) return finder(0, 0);
+      if (inBox(0, n - 7)) return finder(0, n - 7);
+      if (inBox(n - 7, 0)) return finder(n - 7, 0);
+      const h = Math.sin(r * 12.9898 + c * 78.233) * 43758.5453;
+      return (h - Math.floor(h)) > 0.5;
+    };
+    const rows = [];
+    for (let r = 0; r < n; r++) {
+      const cells = [];
+      for (let c = 0; c < n; c++) {
+        cells.push(React.createElement('div', { key: c, style: { width: cell, height: cell, background: on(r, c) ? '#16171A' : 'transparent' } }));
+      }
+      rows.push(React.createElement('div', { key: r, style: { display: 'flex' } }, cells));
+    }
+    return React.createElement('div', { style: { width: size, height: size, display: 'flex', flexDirection: 'column' } }, rows);
+  }
+
+  mark(i, cur) { return cur > i ? ['✓', '#17795E'] : cur === i ? ['●', '#16171A'] : ['○', '#B4B6BC']; }
+
+  strength() {
+    const p = this.state.pw; let s = 0;
+    if (p.length >= 8) s++;
+    if (/[A-Z]/.test(p) && /[a-z]/.test(p)) s++;
+    if (/[0-9]/.test(p)) s++;
+    if (/[^A-Za-z0-9]/.test(p) && p.length >= 12) s++;
+    return p ? Math.max(1, s) : 0;
+  }
+
+  startInstall() {
+    this.setState({ install: 'busy', installPct: 0 });
+    const tick = () => {
+      this.setState(st => {
+        const next = Math.min(100, st.installPct + 7 + Math.random() * 9);
+        if (next >= 100) { this.after(700, () => this.setState({ install: 'done' })); this.after(2000, () => this.go('password')); return { installPct: 100 }; }
+        this.after(160, tick); return { installPct: next };
+      });
+    };
+    this.after(200, tick);
+  }
+
+  runPhoneStep(next, marks) {
+    this.setState({ phone: 'captured', marks });
+    this.after(1200, () => this.setState({ phone: next }));
+  }
+
+  capture() {
+    const p = this.state.phone;
+    if (p === 'front') this.runPhoneStep('back', 2);
+    else if (p === 'back') this.runPhoneStep('face', 3);
+    else if (p === 'face') {
+      this.setState({ phone: 'captured', marks: 4 });
+      this.after(1200, () => this.setState({ phone: 'done', marks: 5 }));
+      this.after(2200, () => this.startProcessing());
+    }
+  }
+
+  startProcessing() {
+    this.go('processing', { proc: 0 });
+    [900, 1900, 2900, 3900].forEach((ms, i) => this.after(ms, () => this.setState({ proc: i + 1 })));
+    this.after(4800, () => this.go('verified', { verified: true }));
+  }
+
+  renderVals() {
+    const s = this.state, st = s.step;
+    const stages = { landing: 'Landing', google: 'Google sign-in', signedin: 'Signed in', install: 'Extension', password: 'Wallet setup', passkey: 'Wallet setup', wallet: 'Wallet', kycdoc: 'eKYC 1/4', kycid: 'eKYC 2/4', handoff: 'eKYC 3/4', processing: 'eKYC 4/4', verified: 'Verified' };
+    const str = this.strength();
+    const strengthColors = ['#EFEFEB', '#C4544A', '#C4864A', '#4A8CC4', '#17795E'];
+    const bar = i => (str >= i ? strengthColors[str] : '#EFEFEB');
+    const pwOk = s.pw.length >= 8 && s.pw === s.pw2;
+    const m = s.marks;
+    const sm = i => this.mark(i, m);
+    const pm = i => this.mark(i, s.proc);
+    const phoneTitles = { front: 'Scan the front of your ID', back: 'Scan the back of your ID', face: 'Verify your face' };
+    const phoneStepLabels = { front: 'STEP 1 OF 3', back: 'STEP 2 OF 3', face: 'STEP 3 OF 3' };
+    const capturedLabels = { 2: 'Front side captured', 3: 'Back side captured', 4: 'Face verified' };
+    const face = s.phone === 'face';
+
+    return {
+      productName: this.props.productName ?? 'Vaulta',
+      showPlaceholderCards: this.props.showPlaceholderCards ?? true,
+      stageLabel: stages[st] || '',
+      isLanding: st === 'landing', isGoogle: st === 'google', isSignedIn: st === 'signedin',
+      isInstall: st === 'install', isPassword: st === 'password', isPasskey: st === 'passkey',
+      isWallet: st === 'wallet', isKycDoc: st === 'kycdoc', isKycId: st === 'kycid',
+      isHandoff: st === 'handoff', isProcessing: st === 'processing', isVerified: st === 'verified',
+      googleBusy: s.googleBusy,
+      installIdle: s.install === 'idle', installBusy: s.install === 'busy', installDone: s.install === 'done',
+      installPct: Math.round(s.installPct) + '%', installWidth: s.installPct + '%',
+      installLabel: s.installPct < 55 ? 'Downloading wallet…' : 'Installing wallet…',
+      pw: s.pw, pw2: s.pw2,
+      bar1: bar(1), bar2: bar(2), bar3: bar(3), bar4: bar(4),
+      strengthLabel: ['Enter a password', 'Weak', 'Fair', 'Strong', 'Excellent'][str],
+      matchLabel: s.pw2 ? (s.pw === s.pw2 ? 'Passwords match' : 'Passwords do not match') : '',
+      pwBtnBg: pwOk ? '#16171A' : '#C9C9C3',
+      passkeyModal: s.passkey === 'scanning' || s.passkey === 'done',
+      passkeyScanning: s.passkey === 'scanning', passkeyDone: s.passkey === 'done',
+      verified: s.verified, notVerified: !s.verified, cardOpen: s.cardOpen,
+      idStatusText: s.verified ? 'Verified' : 'Verification required',
+      idStatusIcon: s.verified ? '✓' : '!',
+      idStatusColor: s.verified ? '#17795E' : '#B4763A',
+      cardCountLabel: s.verified ? (this.props.showPlaceholderCards ?? true ? '4 cards' : '1 card') : 'No cards yet',
+      miniQr: this.qr(52, 2),
+      bigQr: this.qr(200, 8),
+      pairingCode: 'K7 · 4QB2',
+      syncWidth: (50 + m * 10) + '%',
+      syncStatus: m === 0 ? 'Waiting for phone…' : m < 5 ? 'Identity verification in progress' : 'Handing back to desktop…',
+      s1i: sm(1)[0], s1c: sm(1)[1], s2i: sm(2)[0], s2c: sm(2)[1], s3i: sm(3)[0], s3c: sm(3)[1],
+      s4i: sm(4)[0], s4c: sm(4)[1], s5i: sm(5)[0], s5c: sm(5)[1],
+      p1i: pm(1)[0], p1c: pm(1)[1], p2i: pm(2)[0], p2c: pm(2)[1], p3i: pm(3)[0], p3c: pm(3)[1], p4i: pm(4)[0], p4c: pm(4)[1],
+      phoneOn: s.phone !== 'idle', phoneIdle: s.phone === 'idle',
+      phoneConnect: s.phone === 'connect',
+      phoneCamera: s.phone === 'front' || s.phone === 'back' || s.phone === 'face',
+      phoneCaptured: s.phone === 'captured', phoneDone: s.phone === 'done',
+      phoneTitle: phoneTitles[s.phone] || '', phoneStepLabel: phoneStepLabels[s.phone] || '',
+      capturedLabel: capturedLabels[m] || 'Captured',
+      phoneInstruction: face ? 'Look directly at the camera' : 'Place your ID inside the frame',
+      frameW: face ? '190px' : '230px', frameH: face ? '240px' : '145px', frameR: face ? '120px / 150px' : '14px',
+      frameHint: face ? 'FACE' : 'CCCD',
+
+      restart: () => { this.timers.forEach(clearTimeout); this.timers = []; this.setState({ step: 'landing', googleBusy: false, install: 'idle', installPct: 0, pw: '', pw2: '', passkey: 'idle', verified: false, cardOpen: false, phone: 'idle', marks: 0, proc: 0 }); },
+      startGoogle: () => this.go('google'),
+      pickAccount: () => { this.setState({ googleBusy: true }); this.after(1200, () => this.go('signedin', { googleBusy: false })); this.after(4000, () => this.go('install')); },
+      installWallet: () => this.startInstall(),
+      onPw: e => this.setState({ pw: e.target.value }),
+      onPw2: e => this.setState({ pw2: e.target.value }),
+      submitPassword: () => { if (pwOk) this.go('passkey'); },
+      createPasskey: () => { this.setState({ passkey: 'scanning' }); this.after(1900, () => this.setState({ passkey: 'done' })); },
+      finishPasskey: () => this.go('wallet', { passkey: 'idle' }),
+      startKyc: () => this.go('kycdoc'),
+      pickLicense: () => this.go('kycid'),
+      pickCccd: () => this.go('kycid'),
+      pickPassport: () => this.go('kycid'),
+      goHandoff: () => this.go('handoff', { phone: 'idle', marks: 0 }),
+      scanWithPhone: () => { this.setState({ phone: 'connect' }); this.after(1400, () => this.setState({ marks: 1 })); this.after(2200, () => this.setState({ phone: 'front' })); },
+      capture: () => this.capture(),
+      toWallet: () => this.go('wallet'),
+      openCard: () => this.setState({ cardOpen: true }),
+      closeCard: () => this.setState({ cardOpen: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

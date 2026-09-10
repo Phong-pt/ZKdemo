@@ -26,7 +26,7 @@ EKYC_DB = [
 _pending_nonces: dict[str, dict] = {}
 
 SMALL_PRIMES = [p for p in range(3, 5000) if gmpy2.is_prime(p)]
-_RANDOM_STATE = gmpy2.random_state()
+_RANDOM_STATE = gmpy2.random_state(secrets.randbits(256))
 
 
 def generate_nonce() -> str:
@@ -102,7 +102,7 @@ def find_ekyc_record(cccd: str, name: str, dob: str, nationality: str, address: 
     return None
 
 
-def issue_challenge(ekyc: dict) -> str | None:
+def register_ekyc(ekyc: dict) -> dict:
     record = find_ekyc_record(
         cccd=ekyc["cccd"],
         name=ekyc["name"],
@@ -110,7 +110,15 @@ def issue_challenge(ekyc: dict) -> str | None:
         nationality=ekyc["nationality"],
         address=ekyc["address"],
     )
-    if record is None or record["credential_issued"]:
+    if record is None:
+        record = {**ekyc, "credential_issued": False}
+        EKYC_DB.append(record)
+    return record
+
+
+def issue_challenge(ekyc: dict) -> str | None:
+    record = register_ekyc(ekyc)
+    if record["credential_issued"]:
         return None
     nonce = generate_nonce()
     _pending_nonces[nonce] = ekyc

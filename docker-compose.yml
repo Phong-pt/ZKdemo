@@ -1,0 +1,20 @@
+services:
+  zkp-demo:
+    build: .
+    container_name: zkp-demo
+
+  api:
+    build: .
+    container_name: zkp-api
+    command: ["python", "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    container_name: zkp-frontend
+    ports:
+      - "8080:80"
+      - "8443:443"
+    depends_on:
+      - api

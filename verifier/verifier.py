@@ -2,6 +2,7 @@ import secrets
 import time
 
 from common import encode_attribute, hash_three
+from issuer import issuer
 
 _pending_sessions: dict[str, dict] = {}
 
@@ -75,7 +76,7 @@ def _check_presentation(presentation: dict, cred_def: dict, session: dict) -> bo
     return c_prime == c
 
 
-def verify_presentation(presentation: dict, cred_def: dict, n_v: str) -> bool:
+def verify_presentation(presentation: dict, n_v: str) -> bool:
     session = _pending_sessions.get(n_v)
     if session is None:
         return False
@@ -83,6 +84,7 @@ def verify_presentation(presentation: dict, cred_def: dict, n_v: str) -> bool:
         _pending_sessions.pop(n_v, None)
         return False
     try:
+        cred_def = issuer.get_public_cred_def()
         return _check_presentation(presentation, cred_def, session)
     except (KeyError, ValueError, ZeroDivisionError):
         return False
