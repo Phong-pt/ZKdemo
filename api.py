@@ -1,5 +1,9 @@
+import os
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from issuer import issuer
@@ -7,6 +11,8 @@ from wallet import wallet
 from verifier import verifier
 
 app = FastAPI(title="ZKP demo API")
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,6 +63,23 @@ class VerifyRequest(BaseModel):
 class VerifyResponse(BaseModel):
     verified: bool
     revealed: dict[str, str]
+
+
+class VerifierLoginRequest(BaseModel):
+    email: str
+
+
+class VerifierLoginResponse(BaseModel):
+    authorized: bool
+    org_name: str | None
+
+
+@app.get("/api/config")
+def get_config() -> dict[str, str | list[str]]:
+    return {
+        "google_client_id": os.environ.get("GOOGLE_CLIENT_ID", ""),
+        "verifier_domains": sorted(issuer.TRUSTED_VERIFIER_DOMAINS),
+    }
 
 
 @app.get("/api/cred-def")
@@ -120,6 +143,12 @@ def verify(body: VerifyRequest) -> VerifyResponse:
     return VerifyResponse(verified=ok, revealed=revealed)
 
 
+@app.post("/api/verifier/login", response_model=VerifierLoginResponse)
+def verifier_login(body: VerifierLoginRequest) -> VerifierLoginResponse:
+    org_name = issuer.find_verifier_org(body.email)
+    return VerifierLoginResponse(authorized=org_name is not None, org_name=org_name)
+
+
 @app.post("/api/reset")
 def reset() -> dict[str, bool]:
     for state_file in [
@@ -137,3 +166,20 @@ def reset() -> dict[str, bool]:
     issuer.EKYC_DB[:] = issuer.EKYC_DB[:1]
     issuer.EKYC_DB[0]["credential_issued"] = False
     return {"reset": True}
+
+
+# Chỉ tồn tại ở image deploy (Dockerfile.render copy frontend/dist vào ./static) — khi chạy
+# docker-compose thì nginx serve SPA nên thư mục này không có và route dưới không được đăng ký.
+if STATIC_DIR.is_dir():
+
+    @app.get("/{full_path:path}")
+    def spa(full_path: str) -> FileResponse:
+        if full_path.startswith("api/"):
+            raise HTTPException(404, "Không có endpoint này")
+        index = STATIC_DIR / "index.html"
+        if not full_path:
+            return FileResponse(index)
+        candidate = (STATIC_DIR / full_path).resolve()
+        if not candidate.is_relative_to(STATIC_DIR.resolve()) or not candidate.is_file():
+            return FileResponse(index)
+        return FileResponse(candidate)

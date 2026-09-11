@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: zkp-demo
+    runtime: docker
+    dockerfilePath: ./Dockerfile.render
+    plan: free
+    region: singapore
+    healthCheckPath: /api/config
+    envVars:
+      # Google OAuth Client ID (Web application). Authorized JavaScript origin phải là đúng domain
+      # Render cấp cho service này (https://<tên-service>.onrender.com). Để trống thì App A dùng
+      # nút "tài khoản demo" thay cho nút Google thật.
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      # Tuỳ chọn: JSON object thêm domain email công ty được chấp nhận ở Verifier Portal, ngoài
+      # mặc định {"ntq-solution.com.vn": "NTQ Solution"}.
+      - key: VERIFIER_TRUSTED_DOMAINS_JSON
+        sync: false

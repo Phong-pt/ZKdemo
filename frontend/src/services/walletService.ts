@@ -17,7 +17,7 @@ export const walletService = {
     }
   },
 
-  async createPasskey(displayName: string): Promise<void> {
+  async createPasskey(displayName: string, signal?: AbortSignal): Promise<void> {
     if (!window.PublicKeyCredential) {
       throw new Error('Trình duyệt này không hỗ trợ passkey (WebAuthn).')
     }
@@ -35,15 +35,14 @@ export const walletService = {
         { type: 'public-key', alg: -257 },
       ],
       authenticatorSelection: {
-        authenticatorAttachment: 'platform',
-        userVerification: 'required',
+        userVerification: 'preferred',
         residentKey: 'preferred',
       },
-      timeout: 60000,
+      timeout: 30000,
       attestation: 'none',
     }
 
-    const credential = await navigator.credentials.create({ publicKey })
+    const credential = await navigator.credentials.create({ publicKey, signal })
     if (!credential) {
       throw new Error('Không tạo được passkey.')
     }

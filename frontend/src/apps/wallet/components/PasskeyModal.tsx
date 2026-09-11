@@ -4,9 +4,10 @@ import type { PasskeyState } from '../types'
 export interface PasskeyModalProps {
   passkey: Exclude<PasskeyState, 'idle'>
   onFinish: () => void
+  onCancel: () => void
 }
 
-export function PasskeyModal({ passkey, onFinish }: PasskeyModalProps) {
+export function PasskeyModal({ passkey, onFinish, onCancel }: PasskeyModalProps) {
   return (
     <motion.div
       className="fixed inset-0 flex items-center justify-center z-50"
@@ -35,6 +36,13 @@ export function PasskeyModal({ passkey, onFinish }: PasskeyModalProps) {
             </div>
             <div className="text-[17px] font-medium">Face ID</div>
             <div className="text-[13px] text-ink-3 mt-2">Look at your device to create the passkey.</div>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="mt-[18px] text-[13px] text-ink-3 cursor-pointer underline"
+            >
+              Cancel
+            </button>
           </div>
         )}
 

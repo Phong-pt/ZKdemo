@@ -8,6 +8,11 @@ export interface ParsedCccdFields {
   address?: string
 }
 
+export interface OcrResult {
+  text: string
+  fields: ParsedCccdFields
+}
+
 function parseFields(text: string): ParsedCccdFields {
   const lines = text
     .split('\n')
@@ -33,13 +38,13 @@ function parseFields(text: string): ParsedCccdFields {
 }
 
 export const ocrService = {
-  async recognizeCccd(imageDataUrl: string): Promise<ParsedCccdFields> {
+  async recognizeCccd(imageDataUrl: string): Promise<OcrResult> {
     const worker = await createWorker('vie')
     try {
       const {
         data: { text },
       } = await worker.recognize(imageDataUrl)
-      return parseFields(text)
+      return { text, fields: parseFields(text) }
     } finally {
       await worker.terminate()
     }

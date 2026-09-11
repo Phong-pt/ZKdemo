@@ -26,6 +26,7 @@ import { LiveSession } from './screens/LiveSession'
 import { Result } from './screens/Result'
 import { Settings } from './screens/Settings'
 import { Templates } from './screens/Templates'
+import { VerifierLogin } from './screens/VerifierLogin'
 import {
   CLAIM_TO_BACKEND_ATTR,
   createInitialVerifierState,
@@ -40,7 +41,7 @@ function delay(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms))
 }
 
-const ORG_NAME = 'Meridian Bank'
+const AUTH_STORAGE_KEY = 'verifier-auth'
 
 type VerifierBusEvent =
   | { type: 'simulate-scan' }
@@ -72,6 +73,51 @@ export function VerifierApp() {
 
   useEffect(() => clearTimers, [clearTimers])
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(AUTH_STORAGE_KEY)
+      if (!stored) return
+      const { email, orgName } = JSON.parse(stored) as { email: string; orgName: string }
+      setState((s) => ({ ...s, authed: true, orgEmail: email, orgName }))
+    } catch {
+      // ignore malformed/missing storage
+    }
+  }, [])
+
+  const login = useCallback((email: string) => {
+    setState((s) => ({ ...s, loginBusy: true, loginError: null }))
+    apiClient
+      .verifierLogin(email)
+      .then((result) => {
+        if (!result.authorized || !result.org_name) {
+          setState((s) => ({
+            ...s,
+            loginBusy: false,
+            loginError: 'Email domain này chưa được issuer đăng ký cho tổ chức nào.',
+          }))
+          return
+        }
+        try {
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ email, orgName: result.org_name }))
+        } catch {
+          // localStorage unavailable — auth just won't survive a refresh
+        }
+        setState((s) => ({ ...s, authed: true, orgEmail: email, orgName: result.org_name!, loginBusy: false }))
+      })
+      .catch(() => {
+        setState((s) => ({ ...s, loginBusy: false, loginError: 'Không kết nối được tới backend — thử lại.' }))
+      })
+  }, [])
+
+  const logout = useCallback(() => {
+    try {
+      localStorage.removeItem(AUTH_STORAGE_KEY)
+    } catch {
+      // ignore
+    }
+    setState(createInitialVerifierState())
+  }, [])
+
   const startExpiry = useCallback(() => {
     if (expiryInterval.current !== null) clearInterval(expiryInterval.current)
     expiryInterval.current = window.setInterval(() => {
@@ -81,7 +127,7 @@ export function VerifierApp() {
 
   const restart = useCallback(() => {
     clearTimers()
-    setState(createInitialVerifierState())
+    setState((s) => ({ ...createInitialVerifierState(), authed: s.authed, orgEmail: s.orgEmail, orgName: s.orgName }))
     apiClient.reset().catch(() => {})
   }, [clearTimers])
 
@@ -225,9 +271,13 @@ export function VerifierApp() {
   const provingCount = `${proofN} ${proofN === 1 ? 'condition' : 'conditions'}`
   const notSharingText = withheld.slice(0, 4).map((c) => c.label).join(', ')
 
+  if (!state.authed) {
+    return <VerifierLogin busy={state.loginBusy} error={state.loginError} onSubmit={login} />
+  }
+
   return (
     <div className="min-h-screen bg-bg-page text-ink flex gap-[22px] items-start flex-wrap justify-center p-6">
-      <Sidebar orgName={ORG_NAME} view={state.view} onNavigate={navigate} onRestart={restart} />
+      <Sidebar orgName={state.orgName} view={state.view} onNavigate={navigate} onRestart={restart} onLogout={logout} />
 
       <div className="flex-1 basis-[720px] min-w-80 max-w-[920px] flex flex-col gap-[22px]">
         {state.view === 'dashboard' && (
@@ -243,7 +293,7 @@ export function VerifierApp() {
         )}
         {state.view === 'templates' && <Templates onUse={applyTemplate} />}
         {state.view === 'activity' && <Activity log={state.log} onOpenDetail={openDetail} />}
-        {state.view === 'settings' && <Settings orgName={ORG_NAME} />}
+        {state.view === 'settings' && <Settings orgName={state.orgName} />}
         {state.view === 'create' && (
           <CreateWizard
             state={state}
@@ -296,7 +346,7 @@ export function VerifierApp() {
         <WalletPhone
           phone={state.phone}
           requestId={REQUEST_ID}
-          orgName={ORG_NAME}
+          orgName={state.orgName}
           purposeText={state.purpose || state.desc}
           requestedAttrs={buildRequestedAttrs(state)}
           zkNote={buildZkNote(state)}

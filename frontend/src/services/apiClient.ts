@@ -16,6 +16,16 @@ export interface VerifyResponse {
   revealed: Record<string, string>
 }
 
+export interface VerifierLoginResponse {
+  authorized: boolean
+  org_name: string | null
+}
+
+export interface ConfigResponse {
+  google_client_id: string
+  verifier_domains: string[]
+}
+
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`/api${path}`, {
     headers: { 'Content-Type': 'application/json' },
@@ -29,6 +39,7 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const apiClient = {
+  config: () => apiFetch<ConfigResponse>('/config'),
   issueCredential: (identity: IdentityAttributes) =>
     apiFetch<IssueResponse>('/issue', { method: 'POST', body: JSON.stringify(identity) }),
   verifyPresentation: (revealedAttrs: string[]) =>
@@ -37,4 +48,6 @@ export const apiClient = {
       body: JSON.stringify({ revealed_attrs: revealedAttrs }),
     }),
   reset: () => apiFetch<{ reset: boolean }>('/reset', { method: 'POST' }),
+  verifierLogin: (email: string) =>
+    apiFetch<VerifierLoginResponse>('/verifier/login', { method: 'POST', body: JSON.stringify({ email }) }),
 }

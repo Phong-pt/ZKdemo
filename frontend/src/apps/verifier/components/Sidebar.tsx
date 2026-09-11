@@ -6,6 +6,7 @@ export interface SidebarProps {
   view: View
   onNavigate: (view: View) => void
   onRestart: () => void
+  onLogout: () => void
 }
 
 const NAV_ITEMS: Array<[label: string, view: View]> = [
@@ -16,7 +17,7 @@ const NAV_ITEMS: Array<[label: string, view: View]> = [
   ['Settings', 'settings'],
 ]
 
-export function Sidebar({ orgName, view, onNavigate, onRestart }: SidebarProps) {
+export function Sidebar({ orgName, view, onNavigate, onRestart, onLogout }: SidebarProps) {
   return (
     <div className="flex-none w-[228px] sticky top-6 bg-bg-surface border border-line rounded-[22px] p-[22px_18px] flex flex-col gap-1 min-h-[520px]">
       <div className="flex items-center gap-2.5 px-2 pb-5">
@@ -69,6 +70,13 @@ export function Sidebar({ orgName, view, onNavigate, onRestart }: SidebarProps) 
         className="mt-3 text-center text-xs text-ink-3 border border-line py-2 rounded-[10px] cursor-pointer transition-colors duration-150 ease-out hover:border-ink hover:text-ink"
       >
         Restart demo
+      </button>
+      <button
+        type="button"
+        onClick={onLogout}
+        className="mt-2 text-center text-xs text-ink-4 cursor-pointer transition-colors duration-150 ease-out hover:text-ink"
+      >
+        Sign out
       </button>
     </div>
   )

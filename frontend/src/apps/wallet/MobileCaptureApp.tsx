@@ -2,17 +2,25 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { MonoLabel } from '@/components/primitives'
 import { connectSession, type RealtimeSession } from '@/lib/realtimeSession'
-import { ocrService } from '@/services/ocrService'
+import { ocrService, type OcrResult } from '@/services/ocrService'
 import { CameraCapture } from './components/CameraCapture'
 import type { HandoffEvent } from './handoffProtocol'
 
-type Stage = 'front' | 'back' | 'face' | 'done'
+type Stage = 'front' | 'ocr' | 'back' | 'face' | 'done'
+
+const STEP_LABEL: Record<Exclude<Stage, 'done'>, string> = {
+  front: 'Step 1 of 3',
+  ocr: 'Step 1 of 3',
+  back: 'Step 2 of 3',
+  face: 'Step 3 of 3',
+}
 
 export function MobileCaptureApp() {
   const [params] = useSearchParams()
   const sessionId = params.get('session') ?? ''
   const [stage, setStage] = useState<Stage>('front')
   const [ocrRunning, setOcrRunning] = useState(false)
+  const [ocr, setOcr] = useState<OcrResult | null>(null)
   const sessionRef = useRef<RealtimeSession<HandoffEvent> | null>(null)
 
   useEffect(() => {
@@ -23,29 +31,30 @@ export function MobileCaptureApp() {
     return () => session.close()
   }, [sessionId])
 
+  // Ảnh chỉ tồn tại trong biến cục bộ của hàm này rồi bị bỏ đi: không gửi qua WebSocket, không
+  // lưu xuống đâu cả. Chỉ kết quả OCR được hiển thị tại chỗ để thấy máy thật sự có đọc thẻ.
   const onFrontCaptured = (dataUrl: string) => {
     setOcrRunning(true)
+    setStage('ocr')
     ocrService
       .recognizeCccd(dataUrl)
-      .then((fields) => {
-        sessionRef.current?.send({ type: 'front-captured', image: dataUrl, fields })
-      })
-      .catch(() => {
-        sessionRef.current?.send({ type: 'front-captured', image: dataUrl, fields: {} })
-      })
-      .finally(() => {
-        setOcrRunning(false)
-        setStage('back')
-      })
+      .then((result) => setOcr(result))
+      .catch(() => setOcr({ text: '', fields: {} }))
+      .finally(() => setOcrRunning(false))
   }
 
-  const onBackCaptured = (dataUrl: string) => {
-    sessionRef.current?.send({ type: 'back-captured', image: dataUrl })
+  const confirmOcr = () => {
+    sessionRef.current?.send({ type: 'front-captured' })
+    setStage('back')
+  }
+
+  const onBackCaptured = () => {
+    sessionRef.current?.send({ type: 'back-captured' })
     setStage('face')
   }
 
-  const onFaceCaptured = (dataUrl: string) => {
-    sessionRef.current?.send({ type: 'face-captured', image: dataUrl })
+  const onFaceCaptured = () => {
+    sessionRef.current?.send({ type: 'face-captured' })
     sessionRef.current?.send({ type: 'done' })
     setStage('done')
   }
@@ -57,6 +66,12 @@ export function MobileCaptureApp() {
       </div>
     )
   }
+
+  const ocrLines = (ocr?.text ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, 12)
 
   return (
     <div className="min-h-screen bg-bg-page text-ink flex flex-col items-center px-5 py-8 gap-6">
@@ -70,16 +85,51 @@ export function MobileCaptureApp() {
 
       {stage !== 'done' && (
         <div className="w-full max-w-[420px]">
-          <MonoLabel>{stage === 'front' ? 'Step 1 of 3' : stage === 'back' ? 'Step 2 of 3' : 'Step 3 of 3'}</MonoLabel>
+          <MonoLabel>{STEP_LABEL[stage]}</MonoLabel>
           <div className="text-xl font-medium mt-2 mb-5">
             {stage === 'front'
               ? 'Scan the front of your ID'
-              : stage === 'back'
-                ? 'Scan the back of your ID'
-                : 'Verify your face'}
+              : stage === 'ocr'
+                ? 'Reading your ID'
+                : stage === 'back'
+                  ? 'Scan the back of your ID'
+                  : 'Verify your face'}
           </div>
-          {ocrRunning ? (
-            <div className="py-24 text-center text-sm text-ink-3">Reading your ID…</div>
+
+          {stage === 'ocr' ? (
+            <div>
+              {ocrRunning ? (
+                <div className="py-20 text-center text-sm text-ink-3">Đang đọc thẻ bằng OCR…</div>
+              ) : (
+                <div className="border border-line rounded-2xl bg-bg-sunken p-4">
+                  <MonoLabel>OCR output</MonoLabel>
+                  {ocrLines.length > 0 ? (
+                    <div className="mt-3 font-mono text-[11px] leading-[1.6] text-ink-2 break-words">
+                      {ocrLines.map((line, i) => (
+                        <div key={i}>{line}</div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-3 text-[13px] text-ink-3">
+                      Không đọc được chữ nào từ ảnh vừa chụp.
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="text-[12px] text-ink-4 mt-3 leading-relaxed">
+                Ảnh vừa chụp không được lưu lại và không rời khỏi điện thoại — phần trên chỉ để minh
+                hoạ OCR đọc được gì. Ví trên máy tính sẽ dùng bộ dữ liệu demo.
+              </div>
+              {!ocrRunning && (
+                <button
+                  type="button"
+                  onClick={confirmOcr}
+                  className="w-full mt-5 bg-ink text-white py-3.5 rounded-[13px] text-[15px] font-medium cursor-pointer"
+                >
+                  Tiếp tục
+                </button>
+              )}
+            </div>
           ) : (
             <CameraCapture
               key={stage}

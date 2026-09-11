@@ -63,7 +63,7 @@ phần 10) bọc ba module này lại thành HTTP endpoint cho frontend gọi �
 ### Cấu trúc thư mục
 
 - [common.py](common.py) — tiện ích dùng chung cho cả ba bên: `encode_attribute` (attribute → số nguyên; chuỗi toàn chữ số giữ nguyên giá trị, còn lại băm SHA-256) và `hash_three` (tính challenge Fiat-Shamir). Import theo dạng `from common import ...`, và ba module import nhau kiểu `from issuer import issuer`, nên **mọi script phải chạy từ thư mục gốc repo** (hoặc chạy với `PYTHONPATH` trỏ về gốc).
-- [issuer/issuer.py](issuer/issuer.py) — logic issuer: `setup()` sinh cred-def CL (`n, S, R, Z, R_attrs`), `EKYC_DB` giả lập, `issue_challenge` phát nonce, `verify_proof` kiểm sigma-protocol, `sign_blindly` ký mù.
+- [issuer/issuer.py](issuer/issuer.py) — logic issuer: `setup()` sinh cred-def CL (`n, S, R, Z, R_attrs`), `EKYC_DB` giả lập, `issue_challenge` phát nonce, `verify_proof` kiểm sigma-protocol, `sign_blindly` ký mù. `find_verifier_org` tra domain email verifier trong `TRUSTED_VERIFIER_DOMAINS` (mặc định + mở rộng qua env `VERIFIER_TRUSTED_DOMAINS_JSON`, xem phần 10) — dùng cho gate đăng nhập Verifier Portal, không liên quan tới AnonCreds/CL-signature.
 - [wallet/wallet.py](wallet/wallet.py) — logic holder, cover cả hai nửa của flow:
   - Issuance: sinh/lưu link secret, `compute_commitment` (`u`), sigma-protocol proof (Schnorr-style), `unblind_signature` + `verify_credential` để kiểm chữ ký issuer trước khi lưu.
   - Presentation: `create_presentation` — randomize `a` thành `a_prime = a·S^r`, sinh proof cho `e, v, link_secret` và các thuộc tính ẩn, tiết lộ chọn lọc (selective disclosure) đúng các thuộc tính verifier yêu cầu.
@@ -105,6 +105,7 @@ Trạng thái in-memory (mất khi restart process): `issuer._pending_nonces`, `
 - **"1 CCCD chỉ được cấp credential đúng 1 lần"** (đã làm lại đúng tầng eKYC, thay cho cơ chế `ls_id` cũ): mỗi bản ghi trong `EKYC_DB` có thêm cờ `credential_issued: bool`. `issue_challenge` từ chối phát `nonce` nếu không tìm thấy bản ghi khớp hoặc bản ghi đã `credential_issued == True`. Cờ này chỉ chuyển sang `True` ở cuối `sign_blindly`, **sau khi** ký thành công (không phải lúc phát nonce) — để 1 lần thử hỏng (proof sai, mất kết nối giữa chừng...) không khoá nhầm CCCD hợp lệ chưa từng nhận được credential nào. Đây đúng tinh thần AnonCreds thật: chặn cấp trùng ở tầng identity-proofing (dữ liệu nội bộ issuer), không đưa bất kỳ giá trị phái sinh từ `link_secret` vào việc này. `ATTRIBUTE_NAMES = ["cccd","name","dob","nationality","address"]` được tách riêng khỏi `EKYC_DB[0].keys()` để `setup()` không lỡ coi `credential_issued` là 1 attribute cần ký.
 - **RNG issuer không seed** (đã fix): [issuer/issuer.py:29](issuer/issuer.py#L29) trước đây gọi `gmpy2.random_state()` không seed, dùng seed mặc định (hằng số cố định) của GMP, khiến `p, q` (private key issuer) tất định giữa các lần chạy — phá vỡ tính bảo mật của chữ ký CL, cả trong `setup()` (S, R, Z, R_attrs) lẫn `generate_issuer_blinding_factor()` vì cả hai dùng chung `_RANDOM_STATE`. Nay seed bằng `gmpy2.random_state(secrets.randbits(256))`.
 - **Verifier tin cred-def lấy từ tham số** (đã fix): `verify_presentation` trước đây nhận `cred_def` do caller truyền vào chứ không tự đọc từ "chain" (`issuer/cred_def_public.json`) — vô hại trong demo cùng process nhưng sai mô hình thật, nơi verifier phải tự lấy cred-def từ nguồn công khai đáng tin chứ không nhận từ bên trình diện proof. Nay `verifier.py` import `issuer` và tự gọi `issuer.get_public_cred_def()` bên trong `verify_presentation`; hàm không còn nhận tham số `cred_def` nữa (chữ ký còn `(presentation, n_v)`).
+- **Passkey ép buộc `authenticatorAttachment: 'platform'`** (đã nới lỏng): `walletService.createPasskey` trước đây bắt buộc platform authenticator (Windows Hello/Touch ID/vân tay) — trên máy không có/chưa bật sẵn loại này, `navigator.credentials.create()` từ chối ngay lập tức không hiện popup nào, ném `NotAllowedError` ("The request is not allowed by the user agent or the platform..."), chặn hẳn bước tạo passkey khi demo trên nhiều máy tester khác nhau. Đã bỏ `authenticatorAttachment` (để trình duyệt tự đề xuất cả platform lẫn security key/PIN) và đổi `userVerification` từ `'required'` xuống `'preferred'` để tương thích với nhiều loại authenticator hơn — vẫn là WebAuthn ceremony thật, không mô phỏng. Trên máy hoàn toàn không có bất kỳ authenticator nào (không platform, không security key vật lý — VD Firefox/Ubuntu thường gặp khi test) trình duyệt vẫn hiện popup chờ "chạm security key" nhưng không ai chạm được thì treo tới hết `timeout` (30s). Đã thêm `AbortController` xuyên suốt `createPasskey` (`walletService.ts` → `WalletApp.tsx` → `PasskeyModal.tsx`) để có nút "Cancel" hủy ngay yêu cầu, và khi ra lỗi thì `PasskeySetup` hiện thêm lựa chọn "tiếp tục không dùng passkey (demo)" bỏ qua bước này — chỉ để demo không bị kẹt cứng trên máy thiếu phần cứng xác thực, không phải mô phỏng passkey giả khi ceremony thật thành công.
 
 ## 8. Chạy thử
 
@@ -154,19 +155,34 @@ Kiến trúc chung:
   màu trong PROMPT.md) — font Geist Sans + JetBrains Mono qua `@fontsource`, không dùng Inter.
 - **3 primitive** dùng chung ở [src/components/primitives/](frontend/src/components/primitives/):
   `Card` (là `motion.div`, nhận thẳng prop framer-motion), `Button`, `MonoLabel`.
-- **Service layer** ở [src/services/](frontend/src/services/): `authService` (Google mock) và
-  `walletService.installExtension` (cài extension) vẫn thuần giả lập (`Promise` + `setTimeout`) —
-  không có khái niệm tương ứng bên lõi Python. `walletService.createPasskey` thì **thật** — gọi
-  `navigator.credentials.create()` (WebAuthn), thật sự bật hộp thoại sinh trắc học của hệ điều hành
-  (Windows Hello/Touch ID/vân tay Android...), không mô phỏng nữa (xem phần 10). `kycService` và phần
-  verify trong `VerifierApp.tsx` thì **gọi API thật** qua
-  [src/services/apiClient.ts](frontend/src/services/apiClient.ts) (`fetch('/api/...')`) — xem phần 10
-  để biết chính xác đoạn nào là crypto thật, đoạn nào vẫn chỉ là UI mô phỏng.
+- **Service layer** ở [src/services/](frontend/src/services/): `walletService.installExtension`
+  (cài extension) vẫn thuần giả lập (`Promise` + `setTimeout`) — không có khái niệm tương ứng bên lõi
+  Python. `walletService.createPasskey` thì **thật** — gọi `navigator.credentials.create()`
+  (WebAuthn), thật sự bật hộp thoại sinh trắc học của hệ điều hành (Windows Hello/Touch ID/vân tay
+  Android...), không mô phỏng nữa (xem phần 10). `kycService` và phần verify trong `VerifierApp.tsx`
+  thì **gọi API thật** qua [src/services/apiClient.ts](frontend/src/services/apiClient.ts)
+  (`fetch('/api/...')`) — xem phần 10 để biết chính xác đoạn nào là crypto thật, đoạn nào vẫn chỉ là
+  UI mô phỏng. `authService` dùng **Google Identity Services thật** (`accounts.google.com/gsi/client`,
+  script nạp trong `index.html`) — `GoogleModal.tsx` render nút "Sign in with Google" chính chủ của
+  Google (`google.accounts.id.renderButton`), người dùng chọn đúng tài khoản Gmail thật của họ qua
+  account chooser của Google. **ID-token trả về bị bỏ đi, không giải mã**: đăng nhập xong app luôn
+  dùng persona demo `DEMO_GOOGLE_ACCOUNT` (tên khớp `DEMO_CCCD_IDENTITY`) — có chủ đích, để ai đăng
+  nhập bằng tài khoản Gmail nào cũng ra cùng một ví demo và không có dữ liệu cá nhân thật nào của
+  người test lọt vào luồng. Client ID lấy **lúc chạy** qua `GET /api/config` (biến môi trường
+  `GOOGLE_CLIENT_ID` của service `api`, xem `.env.example`), không bake vào bundle Vite — nhờ vậy
+  đổi Client ID/domain chỉ cần restart backend, không phải build lại frontend. Thiếu Client ID thì
+  modal tự rơi về nút "tài khoản demo" để app vẫn chạy được không cần cấu hình OAuth.
 - **`ocrService`** ([src/services/ocrService.ts](frontend/src/services/ocrService.ts)) — chạy
-  Tesseract.js (OCR tiếng Việt) ngay trong trình duyệt (trên **điện thoại**, vì đó là nơi chụp ảnh
-  CCCD — xem `MobileCaptureApp.tsx`) để đọc ảnh vừa chụp, parse best-effort ra
-  `cccd`/`name`/`dob`/`nationality`/`address` bằng regex; độ chính xác OCR không đảm bảo, đó là lý do
-  luôn có màn hình cho người dùng sửa lại trên desktop trước khi gửi đi (`KycReview.tsx`).
+  Tesseract.js (OCR tiếng Việt) ngay trong trình duyệt **trên điện thoại** (`MobileCaptureApp.tsx`),
+  trả về cả `text` thô lẫn `fields` parse best-effort bằng regex. Ảnh chụp **không bao giờ rời điện
+  thoại**: `MobileCaptureApp` giữ data-URL trong một biến cục bộ, chạy OCR, hiển thị luôn text đọc
+  được trên màn hình điện thoại (bước `ocr`) cho người xem thấy máy thật sự đọc thẻ, rồi bỏ đi —
+  không gửi qua WebSocket, không lưu xuống đâu (`HandoffEvent` không còn trường `image` nào, xem
+  [handoffProtocol.ts](frontend/src/apps/wallet/handoffProtocol.ts)). Desktop chỉ nhận sự kiện tiến
+  độ và tự điền [`DEMO_CCCD_IDENTITY`](frontend/src/apps/wallet/demoIdentity.ts) (khớp
+  `issuer.EKYC_DB[0]`) vào `KycReview.tsx` — quét CCCD/giấy tờ bất kỳ đều ra cùng một bộ dữ liệu demo
+  cố định, nên demo không phụ thuộc vào việc có CCCD thật hay độ chính xác OCR. `KycReview.tsx` vẫn
+  cho sửa tay trước khi gửi đi.
 - **`CameraCapture`** ([src/apps/wallet/components/CameraCapture.tsx](frontend/src/apps/wallet/components/CameraCapture.tsx))
   — component dùng chung, gọi `navigator.mediaDevices.getUserMedia` thật để lấy luồng camera thiết bị,
   chụp 1 khung hình vào `<canvas>` khi bấm nút chụp. Dùng trong `MobileCaptureApp.tsx` (trang mở trên
@@ -202,7 +218,10 @@ hệt `demo.py`), để frontend gọi được crypto thật thay vì chỉ mô
 `python -m uvicorn api:app --port 8000` (cần cài thêm `fastapi`/`uvicorn`/`pydantic`, đã có trong
 [requirements.txt](requirements.txt)).
 
-3 REST endpoint + 1 WebSocket:
+5 REST endpoint + 1 WebSocket:
+
+- `GET /api/config` — trả `{google_client_id, verifier_domains}` đọc từ biến môi trường lúc chạy.
+  Đây là cách frontend biết Google Client ID mà không cần bake vào bundle lúc build (xem phần 9).
 
 - `WS /api/session/{session_id}/ws` — relay thô: bất kỳ tin nào 1 peer gửi lên được phát lại cho MỌI
   peer khác đang mở cùng `session_id` (không lưu lịch sử, không xử lý nội dung). Đây là kênh đồng bộ
@@ -229,6 +248,13 @@ hệt `demo.py`), để frontend gọi được crypto thật thay vì chỉ mô
 - `POST /api/reset` — xoá toàn bộ state file (gồm cả `wallet/identity.json` mới) + reset in-memory
   state + xoá các bản ghi `EKYC_DB` được auto-register thêm vào (giữ lại đúng bản ghi demo gốc); nút
   "Restart demo" ở cả 2 app gọi endpoint này.
+- `POST /api/verifier/login` — nhận `email`, tách domain (`rsplit("@", 1)`) rồi tra
+  `issuer.TRUSTED_VERIFIER_DOMAINS` (mặc định `{"ntq-solution.com.vn": "NTQ Solution"}`, mở rộng được
+  qua biến môi trường `VERIFIER_TRUSTED_DOMAINS_JSON` — JSON object domain→tên tổ chức, không cần sửa
+  code khi thêm domain công ty khác lúc deploy); trả `{authorized, org_name}`. Đây là gate đăng nhập
+  cho Verifier Portal (`VerifierLogin.tsx`) — chỉ đối chiếu domain email với danh sách issuer đã đăng
+  ký, **không** phải xác thực danh tính thật (không OTP, không mật khẩu) — xem "Vẫn chỉ là mô phỏng"
+  bên dưới. Kết quả đăng nhập lưu ở `localStorage` (`verifier-auth`) để refresh không mất phiên.
 
 **Lưu ý kiến trúc quan trọng — đánh đổi có chủ đích, đã hỏi và được xác nhận:** đúng chuẩn SSI thật,
 `wallet.py` (link secret, blinding, sigma-protocol proof) phải chạy trên thiết bị người dùng, không
@@ -240,25 +266,41 @@ sau này cần đúng mô hình SSI thật, phải viết lại phần wallet cr
 **Đâu là thật, đâu vẫn chỉ là mô phỏng UI (quan trọng, đừng hiểu nhầm khi đọc code frontend):**
 
 - **Thật** —
+  - Google Sign-In ở App A: Google Identity Services thật, nút do chính Google render, account
+    chooser thật của Google — người test chọn bất kỳ tài khoản Gmail nào của họ và Google thật sự xác
+    thực. Nhưng **danh tính sau đăng nhập luôn là persona demo**, ID-token bị bỏ đi không đọc (xem
+    phần 9) — nên đây là "đăng nhập thật, danh tính demo", không phải cơ chế auth bảo vệ tài nguyên.
+    Rơi về nút "tài khoản demo" nếu `GOOGLE_CLIENT_ID` chưa cấu hình.
+  - Verifier Portal login: gọi `/api/verifier/login` thật, đối chiếu domain email với danh sách
+    issuer đã đăng ký (`issuer.TRUSTED_VERIFIER_DOMAINS`) — nhưng chỉ là kiểm tra domain, không xác
+    thực chủ sở hữu email (không OTP/mật khẩu), xem ghi chú mô phỏng bên dưới.
   - Passkey ở App A: `navigator.credentials.create()` (WebAuthn) thật, bật đúng hộp thoại sinh trắc
     học của hệ điều hành/trình duyệt đang chạy trang. Không verify lại ceremony này ở server (không có
     RP backend đầy đủ) — chỉ dùng để chứng minh trình duyệt tạo được platform credential thật, đúng
     tinh thần "passkey bảo vệ quyền truy cập kho lưu trữ cục bộ" đã nêu ở phần 3, không phải cơ chế ZKP.
   - Camera + OCR ở App A: quét QR **thật** mở `/mobile-capture` trên điện thoại thật, `getUserMedia`
     thật lấy ảnh từ camera điện thoại (không phải camera máy desktop), Tesseract.js chạy OCR thật trên
-    ảnh vừa chụp, kết quả đồng bộ về desktop qua WebSocket thật ở trên.
-  - Toàn bộ blind-signing issuance với **dữ liệu người dùng tự nhập/OCR-đọc rồi tự xác nhận** (không
-    còn persona demo cố định), và presentation/verify cho 4 thuộc tính selective-disclosure
+    ảnh vừa chụp và in text đọc được ngay trên điện thoại. Ảnh không được gửi/lưu ở đâu cả; chỉ các
+    sự kiện tiến độ đi qua WebSocket thật về desktop (xem phần 9).
+  - Toàn bộ blind-signing issuance với **dữ liệu do `DEMO_CCCD_IDENTITY` điền sẵn sau khi "quét", người
+    dùng có thể sửa tay ở `KycReview.tsx` trước khi gửi đi** (khác với trước đây vẫn còn OCR-đọc thật
+    làm nguồn dữ liệu), và presentation/verify cho 4 thuộc tính selective-disclosure
     `name`/`dob`/`nationality`/`address`. Thẻ định danh ở App A hiện đúng tên/ngày sinh/quốc tịch
     người dùng vừa xác nhận, lấy từ `/api/issue`; màn "Result" ở App B hiện `verified: true/false`
     **thật** từ `/api/verify`, và nếu backend lỗi/không kết nối được hoặc chưa có credential nào thì
     hiện "Verification declined" (màu amber, icon ✕) chứ không giả vờ thành công.
 - **Vẫn chỉ là mô phỏng UI, không có gì thật đứng sau** —
-  - Google sign-in và cài extension ở App A vẫn luôn là mock (`authService`, `walletService.installExtension`),
-    không có khái niệm tương ứng bên Python.
+  - Cài extension ở App A vẫn luôn là mock (`walletService.installExtension`), không có khái niệm
+    tương ứng bên Python.
   - "Xác thực eKYC" chỉ là người dùng tự khai (xem ghi chú `register_ekyc` ở trên) — không có bước nào
     thật sự kiểm tra tấm ảnh chụp được có phải CCCD hợp lệ/còn hiệu lực hay không, cũng không đối
-    chiếu khuôn mặt selfie với ảnh trên CCCD.
+    chiếu khuôn mặt selfie với ảnh trên CCCD. Từ khi thêm `DEMO_CCCD_IDENTITY`, bước này còn đơn giản
+    hơn nữa: **quét CCCD/giấy tờ bất kỳ đều luôn ra đúng 1 bộ dữ liệu demo cố định**, bất kể ảnh chụp
+    là gì — chủ đích để việc trình diễn cho nhiều người xem/test không phụ thuộc vào có CCCD thật hay
+    độ chính xác OCR.
+  - Verifier Portal login chỉ kiểm tra domain email có trong danh sách issuer đăng ký hay không —
+    không xác thực người nhập email đó có thật sự sở hữu hộp thư đó (không gửi OTP, không mật khẩu).
+    Ai gõ đúng domain đã đăng ký đều đăng nhập được.
   - Predicate proof `age ≥ N` (wallet.py chưa hiện thực, xem "Chưa có" ở phần 7); 4 claim
     `docType`/`country`/`issuer`/`status` trong `CLAIMS` của Verifier Portal (không có thuộc tính
     tương ứng trong credential đã ký); toàn bộ 4 điều kiện trong `CONDS` (`nationalityVN`,
@@ -307,3 +349,68 @@ docker compose up --build
 `zkp-demo` và `api` build từ cùng image nhưng chạy tách container, state file KHÔNG dùng chung giữa
 hai container (mỗi container có filesystem ghi riêng) — đây là 2 cách demo độc lập cùng một lõi crypto,
 không phải 2 instance chia sẻ trạng thái.
+
+Service `api` bind-mount `./issuer:/app/issuer` và `./wallet:/app/wallet` — state (`cred_def_public.json`,
+`identity.json`, `credential.json`...) ghi thẳng ra thư mục tương ứng trên host thay vì chỉ nằm trong
+writable layer của container. Nhờ vậy `docker compose restart api` / `docker compose up -d --build api`
+(hoặc build lại toàn bộ) không xoá credential đã cấp — chỉ `POST /api/reset` hoặc xoá tay các file này
+mới mất state. `zkp-demo` (chạy `demo.py`, một lần rồi thoát) không mount volume, vẫn dùng state riêng
+trong writable layer của chính nó như trước.
+
+**Biến môi trường** — copy [.env.example](.env.example) thành `.env` ở gốc repo (`docker compose` tự
+đọc file này) trước khi `docker compose up --build`:
+
+Cả hai đều là biến runtime của service `api` (đọc lại mỗi lần container khởi động, **không** bake vào
+bundle nên không cần build lại image khi đổi):
+
+- `GOOGLE_CLIENT_ID` — frontend lấy qua `GET /api/config`. Thiếu thì Google Sign-In tự rơi về nút
+  "tài khoản demo" (xem phần 9). Authorized JavaScript origins trong Google Cloud Console phải khớp
+  đúng origin đang mở app (`http://localhost:8080` khi chạy docker compose).
+- `VERIFIER_TRUSTED_DOMAINS_JSON` — JSON object domain email → tên tổ chức, gộp thêm vào (không thay
+  thế) `issuer.DEFAULT_TRUSTED_VERIFIER_DOMAINS` mặc định.
+
+**Giới hạn khi test qua `docker compose` trên 1 máy:** QR code ở `Handoff.tsx` vẫn encode đúng origin
+hiện tại (`window.location.host`), nhưng nếu mở qua `http://localhost:8080` thì QR đó vô nghĩa với
+điện thoại (điện thoại không phải `localhost` của chính nó); phải mở qua `https://<IP-LAN>:8443` như
+mô tả ở phần 10, và điện thoại vẫn phải cùng mạng LAN với máy chạy Docker. Cách deploy ở phần 12 giải
+quyết hẳn giới hạn này.
+
+## 12. Deploy 1 service duy nhất (Render) — [Dockerfile.render](Dockerfile.render), [render.yaml](render.yaml)
+
+Kiểu chạy ở phần 11 tách `frontend` (nginx) và `api` (uvicorn) thành 2 container, chỉ phù hợp chạy
+local. Để deploy public, repo có thêm [Dockerfile.render](Dockerfile.render) **gộp cả hai vào 1 image
+/ 1 process**: stage `node:20-alpine` build Vite, stage `python:3.12-slim` cài lõi crypto rồi copy
+`frontend/dist` vào `./static`; `api.py` tự phát hiện thư mục `static/` tồn tại và đăng ký thêm route
+catch-all `GET /{full_path:path}` serve SPA (có chặn path traversal bằng `is_relative_to`, và trả 404
+cho path bắt đầu bằng `api/` để endpoint sai không trả về HTML). Khi chạy docker-compose thì thư mục
+này không có nên route đó **không** được đăng ký — nginx vẫn lo phần SPA như cũ.
+
+Vì sao phải gộp 1 origin: `apiClient.ts` gọi `fetch('/api/...')` tương đối và `realtimeSession.ts`
+nối `ws(s)://window.location.host/api/session/...` — cả hai đều dựa vào frontend và API **cùng
+origin**. Gộp 1 service thì không cần CORS, không cần cấu hình proxy riêng, và `mobileCaptureUrl()`
+tự encode đúng domain HTTPS công khai vào QR → **điện thoại quét được từ mạng khác (4G/5G) mà không
+cần cùng LAN**, đồng thời có TLS thật nên WebAuthn/camera đủ điều kiện secure context, không còn cảnh
+báo chứng chỉ tự ký như cách chạy `https://<IP-LAN>:8443`.
+
+`Dockerfile.render` còn `RUN python -c "from issuer import issuer; issuer.setup()"` để **sinh sẵn
+cred-def lúc build** — sinh 2 safe prime 1024-bit mất hàng chục giây, nếu để lười sinh lúc request đầu
+tiên thì trên instance free (CPU thấp) `/api/issue` đầu tiên sẽ treo rất lâu. Đổi lại, private key
+issuer nằm trong image — chấp nhận được với demo, không được làm vậy với hệ thống thật.
+
+[render.yaml](render.yaml) là blueprint: 1 web service `runtime: docker`, `plan: free`,
+`healthCheckPath: /api/config`, và 2 biến `GOOGLE_CLIENT_ID` / `VERIFIER_TRUSTED_DOMAINS_JSON` khai
+báo `sync: false` (điền tay trong dashboard, không commit vào repo). `CMD` bind `0.0.0.0:${PORT}` vì
+Render tự cấp `PORT`.
+
+**Lưu ý về free tier Render:** filesystem ephemeral và instance tự ngủ sau ~15 phút không có request
+— nghĩa là state (`wallet/credential.json`, `identity.json`...) **mất sau mỗi lần instance khởi động
+lại**, người test phải làm lại luồng eKYC từ đầu; lần truy cập đầu sau khi ngủ mất ~1 phút cold
+start. Không mount được volume ở plan free (`./issuer`, `./wallet` chỉ persist khi chạy docker-compose
+local, xem phần 11).
+
+**Vercel không dùng được cho service này:** cần process chạy dài giữ WebSocket (`/api/session/{id}/ws`
+relay giữa desktop và điện thoại) và state in-memory (`_pending_nonces`, `_pending_sessions`), trong
+khi Vercel Functions là serverless, mỗi request có thể vào một instance khác và không giữ WebSocket.
+Về lý thuyết có thể deploy riêng frontend lên Vercel + backend ở Render, nhưng như vậy phá vỡ giả
+định same-origin ở trên (phải thêm CORS + đổi `apiClient`/`realtimeSession` sang absolute URL) —
+không làm, Render 1 service là đường đơn giản nhất.

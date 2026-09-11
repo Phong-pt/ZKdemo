@@ -24,6 +24,7 @@ const CHECKLIST_LABELS = [
 
 export function Handoff({ sessionId, marks }: HandoffProps) {
   const url = mobileCaptureUrl(sessionId)
+  const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname)
   const syncWidth = 50 + marks * 10
   const syncStatus =
     marks === 0 ? 'Waiting for phone…' : marks < 5 ? 'Identity verification in progress' : 'Handing back to desktop…'
@@ -72,8 +73,9 @@ export function Handoff({ sessionId, marks }: HandoffProps) {
           </div>
         </div>
         <div className="text-xs text-ink-5 mt-7">
-          Your phone and this computer must be on the same network. If you opened this page at
-          "localhost", scanning won't work — open it using this computer's local network address instead.
+          {isLocalhost
+            ? 'Bạn đang mở trang ở "localhost" nên điện thoại không mở được link này — chạy qua địa chỉ mạng nội bộ của máy, hoặc dùng bản deploy công khai.'
+            : 'Điện thoại không cần cùng mạng với máy tính này — chỉ cần có Internet là quét được.'}
         </div>
       </div>
     </Card>

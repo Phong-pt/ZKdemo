@@ -28,7 +28,6 @@ export interface IdentityForm {
 
 export interface WalletState {
   step: Step
-  googleBusy: boolean
   account: GoogleAccount | null
   install: InstallState
   installPct: number
@@ -40,9 +39,6 @@ export interface WalletState {
   cardOpen: boolean
   handoffSessionId: string
   marks: number
-  frontImage: string | null
-  backImage: string | null
-  faceImage: string | null
   identityForm: IdentityForm
   proc: number
   processingError: string | null
@@ -74,7 +70,6 @@ export const EMPTY_IDENTITY_FORM: IdentityForm = {
 export function createInitialWalletState(): WalletState {
   return {
     step: 'landing',
-    googleBusy: false,
     account: null,
     install: 'idle',
     installPct: 0,
@@ -86,9 +81,6 @@ export function createInitialWalletState(): WalletState {
     cardOpen: false,
     handoffSessionId: crypto.randomUUID(),
     marks: 0,
-    frontImage: null,
-    backImage: null,
-    faceImage: null,
     identityForm: { ...EMPTY_IDENTITY_FORM },
     proc: 0,
     processingError: null,

@@ -1,5 +1,6 @@
-import secrets
 import json
+import os
+import secrets
 from pathlib import Path
 
 import gmpy2
@@ -24,6 +25,28 @@ EKYC_DB = [
 ]
 
 _pending_nonces: dict[str, dict] = {}
+
+DEFAULT_TRUSTED_VERIFIER_DOMAINS = {
+    "ntq-solution.com.vn": "NTQ Solution",
+}
+
+
+def _load_trusted_verifier_domains() -> dict[str, str]:
+    domains = dict(DEFAULT_TRUSTED_VERIFIER_DOMAINS)
+    override = os.environ.get("VERIFIER_TRUSTED_DOMAINS_JSON")
+    if override:
+        domains.update(json.loads(override))
+    return domains
+
+
+TRUSTED_VERIFIER_DOMAINS = _load_trusted_verifier_domains()
+
+
+def find_verifier_org(email: str) -> str | None:
+    if "@" not in email:
+        return None
+    domain = email.rsplit("@", 1)[-1].strip().lower()
+    return TRUSTED_VERIFIER_DOMAINS.get(domain)
 
 SMALL_PRIMES = [p for p in range(3, 5000) if gmpy2.is_prime(p)]
 _RANDOM_STATE = gmpy2.random_state(secrets.randbits(256))

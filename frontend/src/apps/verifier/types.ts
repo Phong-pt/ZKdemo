@@ -158,6 +158,11 @@ const INITIAL_LOG: LogEntry[] = [
 ]
 
 export interface VerifierState {
+  authed: boolean
+  orgName: string
+  orgEmail: string
+  loginBusy: boolean
+  loginError: string | null
   view: View
   wizard: number
   name: string
@@ -182,6 +187,11 @@ export const EXPIRY_START_SECONDS = 598
 
 export function createInitialVerifierState(): VerifierState {
   return {
+    authed: false,
+    orgName: '',
+    orgEmail: '',
+    loginBusy: false,
+    loginError: null,
     view: 'dashboard',
     wizard: 1,
     name: 'Age verification',

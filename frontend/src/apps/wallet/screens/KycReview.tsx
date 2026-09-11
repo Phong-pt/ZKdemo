@@ -4,9 +4,6 @@ import type { IdentityForm } from '../types'
 
 export interface KycReviewProps {
   form: IdentityForm
-  frontImage: string | null
-  backImage: string | null
-  faceImage: string | null
   onChange: (field: keyof IdentityForm, value: string) => void
   onRetake: () => void
   onSubmit: () => void
@@ -23,7 +20,7 @@ const FIELDS: Array<[key: keyof IdentityForm, label: string, placeholder: string
 const inputClass =
   'w-full px-[15px] py-3.5 border border-line rounded-xl text-sm bg-bg-sunken transition-colors duration-150 ease-out focus:outline-none focus:border-blue'
 
-export function KycReview({ form, frontImage, backImage, faceImage, onChange, onRetake, onSubmit }: KycReviewProps) {
+export function KycReview({ form, onChange, onRetake, onSubmit }: KycReviewProps) {
   const complete = Object.values(form).every((value) => value.trim().length > 0)
 
   return (
@@ -44,16 +41,10 @@ export function KycReview({ form, frontImage, backImage, faceImage, onChange, on
           We read this from your ID automatically — fix anything that isn't right before continuing.
         </div>
 
-        <div className="flex gap-4 mt-6 items-center flex-wrap">
-          {frontImage && (
-            <img src={frontImage} alt="Captured ID front" className="w-[100px] h-[64px] object-cover rounded-xl border border-line" />
-          )}
-          {backImage && (
-            <img src={backImage} alt="Captured ID back" className="w-[100px] h-[64px] object-cover rounded-xl border border-line" />
-          )}
-          {faceImage && (
-            <img src={faceImage} alt="Captured selfie" className="w-[64px] h-[64px] object-cover rounded-xl border border-line" />
-          )}
+        <div className="flex gap-4 mt-5 items-center flex-wrap">
+          <div className="text-[13px] text-ink-4">
+            Ảnh chụp không rời khỏi điện thoại và không được lưu lại.
+          </div>
           <button
             type="button"
             onClick={onRetake}

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { connectSession } from '@/lib/realtimeSession'
 import { apiClient, type IdentityAttributes } from '@/services/apiClient'
-import { authService, DEMO_GOOGLE_ACCOUNT } from '@/services/authService'
+import type { GoogleAccount } from '@/services/authService'
 import { kycService } from '@/services/kycService'
 import { walletService } from '@/services/walletService'
 import { IdentityCardModal } from './components/IdentityCardModal'
 import { Header } from './components/Header'
 import { PasskeyModal } from './components/PasskeyModal'
+import { DEMO_CCCD_IDENTITY } from './demoIdentity'
 import type { HandoffEvent } from './handoffProtocol'
 import { GoogleModal } from './screens/GoogleModal'
 import { Handoff } from './screens/Handoff'
@@ -55,15 +56,13 @@ export function WalletApp() {
     setState((s) => ({ ...s, step: 'google' }))
   }, [])
 
-  const pickAccount = useCallback(() => {
-    const id = ++requestId.current
-    setState((s) => ({ ...s, googleBusy: true }))
-    authService.signInWithGoogle().then((account) => {
-      if (requestId.current !== id) return
-      setState((s) => ({ ...s, step: 'signedin', googleBusy: false, account }))
-      after(4000, () => setState((s) => ({ ...s, step: 'install' })))
-    })
-  }, [after])
+  const onAccount = useCallback(
+    (account: GoogleAccount) => {
+      setState((s) => ({ ...s, step: 'signedin', account }))
+      after(1600, () => setState((s) => ({ ...s, step: 'install' })))
+    },
+    [after],
+  )
 
   const installWallet = useCallback(() => {
     const id = ++requestId.current
@@ -90,12 +89,16 @@ export function WalletApp() {
     })
   }, [])
 
+  const passkeyAbort = useRef<AbortController | null>(null)
+
   const createPasskey = useCallback(() => {
     const id = ++requestId.current
+    const controller = new AbortController()
+    passkeyAbort.current = controller
     setState((s) => ({ ...s, passkey: 'scanning', passkeyError: null }))
     const displayName = stateRef.current.account?.name ?? 'Wallet user'
     walletService
-      .createPasskey(displayName)
+      .createPasskey(displayName, controller.signal)
       .then(() => {
         if (requestId.current !== id) return
         setState((s) => ({ ...s, passkey: 'done' }))
@@ -107,8 +110,17 @@ export function WalletApp() {
       })
   }, [])
 
+  const cancelPasskey = useCallback(() => {
+    passkeyAbort.current?.abort()
+  }, [])
+
   const finishPasskey = useCallback(() => {
     setState((s) => ({ ...s, step: 'wallet', passkey: 'idle' }))
+  }, [])
+
+  const skipPasskey = useCallback(() => {
+    passkeyAbort.current?.abort()
+    setState((s) => ({ ...s, step: 'wallet', passkey: 'idle', passkeyError: null }))
   }, [])
 
   const startKyc = useCallback(() => setState((s) => ({ ...s, step: 'kycdoc' })), [])
@@ -120,9 +132,6 @@ export function WalletApp() {
       step: 'handoff',
       handoffSessionId: crypto.randomUUID(),
       marks: 0,
-      frontImage: null,
-      backImage: null,
-      faceImage: null,
     }))
   }, [])
 
@@ -132,22 +141,11 @@ export function WalletApp() {
       if (event.type === 'connected') {
         setState((s) => ({ ...s, marks: Math.max(s.marks, 1) }))
       } else if (event.type === 'front-captured') {
-        setState((s) => ({
-          ...s,
-          marks: 2,
-          frontImage: event.image,
-          identityForm: {
-            cccd: event.fields.cccd ?? s.identityForm.cccd,
-            name: event.fields.name ?? s.identityForm.name,
-            dob: event.fields.dob ?? s.identityForm.dob,
-            nationality: event.fields.nationality ?? s.identityForm.nationality,
-            address: event.fields.address ?? s.identityForm.address,
-          },
-        }))
+        setState((s) => ({ ...s, marks: 2, identityForm: { ...DEMO_CCCD_IDENTITY } }))
       } else if (event.type === 'back-captured') {
-        setState((s) => ({ ...s, marks: 3, backImage: event.image }))
+        setState((s) => ({ ...s, marks: 3 }))
       } else if (event.type === 'face-captured') {
-        setState((s) => ({ ...s, marks: 4, faceImage: event.image }))
+        setState((s) => ({ ...s, marks: 4 }))
       } else if (event.type === 'done') {
         setState((s) => ({ ...s, marks: 5 }))
         after(700, () => setState((s) => ({ ...s, step: 'kycreview' })))
@@ -190,14 +188,7 @@ export function WalletApp() {
 
       {state.step === 'landing' && <Landing onStartGoogle={startGoogle} />}
 
-      {state.step === 'google' && (
-        <GoogleModal
-          productName={PRODUCT_NAME}
-          account={DEMO_GOOGLE_ACCOUNT}
-          busy={state.googleBusy}
-          onPickAccount={pickAccount}
-        />
-      )}
+      {state.step === 'google' && <GoogleModal productName={PRODUCT_NAME} onAccount={onAccount} />}
 
       {state.step === 'signedin' && state.account && <SignedIn account={state.account} />}
 
@@ -221,10 +212,13 @@ export function WalletApp() {
       )}
 
       {state.step === 'passkey' && <PasskeySetup onCreatePasskey={createPasskey} />}
-      {state.passkey !== 'idle' && <PasskeyModal passkey={state.passkey} onFinish={finishPasskey} />}
+      {state.passkey !== 'idle' && <PasskeyModal passkey={state.passkey} onFinish={finishPasskey} onCancel={cancelPasskey} />}
       {state.step === 'passkey' && state.passkeyError && (
-        <div className="text-sm text-center -mt-2" style={{ color: '#B4763A' }}>
-          {state.passkeyError}
+        <div className="text-sm text-center -mt-2 flex flex-col items-center gap-2">
+          <span style={{ color: '#B4763A' }}>{state.passkeyError}</span>
+          <button type="button" onClick={skipPasskey} className="text-ink-3 underline cursor-pointer">
+            Máy này không có thiết bị xác thực — tiếp tục không dùng passkey (demo)
+          </button>
         </div>
       )}
 
@@ -245,9 +239,6 @@ export function WalletApp() {
       {state.step === 'kycreview' && (
         <KycReview
           form={state.identityForm}
-          frontImage={state.frontImage}
-          backImage={state.backImage}
-          faceImage={state.faceImage}
           onChange={onIdentityFieldChange}
           onRetake={rescan}
           onSubmit={startProcessing}

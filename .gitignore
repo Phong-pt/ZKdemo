@@ -6,3 +6,6 @@ issuer/issuer_private_key.json
 wallet/link_secret.json
 wallet/pending_request.json
 wallet/credential.json
+wallet/identity.json
+
+.env
