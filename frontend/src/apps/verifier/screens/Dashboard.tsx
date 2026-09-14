@@ -25,7 +25,7 @@ export function Dashboard({
   const stats = [
     ['ACTIVE', activeCount, 'Awaiting wallet'],
     ['COMPLETED', completedCount, 'Verified proofs'],
-    ['REJECTED', 3, 'Declined by user'],
+    ['REJECTED', log.filter((entry) => entry.result === 'Declined').length, 'Unsuccessful requests'],
     ['SUCCESS RATE', `${successRate}%`, 'Last 30 days'],
   ] as const
 

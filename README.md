@@ -1,3 +1,23 @@
+# Chạy luồng Issuer → Wallet → Verifier
+
+Luồng tích hợp hiện dùng CL signature thật trong lõi Python, phiên xác minh riêng và QR có thể quét.
+
+1. Chạy `docker compose up --build api frontend`, mở `http://localhost:8080/` để hoàn tất onboarding/eKYC và cấp credential.
+2. Mở `/verifier`, đăng nhập email thuộc domain demo `ntq-solution.com.vn` (đây là kiểm tra domain, chưa phải xác thực email).
+3. Tạo yêu cầu **Identity verification**: chọn họ tên, ngày sinh, quốc tịch hoặc địa chỉ; điều kiện hỗ trợ là **Credential is valid**.
+4. Sao chép link hoặc quét QR để mở `/present/<session-id>` trên tab/thiết bị khác. Người dùng chọn thuộc tính muốn chia sẻ rồi Approve hoặc Decline. Có thể dùng nút mô phỏng trong Portal để thử trên một màn hình.
+5. Portal tự nhận kết quả từ backend; giá trị hiển thị lấy từ credential được xác minh, chỉ gồm các thuộc tính đã duyệt. Những thuộc tính yêu cầu là tùy chọn; bỏ chọn vẫn cho phép chứng minh sở hữu credential.
+
+Phiên hết hạn sau 5 phút và chỉ nhận một phản hồi thành công/từ chối. Khi chưa có credential, có thể cấp credential rồi thử lại cùng phiên nếu chưa hết hạn. Restart của Portal không xoá credential. Một ví demo chỉ giữ một danh tính: cấp lại cùng dữ liệu là idempotent, dữ liệu khác trả 409.
+
+**Phạm vi demo:** ba vai vẫn chạy chung backend và dùng một ví phía server, không phải ví tự quản nhiều người dùng. Link phiên là bearer capability; ai có link có thể xem kết quả hoặc phản hồi bằng ví demo chung. eKYC chưa đối chiếu cơ quan thật. Chưa hỗ trợ proof tuổi/quốc tịch/cư trú, credential sinh viên/việc làm hoặc revocation; các yêu cầu đó bị chặn, không báo thành công giả. Phiên/lịch sử chưa bền vững qua restart/reload. `/api/reset` là thao tác xoá toàn bộ state demo. Khi quét QR bằng điện thoại, mở app bằng hostname/IP truy cập được từ điện thoại, thay vì localhost.
+
+API luồng mới: `POST /api/requests`, `GET /api/requests/{id}`, `POST /api/requests/{id}/approve` (body `{"revealed_attrs":["name"]}`), `POST /api/requests/{id}/decline`. API `/api/issue` và `/api/verify` cũ được giữ để tương thích demo.
+
+Kiểm tra: cài `requirements.txt` và `httpx`, chạy `python -m unittest discover -s tests -v`. Test dùng state tạm và khoá nhỏ riêng, không sửa credential đang dùng. Frontend: `cd frontend && npm install && npm run build && npm run lint`.
+
+---
+
 # Handoff: Identity Wallet + Verifier Portal
 
 ## Overview

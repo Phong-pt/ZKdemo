@@ -1,3 +1,4 @@
+import type { VerifyResponse } from '@/services/apiClient'
 export type View = 'dashboard' | 'create' | 'templates' | 'activity' | 'settings' | 'live' | 'result'
 export type PhoneState = 'idle' | 'scan' | 'request' | 'disclosure' | 'generating' | 'sent'
 
@@ -67,7 +68,7 @@ export const TEMPLATES: Template[] = [
     reveal: {},
     ageOn: true,
     age: 18,
-    conds: { credValid: true, notRevoked: true },
+    conds: { credValid: true },
     proveTag: 'AGE ≥ 18',
     revealTag: 'REVEAL: NONE',
   },
@@ -78,7 +79,7 @@ export const TEMPLATES: Template[] = [
     reveal: { fullName: true },
     ageOn: false,
     age: 18,
-    conds: { credValid: true, notRevoked: true },
+    conds: { credValid: true },
     proveTag: 'CRED VALID',
     revealTag: 'REVEAL: NAME',
   },
@@ -100,7 +101,7 @@ export const TEMPLATES: Template[] = [
     reveal: { issuer: true },
     ageOn: false,
     age: 18,
-    conds: { credValid: true, notRevoked: true },
+    conds: { credValid: true },
     proveTag: 'CRED VALID',
     revealTag: 'REVEAL: ISSUER',
   },
@@ -130,33 +131,6 @@ export interface LogEntry {
   withheld: string
 }
 
-const INITIAL_LOG: LogEntry[] = [
-  {
-    id: 'VER-3B71',
-    date: 'Sep 08, 2026',
-    purpose: 'Nationality check',
-    result: 'Verified',
-    color: '#17795E',
-    disclosed: '0 attributes + 1 proof',
-    request: 'Nationality = Vietnam',
-    revealed: 'None',
-    proven: 'Nationality = Vietnam',
-    withheld: 'Name, DOB, address, ID number',
-  },
-  {
-    id: 'VER-2C09',
-    date: 'Sep 05, 2026',
-    purpose: 'Age verification',
-    result: 'Declined',
-    color: '#B4763A',
-    disclosed: '—',
-    request: 'Age ≥ 21',
-    revealed: 'None',
-    proven: 'None',
-    withheld: 'All attributes',
-  },
-]
-
 export interface VerifierState {
   authed: boolean
   orgName: string
@@ -179,6 +153,8 @@ export interface VerifierState {
   expiry: number
   detail: LogEntry | null
   log: LogEntry[]
+  requestPending: boolean
+  result: VerifyResponse | null
   sessionId: string
 }
 
@@ -194,20 +170,22 @@ export function createInitialVerifierState(): VerifierState {
     loginError: null,
     view: 'dashboard',
     wizard: 1,
-    name: 'Age verification',
-    desc: 'Verify that the user is above the required age.',
+    name: 'Identity verification',
+    desc: 'Verify a signed identity credential.',
     purpose: 'Required to access this service.',
     reveal: { fullName: true },
-    ageOn: true,
+    ageOn: false,
     age: 18,
-    conds: { credValid: true, notRevoked: true },
+    conds: { credValid: true },
     phone: 'idle',
     vstep: 0,
     gstep: 0,
     disc: {},
     expiry: EXPIRY_START_SECONDS,
     detail: null,
-    log: INITIAL_LOG,
+    log: [],
+    requestPending: false,
+    result: null,
     sessionId: crypto.randomUUID(),
   }
 }

@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion'
-import { QrGrid } from '@/components/QrGrid'
+import { useState } from 'react'
+import { QrCode } from '@/apps/wallet/components/QrCode'
 import { mark } from '../types'
 
 export interface LiveSessionProps {
+  verificationUrl: string
   name: string
   requestId: string
   vstep: number
@@ -20,7 +22,7 @@ const CHECKLIST_PREFIX = [
   'Credential signature checked',
   'Issuer trusted',
 ]
-const CHECKLIST_SUFFIX = ['Credential status: not revoked', 'Zero-knowledge proof verified']
+const CHECKLIST_SUFFIX = ['Checking presentation challenge', 'Waiting for verification result']
 
 function statusFor(vstep: number): { label: string; color: string } {
   if (vstep >= 8) return { label: 'Verified', color: '#17795E' }
@@ -31,6 +33,7 @@ function statusFor(vstep: number): { label: string; color: string } {
 }
 
 export function LiveSession({
+  verificationUrl,
   name,
   requestId,
   vstep,
@@ -40,6 +43,11 @@ export function LiveSession({
   phoneIdle,
   onSimulateScan,
 }: LiveSessionProps) {
+  const [copyStatus, setCopyStatus] = useState('')
+  const copyLink = async () => {
+    try { await navigator.clipboard.writeText(verificationUrl); setCopyStatus('Link copied') }
+    catch { setCopyStatus('Copy the link below') }
+  }
   const status = statusFor(vstep)
   const mins = Math.floor(expirySeconds / 60)
   const secs = expirySeconds % 60
@@ -75,24 +83,28 @@ export function LiveSession({
               Ask the user to scan this QR code with their identity wallet.
             </div>
             <div className="inline-block p-5 border border-line rounded-[22px] mt-[26px]">
-              <QrGrid size={216} cell={8} />
+              <QrCode value={verificationUrl} size={216} />
             </div>
             <div className="font-mono text-xs text-ink-4 mt-4">Connection expires in {expiry}</div>
             <div className="flex gap-2.5 justify-center mt-[22px] flex-wrap">
               <button
                 type="button"
+                onClick={() => void copyLink()}
                 className="px-[18px] py-2.5 border border-line rounded-xl text-[13px] cursor-pointer transition-colors duration-150 ease-out hover:border-ink"
               >
                 Copy verification link
               </button>
               <button
                 type="button"
+                onClick={() => window.open(verificationUrl, '_blank', 'noopener,noreferrer')}
                 className="px-[18px] py-2.5 border border-line rounded-xl text-[13px] cursor-pointer transition-colors duration-150 ease-out hover:border-ink"
               >
-                Share QR
+                Open wallet
               </button>
             </div>
-            {phoneIdle && (
+            <div className="mt-3 text-xs text-ink-3" role="status">{copyStatus}</div>
+            <a className="block mt-2 text-xs text-blue break-all" href={verificationUrl}>{verificationUrl}</a>
+            {phoneIdle && expirySeconds > 0 && (
               <button
                 type="button"
                 onClick={onSimulateScan}
@@ -120,7 +132,7 @@ export function LiveSession({
             </div>
 
             <div className="mt-6 flex flex-col gap-3">
-              {[...CHECKLIST_PREFIX, `Predicate ${predicateText} satisfied`, ...CHECKLIST_SUFFIX].map(
+              {[...CHECKLIST_PREFIX, `Checking ${predicateText}`, ...CHECKLIST_SUFFIX].map(
                 (label, i) => {
                   const [icon, color] = mark(i + 1, vstep)
                   return (

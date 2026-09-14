@@ -19,6 +19,8 @@ def _prune_expired_sessions() -> None:
 
 
 def create_presentation_request(revealed_attrs: list[str]) -> dict:
+    if len(set(revealed_attrs)) != len(revealed_attrs) or set(revealed_attrs) - set(issuer.ATTRIBUTE_NAMES):
+        raise ValueError("Thuộc tính yêu cầu không hợp lệ")
     _prune_expired_sessions()
     n_v = str(secrets.randbits(80))
     request = {"nonce": n_v, "revealed_attrs": revealed_attrs}
@@ -43,7 +45,7 @@ def _check_presentation(presentation: dict, cred_def: dict, session: dict) -> bo
         return False
     if not (0 <= e_hat < (1 << E_HAT_BITS)):
         return False
-    if v_hat < 0:
+    if not (0 <= c < (1 << 256)):
         return False
 
     revealed_attrs = set(session["revealed_attrs"])
@@ -86,7 +88,7 @@ def verify_presentation(presentation: dict, n_v: str) -> bool:
     try:
         cred_def = issuer.get_public_cred_def()
         return _check_presentation(presentation, cred_def, session)
-    except (KeyError, ValueError, ZeroDivisionError):
+    except (KeyError, ValueError, ZeroDivisionError, TypeError, OverflowError):
         return False
     finally:
         _pending_sessions.pop(n_v, None)

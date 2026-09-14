@@ -16,6 +16,17 @@ export interface VerifyResponse {
   revealed: Record<string, string>
 }
 
+export interface VerificationSession {
+  id: string
+  name: string
+  purpose: string
+  revealed_attrs: string[]
+  conditions: string[]
+  status: 'pending' | 'verified' | 'rejected' | 'declined' | 'expired'
+  expires_at: number
+  result: VerifyResponse | null
+}
+
 export interface VerifierLoginResponse {
   authorized: boolean
   org_name: string | null
@@ -33,12 +44,21 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   })
   if (!res.ok) {
     const body = await res.json().catch(() => null)
-    throw new Error(body?.detail ?? `API error ${res.status}`)
+    throw new Error(typeof body?.detail === 'string' ? body.detail : `API error ${res.status}`)
   }
   return res.json() as Promise<T>
 }
 
 export const apiClient = {
+  createRequest: (request: { name: string; purpose: string; revealed_attrs: string[]; conditions: string[] }) =>
+    apiFetch<VerificationSession>('/requests', { method: 'POST', body: JSON.stringify(request) }),
+  getRequest: (id: string) => apiFetch<VerificationSession>(`/requests/${encodeURIComponent(id)}`),
+  approveRequest: (id: string, attrs: string[]) =>
+    apiFetch<VerificationSession>(`/requests/${encodeURIComponent(id)}/approve`, {
+      method: 'POST', body: JSON.stringify({ revealed_attrs: attrs }),
+    }),
+  declineRequest: (id: string) =>
+    apiFetch<VerificationSession>(`/requests/${encodeURIComponent(id)}/decline`, { method: 'POST' }),
   config: () => apiFetch<ConfigResponse>('/config'),
   issueCredential: (identity: IdentityAttributes) =>
     apiFetch<IssueResponse>('/issue', { method: 'POST', body: JSON.stringify(identity) }),

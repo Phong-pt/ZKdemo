@@ -160,6 +160,8 @@ export function WalletPhone({
                       </MonoLabel>
                       <button
                         type="button"
+                        aria-label={`Share ${d.label}`}
+                        aria-pressed={d.knobOn}
                         onClick={d.onToggle}
                         disabled={d.disabled}
                         className="w-[42px] h-6 rounded-full p-[3px] flex-none transition-colors duration-200 ease-out"

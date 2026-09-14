@@ -41,6 +41,7 @@ export function Step3Conditions({
           </div>
           <button
             type="button"
+            disabled={!ageOn}
             onClick={onToggleAge}
             className="w-[46px] h-[26px] rounded-full p-[3px] cursor-pointer transition-colors duration-200 ease-out flex-none"
             style={{ background: ageSwitchBg }}
@@ -71,11 +72,10 @@ export function Step3Conditions({
           <div className="text-sm text-ink-3">years old</div>
         </div>
         <div className="mt-[18px] pt-4 border-t border-line-2 flex gap-2.5 items-center text-[13px] text-green">
-          ✓ Privacy preserving
+          Predicate proof not implemented
         </div>
         <div className="text-[12.5px] text-ink-4 mt-1.5">
-          The exact date of birth will not be shared. The wallet returns a zero-knowledge proof of the predicate{' '}
-          <span className="font-mono">age ≥ {age}</span>.
+          Age requests cannot be verified by this demo. Disable age when using a template to verify credential validity.
         </div>
       </div>
 
@@ -87,10 +87,11 @@ export function Step3Conditions({
             <div
               key={cond.key}
               role="button"
-              tabIndex={0}
-              onClick={() => onToggleCond(cond.key)}
+              aria-disabled={cond.key !== 'credValid' && !on}
+              tabIndex={cond.key === 'credValid' || on ? 0 : -1}
+              onClick={() => { if (cond.key === 'credValid' || on) onToggleCond(cond.key) }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') onToggleCond(cond.key)
+                if ((cond.key === 'credValid' || on) && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onToggleCond(cond.key) }
               }}
               className="flex gap-3.5 items-center p-4 rounded-2xl cursor-pointer transition-colors duration-150 ease-out hover:border-ink"
               style={{ border: `1px solid ${style.border}`, background: style.bg }}
@@ -103,7 +104,7 @@ export function Step3Conditions({
               </div>
               <div className="flex-1">
                 <div className="text-sm font-medium">{cond.label}</div>
-                <div className="text-[12.5px] text-ink-4 mt-0.5">{cond.desc}</div>
+                <div className="text-[12.5px] text-ink-4 mt-0.5">{cond.key === 'credValid' ? cond.desc : 'Not implemented. Disable this condition to continue.'}</div>
               </div>
               <div className="font-mono text-[10px] tracking-[0.08em] px-2.5 py-1.5 rounded-full bg-blue-bg text-blue">
                 PROVE

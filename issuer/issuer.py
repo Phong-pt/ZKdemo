@@ -190,6 +190,10 @@ def sign_blindly(attributes: dict, proof: dict) -> dict:
     if attributes != verified_ekyc:
         raise ValueError("attributes không khớp dữ liệu eKYC đã xác thực")
 
+    if find_ekyc_record(**attributes)["credential_issued"]:
+        _pending_nonces.pop(nonce, None)
+        raise ValueError("CCCD này đã được cấp credential")
+
     u = int(proof["u"])
 
     public_creddef = get_public_cred_def()

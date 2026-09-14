@@ -1,10 +1,13 @@
 import os
+import secrets
+import time
+from threading import RLock
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from issuer import issuer
 from wallet import wallet
@@ -22,6 +25,8 @@ app.add_middleware(
 )
 
 _session_connections: dict[str, list[WebSocket]] = {}
+_flow_lock = RLock()
+_verification_requests: dict[str, dict] = {}
 
 
 @app.websocket("/api/session/{session_id}/ws")
@@ -32,11 +37,16 @@ async def session_relay(websocket: WebSocket, session_id: str) -> None:
     try:
         while True:
             message = await websocket.receive_text()
-            for peer in peers:
+            for peer in list(peers):
                 if peer is not websocket:
-                    await peer.send_text(message)
+                    try:
+                        await peer.send_text(message)
+                    except (RuntimeError, WebSocketDisconnect):
+                        if peer in peers:
+                            peers.remove(peer)
     except WebSocketDisconnect:
-        peers.remove(websocket)
+        if websocket in peers:
+            peers.remove(websocket)
         if not peers:
             _session_connections.pop(session_id, None)
 
@@ -89,11 +99,18 @@ def get_cred_def() -> dict:
 
 @app.post("/api/issue", response_model=IssueResponse)
 def issue_credential(body: IssueRequest) -> IssueResponse:
+    with _flow_lock:
+        return _issue_credential(body)
+
+
+def _issue_credential(body: IssueRequest) -> IssueResponse:
     credential = wallet.get_credential()
     if credential is not None:
         identity = wallet.get_identity()
         if identity is None:
             raise HTTPException(409, "Đã có credential cũ nhưng thiếu dữ liệu identity — gọi /api/reset rồi thử lại")
+        if identity != body.model_dump():
+            raise HTTPException(409, "Ví demo đã có credential của danh tính khác")
         return IssueResponse(issued=True, identity=identity)
 
     attributes = body.model_dump()
@@ -125,7 +142,14 @@ def issue_credential(body: IssueRequest) -> IssueResponse:
 
 @app.post("/api/verify", response_model=VerifyResponse)
 def verify(body: VerifyRequest) -> VerifyResponse:
+    with _flow_lock:
+        return _verify(body)
+
+
+def _verify(body: VerifyRequest) -> VerifyResponse:
     invalid = [a for a in body.revealed_attrs if a not in REVEALABLE_ATTRS]
+    if len(set(body.revealed_attrs)) != len(body.revealed_attrs):
+        raise HTTPException(400, "Thuộc tính bị lặp")
     if invalid:
         raise HTTPException(400, f"Không hỗ trợ tiết lộ thuộc tính: {invalid}")
 
@@ -143,6 +167,78 @@ def verify(body: VerifyRequest) -> VerifyResponse:
     return VerifyResponse(verified=ok, revealed=revealed)
 
 
+class PresentationRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    purpose: str = Field(default="", max_length=1000)
+    revealed_attrs: list[str] = Field(default_factory=list, max_length=4)
+    conditions: list[str] = Field(default_factory=list, max_length=10)
+
+
+class PresentationApproval(BaseModel):
+    revealed_attrs: list[str] = Field(default_factory=list, max_length=4)
+
+
+def _request(session_id: str) -> dict:
+    session = _verification_requests.get(session_id)
+    if session is None:
+        raise HTTPException(404, "Không tìm thấy phiên xác minh")
+    if session["status"] == "pending" and time.time() >= session["expires_at"]:
+        session["status"] = "expired"
+    return session
+
+
+@app.post("/api/requests")
+def create_request(body: PresentationRequest) -> dict:
+    if set(body.revealed_attrs) - set(REVEALABLE_ATTRS):
+        raise HTTPException(400, "Yêu cầu có thuộc tính chưa được hỗ trợ")
+    if len(set(body.revealed_attrs)) != len(body.revealed_attrs):
+        raise HTTPException(400, "Thuộc tính bị lặp")
+    if set(body.conditions) - {"credValid"}:
+        raise HTTPException(400, "Demo chưa hỗ trợ predicate tuổi, quốc tịch, cư trú hoặc chứng minh không thu hồi")
+    with _flow_lock:
+        now = time.time()
+        for key, value in list(_verification_requests.items()):
+            if now > value["expires_at"] + 3600:
+                del _verification_requests[key]
+        session_id = secrets.token_urlsafe(24)
+        session = {
+            **body.model_dump(), "id": session_id, "status": "pending",
+            "expires_at": now + verifier.SESSION_TTL_SECONDS, "result": None,
+        }
+        _verification_requests[session_id] = session
+        return session.copy()
+
+
+@app.get("/api/requests/{session_id}")
+def get_request(session_id: str) -> dict:
+    with _flow_lock:
+        return _request(session_id).copy()
+
+
+@app.post("/api/requests/{session_id}/approve")
+def approve_request(session_id: str, body: PresentationApproval) -> dict:
+    with _flow_lock:
+        session = _request(session_id)
+        if session["status"] != "pending":
+            raise HTTPException(409, "Phiên đã kết thúc hoặc hết hạn")
+        if set(body.revealed_attrs) - set(session["revealed_attrs"]):
+            raise HTTPException(400, "Không được chia sẻ ngoài yêu cầu")
+        result = verify(VerifyRequest(revealed_attrs=body.revealed_attrs))
+        session["result"] = result.model_dump()
+        session["status"] = "verified" if result.verified else "rejected"
+        return session.copy()
+
+
+@app.post("/api/requests/{session_id}/decline")
+def decline_request(session_id: str) -> dict:
+    with _flow_lock:
+        session = _request(session_id)
+        if session["status"] != "pending":
+            raise HTTPException(409, "Phiên đã kết thúc hoặc hết hạn")
+        session["status"] = "declined"
+        return session.copy()
+
+
 @app.post("/api/verifier/login", response_model=VerifierLoginResponse)
 def verifier_login(body: VerifierLoginRequest) -> VerifierLoginResponse:
     org_name = issuer.find_verifier_org(body.email)
@@ -151,6 +247,11 @@ def verifier_login(body: VerifierLoginRequest) -> VerifierLoginResponse:
 
 @app.post("/api/reset")
 def reset() -> dict[str, bool]:
+    with _flow_lock:
+        return _reset()
+
+
+def _reset() -> dict[str, bool]:
     for state_file in [
         issuer.PUBLIC_CREDDEF_FILE,
         issuer.PRIVATE_KEY_FILE,
@@ -163,6 +264,7 @@ def reset() -> dict[str, bool]:
             state_file.unlink()
     issuer._pending_nonces.clear()
     verifier._pending_sessions.clear()
+    _verification_requests.clear()
     issuer.EKYC_DB[:] = issuer.EKYC_DB[:1]
     issuer.EKYC_DB[0]["credential_issued"] = False
     return {"reset": True}

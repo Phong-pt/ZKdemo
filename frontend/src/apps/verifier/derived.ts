@@ -1,11 +1,11 @@
-import { CLAIMS, CONDS, type Claim, type LogEntry, type VerifierState } from './types'
+import { CLAIMS, CLAIM_TO_BACKEND_ATTR, CONDS, type Claim, type LogEntry, type VerifierState } from './types'
 
 export function revealedClaims(state: VerifierState): Claim[] {
   return CLAIMS.filter((c) => state.reveal[c.key])
 }
 
 export function withheldClaims(state: VerifierState): Claim[] {
-  return CLAIMS.filter((c) => !state.reveal[c.key])
+  return CLAIMS.filter((c) => !isSharedNow(state, c.key))
 }
 
 export function activeConds(state: VerifierState) {
@@ -17,7 +17,7 @@ export function proofCount(state: VerifierState): number {
 }
 
 export function disclosurePercent(state: VerifierState): number {
-  return Math.round((revealedClaims(state).length / CLAIMS.length) * 100)
+  return Math.round((sharedNowClaims(state).length / CLAIMS.length) * 100)
 }
 
 export function minimalLabel(pct: number): string {
@@ -37,7 +37,7 @@ export function claimBoxStyle(on: boolean) {
 }
 
 export function isSharedNow(state: VerifierState, key: string): boolean {
-  return state.disc[key] !== false && !!state.reveal[key]
+  return state.result ? Object.hasOwn(state.result.revealed, CLAIM_TO_BACKEND_ATTR[key]) : state.disc[key] !== false && !!state.reveal[key]
 }
 
 export function predicateText(state: VerifierState): string {
@@ -55,7 +55,7 @@ export interface RequestedAttrView {
 export function buildRequestedAttrs(state: VerifierState): RequestedAttrView[] {
   const revealed = revealedClaims(state).map((c) => ({
     label: c.label,
-    value: c.value,
+    value: 'Only shared with your approval',
     tag: 'REVEAL',
     tagBg: '#F5F5F1',
     tagFg: '#6E7079',
@@ -77,7 +77,7 @@ export function buildZkNote(state: VerifierState): string {
   if (state.ageOn) {
     return `Your exact date of birth will NOT be shared. The wallet proves you are ${state.age}+ without revealing your age.`
   }
-  return 'Undisclosed attributes never leave your wallet.'
+  return 'Only approved attributes are included in the presentation. This demo runs wallet cryptography on the backend.'
 }
 
 export interface DiscCardView {
@@ -96,13 +96,13 @@ export interface DiscCardView {
 }
 
 export function buildDiscCards(state: VerifierState): DiscCardView[] {
-  return CLAIMS.slice(0, 4).map((c) => {
+  return CLAIMS.filter((c) => CLAIM_TO_BACKEND_ATTR[c.key]).map((c) => {
     const required = !!state.reveal[c.key]
     const on = state.disc[c.key] !== false && required
     return {
       key: c.key,
       label: c.label.toUpperCase(),
-      value: on ? c.value : c.key === 'dob' && state.ageOn ? 'Only the age requirement will be proven.' : 'Not shared',
+      value: on ? 'Value from your signed credential' : c.key === 'dob' && state.ageOn ? 'Only the age requirement will be proven.' : 'Not shared',
       valueColor: on ? '#16171A' : '#8A8C94',
       note: required ? (on ? 'Required by this request' : 'Turned off — the verifier will see nothing') : 'Privacy protected ✓',
       noteColor: on ? '#8A8C94' : '#17795E',
@@ -117,23 +117,19 @@ export function buildDiscCards(state: VerifierState): DiscCardView[] {
 }
 
 export function sharedNowClaims(state: VerifierState): Claim[] {
-  return revealedClaims(state).filter((c) => state.disc[c.key] !== false)
+  return CLAIMS.filter((c) => isSharedNow(state, c.key))
 }
 
 export function buildResultRows(state: VerifierState): Array<{ label: string; value: string; color: string }> {
-  const rows = CLAIMS.map((c) => {
-    const shared = state.reveal[c.key] && state.disc[c.key] !== false
-    return { label: c.label, value: shared ? c.value : 'Not disclosed', color: shared ? '#16171A' : '#8A8C94' }
+  return CLAIMS.map((c) => {
+    const value = state.result?.revealed[CLAIM_TO_BACKEND_ATTR[c.key]]
+    return { label: c.label, value: value ?? 'Not disclosed', color: value === undefined ? '#8A8C94' : '#16171A' }
   })
-  if (state.ageOn) rows.push({ label: 'Age requirement', value: `${state.age}+ ✓`, color: '#17795E' })
-  return rows
 }
 
 export function buildReceivedList(state: VerifierState): string[] {
-  const shared = sharedNowClaims(state).map((c) => c.label)
-  const ageLabel = state.ageOn ? [`Proof that user is ${state.age}+`] : []
-  const conds = activeConds(state).map((c) => c.label)
-  return [...shared, ...ageLabel, ...conds]
+  if (!state.result?.verified) return []
+  return [...sharedNowClaims(state).map((c) => c.label), 'Valid credential signature']
 }
 
 export function buildWithheldList(state: VerifierState): string[] {
@@ -141,13 +137,13 @@ export function buildWithheldList(state: VerifierState): string[] {
 }
 
 export function buildLogRecord(state: VerifierState, requestId: string, verified: boolean): LogEntry {
-  const revealed = revealedClaims(state)
+  const revealed = sharedNowClaims(state)
   const withheld = withheldClaims(state)
   const conds = activeConds(state)
   const proven = [...(state.ageOn ? [`Age ≥ ${state.age}`] : []), ...conds.map((c) => c.label)]
   return {
     id: requestId,
-    date: 'Sep 10, 2026',
+    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' }),
     purpose: state.name,
     result: verified ? 'Verified' : 'Declined',
     color: verified ? '#17795E' : '#B4763A',

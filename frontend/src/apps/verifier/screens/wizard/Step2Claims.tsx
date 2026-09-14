@@ -1,6 +1,6 @@
 import { MonoLabel } from '@/components/primitives'
 import { claimBoxStyle } from '../../derived'
-import { CLAIMS, type Claim, type ClaimGroup } from '../../types'
+import { CLAIMS, CLAIM_TO_BACKEND_ATTR, type Claim, type ClaimGroup } from '../../types'
 
 export interface Step2ClaimsProps {
   reveal: Record<string, boolean>
@@ -14,14 +14,16 @@ const GROUPS: Array<[label: string, group: ClaimGroup]> = [
 ]
 
 function ClaimRow({ claim, on, onToggle }: { claim: Claim; on: boolean; onToggle: () => void }) {
+  const supported = !!CLAIM_TO_BACKEND_ATTR[claim.key]
   const style = claimBoxStyle(on)
   return (
     <div
       role="button"
-      tabIndex={0}
-      onClick={onToggle}
+      aria-disabled={!supported}
+      tabIndex={supported ? 0 : -1}
+      onClick={() => { if (supported) onToggle() }}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') onToggle()
+        if (supported && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onToggle() }
       }}
       className="flex gap-3.5 items-start px-4 py-[15px] rounded-2xl cursor-pointer mb-2.5 transition-colors duration-150 ease-out hover:border-ink"
       style={{ border: `1px solid ${style.border}`, background: style.bg }}
@@ -34,7 +36,7 @@ function ClaimRow({ claim, on, onToggle }: { claim: Claim; on: boolean; onToggle
       </div>
       <div>
         <div className="text-sm font-medium">{claim.label}</div>
-        <div className="text-[12.5px] text-ink-4 mt-0.5">{claim.desc}</div>
+        <div className="text-[12.5px] text-ink-4 mt-0.5">{supported ? claim.desc : 'Not supported by this credential yet.'}</div>
       </div>
     </div>
   )

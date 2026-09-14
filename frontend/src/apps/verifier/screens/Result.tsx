@@ -34,9 +34,9 @@ export function Result({
   const statusColor = verified ? '#17795E' : '#B4763A'
   const credentialRows: Array<[label: string, value: string, color?: string]> = verified
     ? [
-        ['Credential', 'Government Identity Credential ✓'],
+        ['Credential', 'Demo Identity Credential ✓'],
         ['Credential status', 'Valid ✓', '#17795E'],
-        ['Issuer', 'Trusted Government Issuer ✓', '#17795E'],
+        ['Issuer', 'Configured demo issuer ✓', '#17795E'],
       ]
     : [['Credential', 'Proof could not be verified', '#B4763A']]
 
