@@ -133,7 +133,7 @@ export function buildReceivedList(state: VerifierState): string[] {
 }
 
 export function buildWithheldList(state: VerifierState): string[] {
-  return [...withheldClaims(state).map((c) => c.label), 'ID number']
+  return withheldClaims(state).map((c) => c.label)
 }
 
 export function buildLogRecord(state: VerifierState, requestId: string, verified: boolean): LogEntry {

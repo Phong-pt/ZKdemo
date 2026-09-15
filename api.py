@@ -50,7 +50,7 @@ async def session_relay(websocket: WebSocket, session_id: str) -> None:
         if not peers:
             _session_connections.pop(session_id, None)
 
-REVEALABLE_ATTRS = ["name", "dob", "nationality", "address"]
+REVEALABLE_ATTRS = ["cccd", "name", "dob", "nationality", "address"]
 
 
 class IssueRequest(BaseModel):
@@ -118,7 +118,10 @@ def _issue_credential(body: IssueRequest) -> IssueResponse:
         raise HTTPException(400, "Thiếu thông tin — tất cả các trường đều bắt buộc")
 
     cred_def = issuer.get_public_cred_def()
-    nonce = issuer.issue_challenge(attributes)
+    try:
+        nonce = issuer.issue_challenge(attributes)
+    except issuer.EkycMismatchError as mismatch:
+        raise HTTPException(409, str(mismatch)) from mismatch
     if nonce is None:
         raise HTTPException(400, "CCCD này đã được cấp credential rồi")
 
@@ -170,12 +173,12 @@ def _verify(body: VerifyRequest) -> VerifyResponse:
 class PresentationRequest(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     purpose: str = Field(default="", max_length=1000)
-    revealed_attrs: list[str] = Field(default_factory=list, max_length=4)
+    revealed_attrs: list[str] = Field(default_factory=list, max_length=5)
     conditions: list[str] = Field(default_factory=list, max_length=10)
 
 
 class PresentationApproval(BaseModel):
-    revealed_attrs: list[str] = Field(default_factory=list, max_length=4)
+    revealed_attrs: list[str] = Field(default_factory=list, max_length=5)
 
 
 def _request(session_id: str) -> dict:

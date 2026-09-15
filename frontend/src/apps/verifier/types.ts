@@ -18,6 +18,7 @@ export interface Condition {
 // Anything the issuer does not sign has no place in this list: the wizard could offer it, but no
 // proof could ever back it.
 export const CLAIMS: Claim[] = [
+  { key: 'cccd', label: 'ID number (CCCD)', desc: 'Reveal the full national ID number — the most identifying field in the credential.' },
   { key: 'fullName', label: 'Full name', desc: "Reveal the user's legal name." },
   { key: 'dob', label: 'Date of birth', desc: "Reveal the user's exact date of birth." },
   { key: 'nationality', label: 'Nationality', desc: "Reveal the user's nationality." },
@@ -25,6 +26,7 @@ export const CLAIMS: Claim[] = [
 ]
 
 export const CLAIM_TO_BACKEND_ATTR: Record<string, string> = {
+  cccd: 'cccd',
   fullName: 'name',
   dob: 'dob',
   nationality: 'nationality',

@@ -233,13 +233,19 @@ hệt `demo.py`), để frontend gọi được crypto thật thay vì chỉ mô
   xem [KycReview.tsx](frontend/src/apps/wallet/screens/KycReview.tsx)), chạy đủ flow issuance
   (`issue_challenge` → sigma-protocol proof → `sign_blindly` → `unblind_signature`) với đúng thuộc
   tính đó; idempotent — nếu `wallet.get_credential()` đã có sẵn thì trả về identity đã lưu
-  (`wallet.get_identity()`), không issue lại. `issuer.register_ekyc()` tự thêm bản ghi mới vào
-  `EKYC_DB` nếu CCCD gửi lên chưa từng có (mô phỏng "vừa hoàn tất eKYC lần đầu với CCCD này") — đây là
-  đơn giản hoá cần thiết: repo không có kết nối tới cơ sở dữ liệu định danh thật của nhà nước để đối
-  chiếu, nên "xác minh eKYC" ở tầng demo này thực chất là "người dùng tự khai và ký nhận", không phải
-  xác thực tính xác thực của tấm CCCD trong ảnh.
-- `POST /api/verify` — nhận `revealed_attrs` (chỉ chấp nhận subset của `["name","dob","nationality",
-  "address"]`, không bao giờ cho tiết lộ `cccd`), chạy `create_presentation_request` →
+  (`wallet.get_identity()`), không issue lại. `issuer.register_ekyc()` đối chiếu theo số CCCD và xử lý
+  ba tình huống khác nhau: CCCD chưa từng xuất hiện thì được thêm mới vào `EKYC_DB` (mô phỏng "vừa
+  hoàn tất eKYC lần đầu"); CCCD đã có hồ sơ nhưng người dùng khai khác đi ở bất kỳ trường nào thì ném
+  `EkycMismatchError` kèm danh sách trường lệch, `api.py` đổi thành lỗi 409 để App A hiện thẳng lý do
+  — đây là cách demo tình huống mạo danh, khai sai dữ liệu của người khác; CCCD khớp hồ sơ nhưng đã
+  nhận credential rồi thì `issue_challenge` trả `None`, thành lỗi 400 "CCCD này đã được cấp credential
+  rồi". Việc chấp nhận CCCD lạ vẫn là đơn giản hoá cần thiết: repo không có kết nối tới cơ sở dữ liệu
+  định danh của nhà nước, nên với một CCCD chưa biết thì "xác minh eKYC" vẫn là người dùng tự khai và
+  ký nhận, không phải xác thực tấm CCCD trong ảnh.
+- `POST /api/verify` — nhận `revealed_attrs` (chỉ chấp nhận subset của `["cccd","name","dob",
+  "nationality","address"]` — cả 5 thuộc tính đã ký đều tiết lộ chọn lọc được, kể cả số CCCD: verifier
+  có quyền hỏi và holder có quyền từ chối từng cái một, giống AnonCreds thật, thay vì chặn cứng ở
+  backend), chạy `create_presentation_request` →
   `wallet.create_presentation` → `verifier.verify_presentation` thật (dùng `wallet.get_identity()` đã
   lưu từ lần issue, không còn `wallet.EKYC_DATA` cố định), trả `{verified, revealed}`. Nếu chưa có
   credential nào (`wallet.get_credential()`/`wallet.get_identity()` rỗng) thì trả lỗi 400 — App B

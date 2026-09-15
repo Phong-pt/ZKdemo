@@ -26,6 +26,15 @@ EKYC_DB = [
 
 _pending_nonces: dict[str, dict] = {}
 
+
+class EkycMismatchError(ValueError):
+    def __init__(self, mismatched: list[str]) -> None:
+        super().__init__(
+            "Dữ liệu eKYC không khớp hồ sơ của CCCD này: " + ", ".join(mismatched)
+        )
+        self.mismatched = mismatched
+
+
 DEFAULT_TRUSTED_VERIFIER_DOMAINS = {
     "ntq-solution.com.vn": "NTQ Solution",
 }
@@ -125,17 +134,22 @@ def find_ekyc_record(cccd: str, name: str, dob: str, nationality: str, address: 
     return None
 
 
+def find_by_cccd(cccd: str) -> dict | None:
+    for record in EKYC_DB:
+        if record["cccd"] == cccd:
+            return record
+    return None
+
+
 def register_ekyc(ekyc: dict) -> dict:
-    record = find_ekyc_record(
-        cccd=ekyc["cccd"],
-        name=ekyc["name"],
-        dob=ekyc["dob"],
-        nationality=ekyc["nationality"],
-        address=ekyc["address"],
-    )
+    record = find_by_cccd(ekyc["cccd"])
     if record is None:
         record = {**ekyc, "credential_issued": False}
         EKYC_DB.append(record)
+        return record
+    mismatched = [name for name in ATTRIBUTE_NAMES if record[name] != ekyc[name]]
+    if mismatched:
+        raise EkycMismatchError(mismatched)
     return record
 
 
