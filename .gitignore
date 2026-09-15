@@ -7,3 +7,5 @@ issuer/ekyc_db.json
 wallet/wallets/
 
 .env
+
+contracts/deployment.json

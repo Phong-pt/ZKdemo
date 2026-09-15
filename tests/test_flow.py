@@ -181,6 +181,22 @@ class MultiAccountTests(ThreePartyFlowTests):
         response = self.client.post("/api/issue", json=wallet.EKYC_DATA, headers=headers(HOLDER_B))
         self.assertEqual(response.status_code, 400)
 
+    def test_document_outside_the_registered_schema_is_refused(self):
+        response = self.client.post(
+            "/api/issue", json={**wallet.EKYC_DATA, "document_type": "drivingLicence"}, headers=headers(HOLDER_A)
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("drivingLicence", response.json()["detail"])
+        self.assertIsNone(wallet.get_credential(wallet_id(HOLDER_A)))
+
+    def test_verifier_cannot_ask_outside_the_schema(self):
+        response = self.client.post(
+            "/api/requests",
+            json={"name": "T", "revealed_attrs": ["so_gplx"], "conditions": ["credValid"]},
+            headers=headers(VERIFIER),
+        )
+        self.assertEqual(response.status_code, 400)
+
     def test_endpoints_require_a_token(self):
         self.assertEqual(self.client.post("/api/issue", json=wallet.EKYC_DATA).status_code, 401)
         self.assertEqual(self.client.post("/api/requests", json={"name": "T"}).status_code, 401)

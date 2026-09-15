@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 import auth
+import chain
 from auth import Account
 from issuer import issuer
 from wallet import wallet
@@ -53,10 +54,14 @@ async def session_relay(websocket: WebSocket, session_id: str) -> None:
         if not peers:
             _session_connections.pop(session_id, None)
 
-REVEALABLE_ATTRS = ["cccd", "name", "dob", "nationality", "address"]
+def revealable_attrs() -> list[str]:
+    """Thuộc tính verifier được phép hỏi — lấy từ schema issuer đã đăng ký trên chain, không phải
+    từ một danh sách chép tay trong mã nguồn."""
+    return chain.resolve_attributes()[0]
 
 
 class IssueRequest(BaseModel):
+    document_type: str = "nationalIdentity"
     cccd: str
     name: str
     dob: str
@@ -92,6 +97,11 @@ def get_config() -> dict[str, str | list[str]]:
     }
 
 
+@app.get("/api/chain")
+def chain_status() -> dict:
+    return chain.status()
+
+
 @app.get("/api/cred-def")
 def get_cred_def() -> dict:
     return issuer.get_public_cred_def()
@@ -109,13 +119,14 @@ def _issue_credential(body: IssueRequest, wallet_id: str) -> IssueResponse:
         identity = wallet.get_identity(wallet_id)
         if identity is None:
             raise HTTPException(409, "Đã có credential cũ nhưng thiếu dữ liệu identity — gọi /api/reset rồi thử lại")
-        if identity != body.model_dump():
+        if identity != body.model_dump(exclude={"document_type"}):
             raise HTTPException(409, "Ví demo đã có credential của danh tính khác")
         return IssueResponse(issued=True, identity=identity)
 
-    attributes = body.model_dump()
+    attributes = body.model_dump(exclude={"document_type"})
     if any(not value.strip() for value in attributes.values()):
         raise HTTPException(400, "Thiếu thông tin — tất cả các trường đều bắt buộc")
+    _check_against_schema(body.document_type, attributes)
 
     cred_def = issuer.get_public_cred_def()
     try:
@@ -156,8 +167,28 @@ def verify(body: VerifyRequest, account: Account = Depends(auth.current_account)
         return _verify(body, account.wallet_id)
 
 
+def _check_against_schema(document_type: str, attributes: dict) -> None:
+    """Issuer chỉ ký được thứ nó đã đăng ký khuôn mẫu trên chain. Quét bằng lái hay hộ chiếu ra một
+    bộ thuộc tính khác thì dừng ở đây, không có khoá nào để ký nó."""
+    allowed, source = chain.resolve_attributes()
+    schema_name = chain.get_schema()["name"] if source == "chain" else "nationalIdentity"
+    if document_type != schema_name:
+        raise HTTPException(
+            400,
+            f"Issuer chưa đăng ký schema cho loại giấy tờ '{document_type}'. Trên chain hiện chỉ có "
+            f"'{schema_name}', nên không có khoá công khai nào để ký giấy tờ này.",
+        )
+    if set(attributes) != set(allowed):
+        missing = sorted(set(allowed) - set(attributes))
+        extra = sorted(set(attributes) - set(allowed))
+        raise HTTPException(
+            400,
+            f"Bộ thuộc tính không khớp schema '{schema_name}' trên chain — thiếu {missing}, thừa {extra}.",
+        )
+
+
 def _verify(body: VerifyRequest, wallet_id: str) -> VerifyResponse:
-    invalid = [a for a in body.revealed_attrs if a not in REVEALABLE_ATTRS]
+    invalid = [a for a in body.revealed_attrs if a not in revealable_attrs()]
     if len(set(body.revealed_attrs)) != len(body.revealed_attrs):
         raise HTTPException(400, "Thuộc tính bị lặp")
     if invalid:
@@ -168,7 +199,7 @@ def _verify(body: VerifyRequest, wallet_id: str) -> VerifyResponse:
     if credential is None or identity is None:
         raise HTTPException(400, "Chưa có credential nào được cấp — gọi /api/issue trước")
 
-    cred_def = issuer.get_public_cred_def()
+    cred_def, _ = chain.resolve_cred_def()
     ls = wallet.get_link_secret(wallet_id)
     req = verifier.create_presentation_request(body.revealed_attrs)
     presentation = wallet.create_presentation(credential, identity, ls, cred_def, req)
@@ -201,8 +232,8 @@ def _request(session_id: str) -> dict:
 def create_request(
     body: PresentationRequest, verifier_org: tuple[Account, str] = Depends(auth.verifier_account)
 ) -> dict:
-    if set(body.revealed_attrs) - set(REVEALABLE_ATTRS):
-        raise HTTPException(400, "Yêu cầu có thuộc tính chưa được hỗ trợ")
+    if set(body.revealed_attrs) - set(revealable_attrs()):
+        raise HTTPException(400, "Yêu cầu có thuộc tính ngoài schema issuer đã đăng ký trên chain")
     if len(set(body.revealed_attrs)) != len(body.revealed_attrs):
         raise HTTPException(400, "Thuộc tính bị lặp")
     if set(body.conditions) - {"credValid"}:

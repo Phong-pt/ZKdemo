@@ -1,8 +1,8 @@
 import secrets
 import time
 
+import chain
 from common import encode_attribute, hash_three
-from issuer import issuer
 
 _pending_sessions: dict[str, dict] = {}
 
@@ -19,8 +19,9 @@ def _prune_expired_sessions() -> None:
 
 
 def create_presentation_request(revealed_attrs: list[str]) -> dict:
-    if len(set(revealed_attrs)) != len(revealed_attrs) or set(revealed_attrs) - set(issuer.ATTRIBUTE_NAMES):
-        raise ValueError("Thuộc tính yêu cầu không hợp lệ")
+    allowed, _ = chain.resolve_attributes()
+    if len(set(revealed_attrs)) != len(revealed_attrs) or set(revealed_attrs) - set(allowed):
+        raise ValueError("Thuộc tính yêu cầu không nằm trong schema issuer đã đăng ký")
     _prune_expired_sessions()
     n_v = str(secrets.randbits(80))
     request = {"nonce": n_v, "revealed_attrs": revealed_attrs}
@@ -86,7 +87,7 @@ def verify_presentation(presentation: dict, n_v: str) -> bool:
         _pending_sessions.pop(n_v, None)
         return False
     try:
-        cred_def = issuer.get_public_cred_def()
+        cred_def, _ = chain.resolve_cred_def()
         return _check_presentation(presentation, cred_def, session)
     except (KeyError, ValueError, ZeroDivisionError, TypeError, OverflowError):
         return False
