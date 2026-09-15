@@ -173,9 +173,6 @@ export function VerifierApp() {
     setError(null)
     try {
       const claims = revealedClaims(current)
-      if (claims.some((c) => !CLAIM_TO_BACKEND_ATTR[c.key])) {
-        throw new Error('Credential hiện chỉ hỗ trợ họ tên, ngày sinh, quốc tịch và địa chỉ.')
-      }
       const session = await apiClient.createRequest({
         name: current.name,
         purpose: current.purpose || current.desc,
@@ -266,7 +263,7 @@ export function VerifierApp() {
   const runVerification = useCallback(() => {
     const current = stateRef.current
     setState((s) => ({ ...s, vstep: 3 }))
-    const attrs = sharedNowClaims(current).map((c) => CLAIM_TO_BACKEND_ATTR[c.key]).filter(Boolean)
+    const attrs = sharedNowClaims(current).map((c) => CLAIM_TO_BACKEND_ATTR[c.key])
     apiClient.approveRequest(current.sessionId, attrs).catch((err: unknown) => {
       setError(err instanceof Error ? err.message : 'Xác minh thất bại')
       setState((s) => s.sessionId === current.sessionId ? { ...s, phone: 'disclosure', vstep: 2 } : s)

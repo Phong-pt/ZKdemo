@@ -96,7 +96,7 @@ export interface DiscCardView {
 }
 
 export function buildDiscCards(state: VerifierState): DiscCardView[] {
-  return CLAIMS.filter((c) => CLAIM_TO_BACKEND_ATTR[c.key]).map((c) => {
+  return CLAIMS.map((c) => {
     const required = !!state.reveal[c.key]
     const on = state.disc[c.key] !== false && required
     return {

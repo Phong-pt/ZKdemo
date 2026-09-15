@@ -2,14 +2,10 @@ import type { VerifyResponse } from '@/services/apiClient'
 export type View = 'dashboard' | 'create' | 'templates' | 'activity' | 'settings' | 'live' | 'result'
 export type PhoneState = 'idle' | 'scan' | 'request' | 'disclosure' | 'generating' | 'sent'
 
-export type ClaimGroup = 'identity' | 'residency' | 'other'
-
 export interface Claim {
   key: string
-  group: ClaimGroup
   label: string
   desc: string
-  value: string
 }
 
 export interface Condition {
@@ -18,20 +14,14 @@ export interface Condition {
   desc: string
 }
 
-// fullName/dob/nationality/address are backed by a real credential attribute (see
-// CLAIM_TO_BACKEND_ATTR below) — their `value` here matches wallet.EKYC_DATA in the Python core
-// exactly, since the wizard/phone screens display it before the real /api/verify call resolves.
-// docType/country/issuer/status have no corresponding signed attribute in the credential yet, so
-// they stay illustrative-only (not sent to the backend, never really proven/revealed).
+// Every claim here maps to a real signed attribute of the credential (see CLAIM_TO_BACKEND_ATTR).
+// Anything the issuer does not sign has no place in this list: the wizard could offer it, but no
+// proof could ever back it.
 export const CLAIMS: Claim[] = [
-  { key: 'fullName', group: 'identity', label: 'Full name', desc: "Reveal the user's legal name.", value: 'Phạm Thế Phong' },
-  { key: 'dob', group: 'identity', label: 'Date of birth', desc: "Reveal the user's exact date of birth.", value: '05/05/2005' },
-  { key: 'nationality', group: 'identity', label: 'Nationality', desc: "Reveal the user's nationality.", value: 'Việt Nam' },
-  { key: 'docType', group: 'identity', label: 'Identity document type', desc: 'Reveal which document backs the credential.', value: 'National ID (CCCD)' },
-  { key: 'country', group: 'residency', label: 'Country of residence', desc: 'Reveal the country the user lives in.', value: 'Việt Nam' },
-  { key: 'address', group: 'residency', label: 'Address', desc: 'Reveal the full residential address.', value: 'Tổ 1, Phường Đoàn Kết, Thành phố Lai Châu' },
-  { key: 'issuer', group: 'other', label: 'Credential issuer', desc: 'Reveal which authority issued the credential.', value: 'Government Identity Authority' },
-  { key: 'status', group: 'other', label: 'Verification status', desc: 'Reveal whether the credential is active.', value: 'Active' },
+  { key: 'fullName', label: 'Full name', desc: "Reveal the user's legal name." },
+  { key: 'dob', label: 'Date of birth', desc: "Reveal the user's exact date of birth." },
+  { key: 'nationality', label: 'Nationality', desc: "Reveal the user's nationality." },
+  { key: 'address', label: 'Address', desc: 'Reveal the full residential address.' },
 ]
 
 export const CLAIM_TO_BACKEND_ATTR: Record<string, string> = {
@@ -98,12 +88,12 @@ export const TEMPLATES: Template[] = [
     name: 'Employment verification',
     desc: 'Prove an employment credential is held and valid.',
     purpose: 'Required to confirm your employer.',
-    reveal: { issuer: true },
+    reveal: {},
     ageOn: false,
     age: 18,
     conds: { credValid: true },
     proveTag: 'CRED VALID',
-    revealTag: 'REVEAL: ISSUER',
+    revealTag: 'REVEAL: NONE',
   },
   {
     name: 'Student verification',
