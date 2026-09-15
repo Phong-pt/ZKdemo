@@ -1,14 +1,17 @@
 import os
 import secrets
+import shutil
 import time
 from threading import RLock
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
+import auth
+from auth import Account
 from issuer import issuer
 from wallet import wallet
 from verifier import verifier
@@ -75,13 +78,10 @@ class VerifyResponse(BaseModel):
     revealed: dict[str, str]
 
 
-class VerifierLoginRequest(BaseModel):
-    email: str
-
-
 class VerifierLoginResponse(BaseModel):
     authorized: bool
     org_name: str | None
+    email: str
 
 
 @app.get("/api/config")
@@ -98,15 +98,15 @@ def get_cred_def() -> dict:
 
 
 @app.post("/api/issue", response_model=IssueResponse)
-def issue_credential(body: IssueRequest) -> IssueResponse:
+def issue_credential(body: IssueRequest, account: Account = Depends(auth.current_account)) -> IssueResponse:
     with _flow_lock:
-        return _issue_credential(body)
+        return _issue_credential(body, account.wallet_id)
 
 
-def _issue_credential(body: IssueRequest) -> IssueResponse:
-    credential = wallet.get_credential()
+def _issue_credential(body: IssueRequest, wallet_id: str) -> IssueResponse:
+    credential = wallet.get_credential(wallet_id)
     if credential is not None:
-        identity = wallet.get_identity()
+        identity = wallet.get_identity(wallet_id)
         if identity is None:
             raise HTTPException(409, "Đã có credential cũ nhưng thiếu dữ liệu identity — gọi /api/reset rồi thử lại")
         if identity != body.model_dump():
@@ -125,10 +125,10 @@ def _issue_credential(body: IssueRequest) -> IssueResponse:
     if nonce is None:
         raise HTTPException(400, "CCCD này đã được cấp credential rồi")
 
-    ls = wallet.get_link_secret()
+    ls = wallet.get_link_secret(wallet_id)
     v_prime = wallet.generate_blinding_factor()
     u = wallet.compute_commitment(cred_def["S"], cred_def["R"], cred_def["n"], v_prime, ls)
-    wallet.save_pending_request(nonce, v_prime, ls)
+    wallet.save_pending_request(nonce, v_prime, ls, wallet_id)
 
     v_tilde, ls_tilde = wallet.generate_random_exponents()
     u_prime = wallet.compute_commitment_prime(cred_def["S"], cred_def["R"], cred_def["n"], v_tilde, ls_tilde)
@@ -137,32 +137,34 @@ def _issue_credential(body: IssueRequest) -> IssueResponse:
 
     proof = {"nonce": nonce, "u": u, "c": c, "v_hat": v_hat, "ls_hat": ls_hat}
     signed = issuer.sign_blindly(attributes, proof)
-    wallet.unblind_signature(signed["a"], signed["e"], signed["v_prime_prime"], nonce, attributes, cred_def)
-    wallet.save_identity(attributes)
+    wallet.unblind_signature(
+        signed["a"], signed["e"], signed["v_prime_prime"], nonce, attributes, cred_def, wallet_id
+    )
+    wallet.save_identity(attributes, wallet_id)
 
     return IssueResponse(issued=True, identity=attributes)
 
 
 @app.post("/api/verify", response_model=VerifyResponse)
-def verify(body: VerifyRequest) -> VerifyResponse:
+def verify(body: VerifyRequest, account: Account = Depends(auth.current_account)) -> VerifyResponse:
     with _flow_lock:
-        return _verify(body)
+        return _verify(body, account.wallet_id)
 
 
-def _verify(body: VerifyRequest) -> VerifyResponse:
+def _verify(body: VerifyRequest, wallet_id: str) -> VerifyResponse:
     invalid = [a for a in body.revealed_attrs if a not in REVEALABLE_ATTRS]
     if len(set(body.revealed_attrs)) != len(body.revealed_attrs):
         raise HTTPException(400, "Thuộc tính bị lặp")
     if invalid:
         raise HTTPException(400, f"Không hỗ trợ tiết lộ thuộc tính: {invalid}")
 
-    credential = wallet.get_credential()
-    identity = wallet.get_identity()
+    credential = wallet.get_credential(wallet_id)
+    identity = wallet.get_identity(wallet_id)
     if credential is None or identity is None:
         raise HTTPException(400, "Chưa có credential nào được cấp — gọi /api/issue trước")
 
     cred_def = issuer.get_public_cred_def()
-    ls = wallet.get_link_secret()
+    ls = wallet.get_link_secret(wallet_id)
     req = verifier.create_presentation_request(body.revealed_attrs)
     presentation = wallet.create_presentation(credential, identity, ls, cred_def, req)
     ok = verifier.verify_presentation(presentation, req["nonce"])
@@ -191,7 +193,9 @@ def _request(session_id: str) -> dict:
 
 
 @app.post("/api/requests")
-def create_request(body: PresentationRequest) -> dict:
+def create_request(
+    body: PresentationRequest, verifier_org: tuple[Account, str] = Depends(auth.verifier_account)
+) -> dict:
     if set(body.revealed_attrs) - set(REVEALABLE_ATTRS):
         raise HTTPException(400, "Yêu cầu có thuộc tính chưa được hỗ trợ")
     if len(set(body.revealed_attrs)) != len(body.revealed_attrs):
@@ -206,6 +210,7 @@ def create_request(body: PresentationRequest) -> dict:
         session_id = secrets.token_urlsafe(24)
         session = {
             **body.model_dump(), "id": session_id, "status": "pending",
+            "org_name": verifier_org[1],
             "expires_at": now + verifier.SESSION_TTL_SECONDS, "result": None,
         }
         _verification_requests[session_id] = session
@@ -219,14 +224,16 @@ def get_request(session_id: str) -> dict:
 
 
 @app.post("/api/requests/{session_id}/approve")
-def approve_request(session_id: str, body: PresentationApproval) -> dict:
+def approve_request(
+    session_id: str, body: PresentationApproval, account: Account = Depends(auth.current_account)
+) -> dict:
     with _flow_lock:
         session = _request(session_id)
         if session["status"] != "pending":
             raise HTTPException(409, "Phiên đã kết thúc hoặc hết hạn")
         if set(body.revealed_attrs) - set(session["revealed_attrs"]):
             raise HTTPException(400, "Không được chia sẻ ngoài yêu cầu")
-        result = verify(VerifyRequest(revealed_attrs=body.revealed_attrs))
+        result = _verify(VerifyRequest(revealed_attrs=body.revealed_attrs), account.wallet_id)
         session["result"] = result.model_dump()
         session["status"] = "verified" if result.verified else "rejected"
         return session.copy()
@@ -243,9 +250,22 @@ def decline_request(session_id: str) -> dict:
 
 
 @app.post("/api/verifier/login", response_model=VerifierLoginResponse)
-def verifier_login(body: VerifierLoginRequest) -> VerifierLoginResponse:
-    org_name = issuer.find_verifier_org(body.email)
-    return VerifierLoginResponse(authorized=org_name is not None, org_name=org_name)
+def verifier_login(account: Account = Depends(auth.current_account)) -> VerifierLoginResponse:
+    org_name = issuer.find_verifier_org(account.email)
+    return VerifierLoginResponse(
+        authorized=org_name is not None, org_name=org_name, email=account.email
+    )
+
+
+@app.get("/api/me")
+def me(account: Account = Depends(auth.current_account)) -> dict:
+    return {
+        "email": account.email,
+        "name": account.name,
+        "wallet_id": account.wallet_id,
+        "has_credential": wallet.get_credential(account.wallet_id) is not None,
+        "identity": wallet.get_identity(account.wallet_id),
+    }
 
 
 @app.post("/api/reset")
@@ -255,16 +275,11 @@ def reset() -> dict[str, bool]:
 
 
 def _reset() -> dict[str, bool]:
-    for state_file in [
-        issuer.PUBLIC_CREDDEF_FILE,
-        issuer.PRIVATE_KEY_FILE,
-        wallet.LINK_SECRET_FILE,
-        wallet.PENDING_REQUEST_FILE,
-        wallet.CREDENTIAL_FILE,
-        wallet.IDENTITY_FILE,
-    ]:
+    for state_file in [issuer.PUBLIC_CREDDEF_FILE, issuer.PRIVATE_KEY_FILE]:
         if state_file.exists():
             state_file.unlink()
+    if wallet.WALLETS_DIR.exists():
+        shutil.rmtree(wallet.WALLETS_DIR)
     issuer._pending_nonces.clear()
     verifier._pending_sessions.clear()
     _verification_requests.clear()

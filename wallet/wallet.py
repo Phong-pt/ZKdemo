@@ -5,10 +5,30 @@ from pathlib import Path
 from common import encode_attribute, hash_three
 
 WALLET_DIR = Path(__file__).resolve().parent
-LINK_SECRET_FILE = WALLET_DIR / "link_secret.json"
-CREDENTIAL_FILE = WALLET_DIR / "credential.json"
-PENDING_REQUEST_FILE = WALLET_DIR / "pending_request.json"
-IDENTITY_FILE = WALLET_DIR / "identity.json"
+WALLETS_DIR = WALLET_DIR / "wallets"
+DEFAULT_WALLET_ID = "demo"
+
+
+def wallet_dir(wallet_id: str) -> Path:
+    directory = WALLETS_DIR / wallet_id
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory
+
+
+def link_secret_file(wallet_id: str) -> Path:
+    return wallet_dir(wallet_id) / "link_secret.json"
+
+
+def credential_file(wallet_id: str) -> Path:
+    return wallet_dir(wallet_id) / "credential.json"
+
+
+def pending_request_file(wallet_id: str) -> Path:
+    return wallet_dir(wallet_id) / "pending_request.json"
+
+
+def identity_file(wallet_id: str) -> Path:
+    return wallet_dir(wallet_id) / "identity.json"
 
 EKYC_DATA = {
     "cccd": "012205007445",
@@ -19,13 +39,12 @@ EKYC_DATA = {
 }
 
 
-def get_link_secret(bits: int = 256) -> int:
-    if LINK_SECRET_FILE.exists():
-        return int(json.loads(LINK_SECRET_FILE.read_text(encoding="utf-8"))["link_secret"], 16)
+def get_link_secret(wallet_id: str = DEFAULT_WALLET_ID, bits: int = 256) -> int:
+    path = link_secret_file(wallet_id)
+    if path.exists():
+        return int(json.loads(path.read_text(encoding="utf-8"))["link_secret"], 16)
     link_secret = secrets.randbits(bits)
-    LINK_SECRET_FILE.write_text(
-        json.dumps({"link_secret": format(link_secret, "x")}), encoding="utf-8"
-    )
+    path.write_text(json.dumps({"link_secret": format(link_secret, "x")}), encoding="utf-8")
     return link_secret
 
 
@@ -37,23 +56,24 @@ def compute_commitment(S: int, R: int, n: int, v_prime: int, ls: int) -> int:
     return int(pow(S, v_prime, n) * pow(R, ls, n) % n)
 
 
-def save_pending_request(nonce: str, v_prime: int, ls: int) -> None:
-    PENDING_REQUEST_FILE.write_text(
+def save_pending_request(nonce: str, v_prime: int, ls: int, wallet_id: str = DEFAULT_WALLET_ID) -> None:
+    pending_request_file(wallet_id).write_text(
         json.dumps({"nonce": nonce, "v_prime": format(v_prime, "x"), "ls": format(ls, "x")}),
         encoding="utf-8",
     )
 
 
-def load_pending_request(nonce: str) -> tuple[int, int]:
-    data = json.loads(PENDING_REQUEST_FILE.read_text(encoding="utf-8"))
+def load_pending_request(nonce: str, wallet_id: str = DEFAULT_WALLET_ID) -> tuple[int, int]:
+    data = json.loads(pending_request_file(wallet_id).read_text(encoding="utf-8"))
     if data["nonce"] != nonce:
         raise ValueError("nonce không khớp yêu cầu đang chờ giải mù")
     return int(data["v_prime"], 16), int(data["ls"], 16)
 
 
-def clear_pending_request() -> None:
-    if PENDING_REQUEST_FILE.exists():
-        PENDING_REQUEST_FILE.unlink()
+def clear_pending_request(wallet_id: str = DEFAULT_WALLET_ID) -> None:
+    path = pending_request_file(wallet_id)
+    if path.exists():
+        path.unlink()
 
 
 def generate_random_exponents() -> tuple[int, int]:
@@ -90,37 +110,40 @@ def verify_credential(credential: dict, attributes: dict, cred_def: dict, ls: in
 
 
 def unblind_signature(
-    a: int, e: int, v_prime_prime: int, nonce: str, attributes: dict, cred_def: dict
+    a: int, e: int, v_prime_prime: int, nonce: str, attributes: dict, cred_def: dict,
+    wallet_id: str = DEFAULT_WALLET_ID,
 ) -> dict:
-    v_prime, ls = load_pending_request(nonce)
+    v_prime, ls = load_pending_request(nonce, wallet_id)
     v = v_prime + v_prime_prime
     credential = {"a": a, "e": e, "v": v}
 
     if not verify_credential(credential, attributes, cred_def, ls):
         raise ValueError("chữ ký issuer trả về không hợp lệ với credential vừa giải mù")
 
-    CREDENTIAL_FILE.write_text(
+    credential_file(wallet_id).write_text(
         json.dumps({k: str(val) for k, val in credential.items()}), encoding="utf-8"
     )
-    clear_pending_request()
+    clear_pending_request(wallet_id)
     return credential
 
 
-def get_credential() -> dict | None:
-    if not CREDENTIAL_FILE.exists():
+def get_credential(wallet_id: str = DEFAULT_WALLET_ID) -> dict | None:
+    path = credential_file(wallet_id)
+    if not path.exists():
         return None
-    cred = json.loads(CREDENTIAL_FILE.read_text(encoding="utf-8"))
+    cred = json.loads(path.read_text(encoding="utf-8"))
     return {k: int(v) for k, v in cred.items()}
 
 
-def save_identity(attributes: dict) -> None:
-    IDENTITY_FILE.write_text(json.dumps(attributes, ensure_ascii=False), encoding="utf-8")
+def save_identity(attributes: dict, wallet_id: str = DEFAULT_WALLET_ID) -> None:
+    identity_file(wallet_id).write_text(json.dumps(attributes, ensure_ascii=False), encoding="utf-8")
 
 
-def get_identity() -> dict | None:
-    if not IDENTITY_FILE.exists():
+def get_identity(wallet_id: str = DEFAULT_WALLET_ID) -> dict | None:
+    path = identity_file(wallet_id)
+    if not path.exists():
         return None
-    return json.loads(IDENTITY_FILE.read_text(encoding="utf-8"))
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def receive_presentation_nonce(n_v: str) -> str:
