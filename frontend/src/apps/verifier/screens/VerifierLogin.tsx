@@ -1,21 +1,30 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Card, MonoLabel } from '@/components/primitives'
+import { authService, demoAccount, type GoogleAccount } from '@/services/authService'
 
 export interface VerifierLoginProps {
   busy: boolean
   error: string | null
-  onSubmit: (email: string) => void
+  onSubmit: (account: GoogleAccount) => void
 }
 
-const inputClass =
-  'w-full px-[15px] py-3.5 border border-line rounded-xl text-sm bg-bg-sunken transition-colors duration-150 ease-out focus:outline-none focus:border-blue'
+const DEMO_VERIFIER = 'verifier@ntq-solution.com.vn'
 
 export function VerifierLogin({ busy, error, onSubmit }: VerifierLoginProps) {
-  const [email, setEmail] = useState('')
+  const buttonRef = useRef<HTMLDivElement>(null)
+  const [mounted, setMounted] = useState(false)
 
-  const submit = () => {
-    if (email.trim() && !busy) onSubmit(email.trim())
-  }
+  useEffect(() => {
+    let cancelled = false
+    if (buttonRef.current) {
+      authService.mountSignInButton(buttonRef.current, onSubmit).then((ok) => {
+        if (!cancelled) setMounted(ok)
+      })
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [onSubmit])
 
   return (
     <div className="min-h-screen bg-bg-page text-ink flex items-center justify-center p-6">
@@ -32,39 +41,35 @@ export function VerifierLogin({ busy, error, onSubmit }: VerifierLoginProps) {
           <MonoLabel>Verifier portal</MonoLabel>
           <div className="text-[26px] font-medium tracking-[-0.028em] mt-3">Sign in</div>
           <div className="text-sm text-ink-3 mt-2.5">
-            Use the company email your organisation registered with the Issuer.
+            Sign in with the Google account of your company. Only domains your organisation registered with
+            the Issuer can open this portal.
           </div>
         </div>
 
-        <div className="px-8 py-7">
-          <div className="text-[13px] font-medium mb-2">Work email</div>
-          <input
-            value={email}
-            placeholder="you@ntq-solution.com.vn"
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') submit()
-            }}
-            className={inputClass}
-          />
+        <div className="px-8 py-7 flex flex-col items-center gap-3">
+          <div ref={buttonRef} style={{ minHeight: 44 }} />
+          {!mounted && (
+            <>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => onSubmit(demoAccount(DEMO_VERIFIER))}
+                className="w-full text-center text-white py-3.5 rounded-[13px] text-[15px] font-medium disabled:opacity-50"
+                style={{ background: '#16171A' }}
+              >
+                {busy ? 'Checking…' : `Continue as ${DEMO_VERIFIER}`}
+              </button>
+              <div className="text-[12px] text-ink-4 text-center leading-relaxed">
+                Google Sign-In chưa được cấu hình (thiếu GOOGLE_CLIENT_ID) — dùng tài khoản demo ở trên.
+              </div>
+            </>
+          )}
+          {busy && mounted && <div className="text-[13px] text-ink-3">Checking…</div>}
           {error && (
-            <div className="text-[13px] mt-3" style={{ color: '#B4763A' }}>
+            <div className="text-[13px] text-center" style={{ color: '#B4763A' }}>
               {error}
             </div>
           )}
-
-          <button
-            type="button"
-            onClick={submit}
-            disabled={!email.trim() || busy}
-            className="w-full mt-6 text-center text-white py-3.5 rounded-[13px] text-[15px] font-medium transition-colors duration-150 ease-out"
-            style={{
-              background: email.trim() && !busy ? '#16171A' : '#C9C9C3',
-              cursor: email.trim() && !busy ? 'pointer' : 'not-allowed',
-            }}
-          >
-            {busy ? 'Checking…' : 'Continue'}
-          </button>
         </div>
       </Card>
     </div>

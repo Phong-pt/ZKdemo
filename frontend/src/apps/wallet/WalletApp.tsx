@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { connectSession } from '@/lib/realtimeSession'
-import { apiClient, type IdentityAttributes } from '@/services/apiClient'
-import type { GoogleAccount } from '@/services/authService'
+import { apiClient, setAuthToken, type IdentityAttributes } from '@/services/apiClient'
+import { authService, type GoogleAccount } from '@/services/authService'
 import { kycService } from '@/services/kycService'
 import { walletService } from '@/services/walletService'
 import { IdentityCardModal } from './components/IdentityCardModal'
@@ -58,11 +58,22 @@ export function WalletApp() {
 
   const onAccount = useCallback(
     (account: GoogleAccount) => {
+      setAuthToken(account.token)
       setState((s) => ({ ...s, step: 'signedin', account }))
       after(1600, () => setState((s) => ({ ...s, step: 'install' })))
     },
     [after],
   )
+
+  // Đăng xuất chỉ rời phiên; credential của tài khoản đó vẫn nằm nguyên trong ví phía máy chủ,
+  // đăng nhập lại là thấy lại thẻ. Muốn xoá sạch mọi ví thì dùng "Restart demo".
+  const signOut = useCallback(() => {
+    requestId.current += 1
+    clearTimers()
+    authService.signOut()
+    setAuthToken(null)
+    setState(createInitialWalletState())
+  }, [clearTimers])
 
   const installWallet = useCallback(() => {
     const id = ++requestId.current
@@ -184,7 +195,13 @@ export function WalletApp() {
 
   return (
     <div className="min-h-screen bg-bg-page text-ink flex flex-col items-center gap-6 px-6 pt-7 pb-16">
-      <Header productName={PRODUCT_NAME} stageLabel={STAGE_LABELS[state.step]} onRestart={restart} />
+      <Header
+        productName={PRODUCT_NAME}
+        stageLabel={STAGE_LABELS[state.step]}
+        accountEmail={state.account?.email}
+        onRestart={restart}
+        onSignOut={signOut}
+      />
 
       {state.step === 'landing' && <Landing onStartGoogle={startGoogle} />}
 

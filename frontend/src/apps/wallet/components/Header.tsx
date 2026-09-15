@@ -3,10 +3,12 @@ import { Button, MonoLabel } from '@/components/primitives'
 export interface HeaderProps {
   productName: string
   stageLabel: string
+  accountEmail?: string
   onRestart: () => void
+  onSignOut?: () => void
 }
 
-export function Header({ productName, stageLabel, onRestart }: HeaderProps) {
+export function Header({ productName, stageLabel, accountEmail, onRestart, onSignOut }: HeaderProps) {
   return (
     <div className="w-full max-w-[1180px] flex items-center justify-between gap-4">
       <div className="flex items-center gap-2.5">
@@ -19,6 +21,12 @@ export function Header({ productName, stageLabel, onRestart }: HeaderProps) {
         <MonoLabel tone="ink-4" tracking="0.04em">
           {stageLabel}
         </MonoLabel>
+        {accountEmail && <div className="text-[12px] text-ink-3 max-w-[220px] truncate">{accountEmail}</div>}
+        {accountEmail && onSignOut && (
+          <Button variant="secondary" size="sm" pill onClick={onSignOut}>
+            Sign out
+          </Button>
+        )}
         <Button variant="secondary" size="sm" pill onClick={onRestart}>
           Restart demo
         </Button>

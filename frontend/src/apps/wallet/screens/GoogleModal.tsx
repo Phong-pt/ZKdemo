@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
-import { authService, DEMO_GOOGLE_ACCOUNT, type GoogleAccount } from '@/services/authService'
+import { authService, demoAccount, type GoogleAccount } from '@/services/authService'
+
+const DEMO_LABELS = ['nguoi-dung-a', 'nguoi-dung-b']
 
 export interface GoogleModalProps {
   productName: string
@@ -45,32 +47,36 @@ export function GoogleModal({ productName, onAccount }: GoogleModalProps) {
 
         <div className="px-7 py-[22px] flex flex-col items-center gap-3">
           <div ref={buttonRef} style={{ minHeight: 44 }} />
-          {!mounted && (
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => onAccount(DEMO_GOOGLE_ACCOUNT)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') onAccount(DEMO_GOOGLE_ACCOUNT)
-              }}
-              className="w-full flex items-center gap-3.5 px-4 py-[14px] rounded-xl border border-line cursor-pointer transition-colors duration-150 ease-out hover:bg-bg-muted"
-            >
+          {!mounted && DEMO_LABELS.map((label) => {
+            const account = demoAccount(label)
+            return (
               <div
-                className="w-[38px] h-[38px] rounded-full text-white flex items-center justify-center text-[15px] font-medium"
-                style={{ background: 'linear-gradient(145deg,#3D6BEA,#2438A8)' }}
+                key={label}
+                role="button"
+                tabIndex={0}
+                onClick={() => onAccount(account)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') onAccount(account)
+                }}
+                className="w-full flex items-center gap-3.5 px-4 py-[14px] rounded-xl border border-line cursor-pointer transition-colors duration-150 ease-out hover:bg-bg-muted"
               >
-                {DEMO_GOOGLE_ACCOUNT.avatarInitial}
+                <div
+                  className="w-[38px] h-[38px] rounded-full text-white flex items-center justify-center text-[15px] font-medium"
+                  style={{ background: 'linear-gradient(145deg,#3D6BEA,#2438A8)' }}
+                >
+                  {account.avatarInitial}
+                </div>
+                <div>
+                  <div className="text-sm font-medium">{account.name}</div>
+                  <div className="text-[13px] text-ink-3">{account.email}</div>
+                </div>
               </div>
-              <div>
-                <div className="text-sm font-medium">{DEMO_GOOGLE_ACCOUNT.name}</div>
-                <div className="text-[13px] text-ink-3">{DEMO_GOOGLE_ACCOUNT.email}</div>
-              </div>
-            </div>
-          )}
+            )
+          })}
           {!mounted && (
             <div className="text-[12px] text-ink-4 text-center leading-relaxed">
-              Google Sign-In chưa được cấu hình (thiếu biến môi trường GOOGLE_CLIENT_ID) — dùng tài khoản demo ở
-              trên để tiếp tục.
+              Google Sign-In chưa được cấu hình (thiếu biến môi trường GOOGLE_CLIENT_ID) — chọn một trong hai
+              tài khoản demo ở trên; mỗi tài khoản là một ví riêng.
             </div>
           )}
         </div>

@@ -41,7 +41,8 @@ def account_from_token(token: str) -> Account:
         if client_id:
             raise HTTPException(401, "Máy chủ đã bật Google Sign-In — hãy đăng nhập bằng Google")
         label = token.split(":", 1)[1].strip() or "demo"
-        return Account(_wallet_id("demo:" + label), f"{label}@demo.local", label, True)
+        email = label if "@" in label else f"{label}@demo.local"
+        return Account(_wallet_id("demo:" + label), email, label.split("@", 1)[0], True)
 
     if not client_id:
         raise HTTPException(503, "Máy chủ chưa cấu hình GOOGLE_CLIENT_ID")

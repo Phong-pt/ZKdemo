@@ -30,6 +30,15 @@ export interface VerificationSession {
 export interface VerifierLoginResponse {
   authorized: boolean
   org_name: string | null
+  email: string
+}
+
+export interface MeResponse {
+  email: string
+  name: string
+  wallet_id: string
+  has_credential: boolean
+  identity: Record<string, string> | null
 }
 
 export interface ConfigResponse {
@@ -37,10 +46,25 @@ export interface ConfigResponse {
   verifier_domains: string[]
 }
 
+// Token của phiên đang đăng nhập; mọi endpoint xác định ví theo token này chứ không theo cookie.
+let authToken: string | null = null
+
+export function setAuthToken(token: string | null) {
+  authToken = token
+}
+
+export function getAuthToken(): string | null {
+  return authToken
+}
+
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`/api${path}`, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      ...options?.headers,
+    },
   })
   if (!res.ok) {
     const body = await res.json().catch(() => null)
@@ -68,6 +92,6 @@ export const apiClient = {
       body: JSON.stringify({ revealed_attrs: revealedAttrs }),
     }),
   reset: () => apiFetch<{ reset: boolean }>('/reset', { method: 'POST' }),
-  verifierLogin: (email: string) =>
-    apiFetch<VerifierLoginResponse>('/verifier/login', { method: 'POST', body: JSON.stringify({ email }) }),
+  verifierLogin: () => apiFetch<VerifierLoginResponse>('/verifier/login', { method: 'POST' }),
+  me: () => apiFetch<MeResponse>('/me'),
 }

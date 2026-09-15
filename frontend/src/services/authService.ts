@@ -4,20 +4,38 @@ export interface GoogleAccount {
   name: string
   email: string
   avatarInitial: string
+  // ID-token do Google ký; mọi lời gọi API kèm theo nó để backend biết đây là ví của ai.
+  token: string
 }
 
-// Đăng nhập Google là thật, nhưng danh tính hiển thị luôn là persona demo này (khớp
-// DEMO_CCCD_IDENTITY) — người test đăng nhập bằng tài khoản Gmail nào cũng ra cùng một ví demo,
-// nên không có dữ liệu cá nhân thật nào của người test lọt vào luồng.
-export const DEMO_GOOGLE_ACCOUNT: GoogleAccount = {
-  name: 'Phạm Thế Phong',
-  email: 'phong.pham.demo@gmail.com',
-  avatarInitial: 'P',
+// Chỉ dùng khi máy chủ chưa cấu hình GOOGLE_CLIENT_ID: token "demo:..." cho phép app chạy trọn
+// luồng mà không cần OAuth. Mỗi nhãn là một ví riêng, nên vẫn diễn được cảnh đổi tài khoản.
+export function demoAccount(label = 'demo'): GoogleAccount {
+  return {
+    name: label.split('@')[0],
+    email: label.includes('@') ? label : `${label}@demo.local`,
+    avatarInitial: label.charAt(0).toUpperCase(),
+    token: `demo:${label}`,
+  }
+}
+
+function decodeIdToken(token: string): { name: string; email: string } {
+  const payload = token.split('.')[1]
+  const bytes = atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
+  const json = decodeURIComponent(
+    bytes
+      .split('')
+      .map((char) => '%' + char.charCodeAt(0).toString(16).padStart(2, '0'))
+      .join(''),
+  )
+  const claims = JSON.parse(json) as { name?: string; email?: string }
+  return { name: claims.name ?? claims.email ?? 'Google user', email: claims.email ?? '' }
 }
 
 interface GoogleIdApi {
   initialize: (config: { client_id: string; callback: (response: { credential: string }) => void }) => void
   renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void
+  disableAutoSelect: () => void
 }
 
 declare global {
@@ -64,7 +82,15 @@ export const authService = {
     if (!initialized) {
       window.google.accounts.id.initialize({
         client_id: clientId,
-        callback: () => currentOnSignIn?.(DEMO_GOOGLE_ACCOUNT),
+        callback: (response) => {
+          const { name, email } = decodeIdToken(response.credential)
+          currentOnSignIn?.({
+            name,
+            email,
+            avatarInitial: (name || email || '?').charAt(0).toUpperCase(),
+            token: response.credential,
+          })
+        },
       })
       initialized = true
     }
@@ -77,5 +103,9 @@ export const authService = {
       text: 'continue_with',
     })
     return true
+  },
+
+  signOut() {
+    window.google?.accounts.id.disableAutoSelect()
   },
 }

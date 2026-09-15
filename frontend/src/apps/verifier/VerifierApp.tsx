@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { publish, subscribe } from '@/lib/sessionBus'
-import { apiClient } from '@/services/apiClient'
+import { apiClient, setAuthToken } from '@/services/apiClient'
+import { authService, type GoogleAccount } from '@/services/authService'
 import {
   buildDiscCards,
   buildLogRecord,
@@ -75,40 +76,50 @@ export function VerifierApp() {
     try {
       const stored = localStorage.getItem(AUTH_STORAGE_KEY)
       if (!stored) return
-      const { email, orgName } = JSON.parse(stored) as { email: string; orgName: string }
+      const { email, orgName, token } = JSON.parse(stored) as { email: string; orgName: string; token: string }
+      setAuthToken(token)
       setState((s) => ({ ...s, authed: true, orgEmail: email, orgName }))
     } catch {
       // ignore malformed/missing storage
     }
   }, [])
 
-  const login = useCallback((email: string) => {
+  const login = useCallback((account: GoogleAccount) => {
+    setAuthToken(account.token)
     setState((s) => ({ ...s, loginBusy: true, loginError: null }))
     apiClient
-      .verifierLogin(email)
+      .verifierLogin()
       .then((result) => {
         if (!result.authorized || !result.org_name) {
+          setAuthToken(null)
           setState((s) => ({
             ...s,
             loginBusy: false,
-            loginError: 'Email domain này chưa được issuer đăng ký cho tổ chức nào.',
+            loginError: `${result.email} không thuộc tổ chức verifier nào đã đăng ký với issuer.`,
           }))
           return
         }
         try {
-          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ email, orgName: result.org_name }))
+          localStorage.setItem(
+            AUTH_STORAGE_KEY,
+            JSON.stringify({ email: result.email, orgName: result.org_name, token: account.token }),
+          )
         } catch {
           // localStorage unavailable — auth just won't survive a refresh
         }
-        setState((s) => ({ ...s, authed: true, orgEmail: email, orgName: result.org_name!, loginBusy: false }))
+        setState((s) => ({ ...s, authed: true, orgEmail: result.email, orgName: result.org_name!, loginBusy: false }))
       })
-      .catch(() => {
-        setState((s) => ({ ...s, loginBusy: false, loginError: 'Không kết nối được tới backend — thử lại.' }))
+      .catch((err: unknown) => {
+        setAuthToken(null)
+        const message = err instanceof Error ? err.message : 'Không kết nối được tới backend — thử lại.'
+        setState((s) => ({ ...s, loginBusy: false, loginError: message }))
       })
   }, [])
 
   const logout = useCallback(() => {
     clearTimers()
+    authService.signOut()
+    setAuthToken(null)
     try {
       localStorage.removeItem(AUTH_STORAGE_KEY)
     } catch {
