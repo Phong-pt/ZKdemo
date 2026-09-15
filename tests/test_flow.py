@@ -34,7 +34,7 @@ class ThreePartyFlowTests(unittest.TestCase):
     def setUpClass(cls):
         cls.temp = tempfile.TemporaryDirectory()
         cls.patches = []
-        for name in ["PUBLIC_CREDDEF_FILE", "PRIVATE_KEY_FILE"]:
+        for name in ["PUBLIC_CREDDEF_FILE", "PRIVATE_KEY_FILE", "EKYC_DB_FILE"]:
             item = patch.object(issuer, name, Path(cls.temp.name) / (name + ".json"))
             item.start()
             cls.patches.append(item)
@@ -172,6 +172,14 @@ class MultiAccountTests(ThreePartyFlowTests):
         )
         self.assertEqual(response.status_code, 409)
         self.assertIn("name", response.json()["detail"])
+
+    def test_issued_flag_survives_a_restart(self):
+        self.issue(HOLDER_A)
+        issuer.EKYC_DB[:] = [dict(record) for record in issuer.SEED_EKYC_DB]
+        issuer.load_ekyc_db()
+        self.assertTrue(issuer.find_by_cccd(wallet.EKYC_DATA["cccd"])["credential_issued"])
+        response = self.client.post("/api/issue", json=wallet.EKYC_DATA, headers=headers(HOLDER_B))
+        self.assertEqual(response.status_code, 400)
 
     def test_endpoints_require_a_token(self):
         self.assertEqual(self.client.post("/api/issue", json=wallet.EKYC_DATA).status_code, 401)

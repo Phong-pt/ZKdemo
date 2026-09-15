@@ -10,6 +10,7 @@ from common import encode_attribute, hash_three
 ISSUER_DIR = Path(__file__).resolve().parent
 PUBLIC_CREDDEF_FILE = ISSUER_DIR / "cred_def_public.json"
 PRIVATE_KEY_FILE = ISSUER_DIR / "issuer_private_key.json"
+EKYC_DB_FILE = ISSUER_DIR / "ekyc_db.json"
 
 ATTRIBUTE_NAMES = ["cccd", "name", "dob", "nationality", "address"]
 
@@ -23,6 +24,22 @@ EKYC_DB = [
         "credential_issued": False,
     }
 ]
+
+SEED_EKYC_DB = [dict(record) for record in EKYC_DB]
+
+
+def save_ekyc_db() -> None:
+    EKYC_DB_FILE.write_text(json.dumps(EKYC_DB, ensure_ascii=False), encoding="utf-8")
+
+
+def load_ekyc_db() -> None:
+    # Hồ sơ eKYC phải sống sót qua restart cùng với credential đã cấp; nếu không, khởi động lại
+    # server là cờ "đã cấp" mất sạch trong khi ví vẫn giữ credential.
+    if EKYC_DB_FILE.exists():
+        EKYC_DB[:] = json.loads(EKYC_DB_FILE.read_text(encoding="utf-8"))
+
+
+load_ekyc_db()
 
 _pending_nonces: dict[str, dict] = {}
 
@@ -146,6 +163,7 @@ def register_ekyc(ekyc: dict) -> dict:
     if record is None:
         record = {**ekyc, "credential_issued": False}
         EKYC_DB.append(record)
+        save_ekyc_db()
         return record
     mismatched = [name for name in ATTRIBUTE_NAMES if record[name] != ekyc[name]]
     if mismatched:
@@ -239,4 +257,5 @@ def sign_blindly(attributes: dict, proof: dict) -> dict:
 
     del _pending_nonces[nonce]
     find_ekyc_record(**attributes)["credential_issued"] = True
+    save_ekyc_db()
     return {"a": a, "e": e, "v_prime_prime": v2}

@@ -3,9 +3,7 @@ __pycache__/
 
 issuer/cred_def_public.json
 issuer/issuer_private_key.json
-wallet/link_secret.json
-wallet/pending_request.json
-wallet/credential.json
-wallet/identity.json
+issuer/ekyc_db.json
+wallet/wallets/
 
 .env

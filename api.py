@@ -123,7 +123,12 @@ def _issue_credential(body: IssueRequest, wallet_id: str) -> IssueResponse:
     except issuer.EkycMismatchError as mismatch:
         raise HTTPException(409, str(mismatch)) from mismatch
     if nonce is None:
-        raise HTTPException(400, "CCCD này đã được cấp credential rồi")
+        raise HTTPException(
+            400,
+            "Số CCCD này đã được cấp credential cho một ví khác. Credential đó gắn với link secret "
+            "của ví kia nên ví này không dùng lại được, và issuer không cấp credential thứ hai cho "
+            "cùng một số CCCD.",
+        )
 
     ls = wallet.get_link_secret(wallet_id)
     v_prime = wallet.generate_blinding_factor()
@@ -275,7 +280,7 @@ def reset() -> dict[str, bool]:
 
 
 def _reset() -> dict[str, bool]:
-    for state_file in [issuer.PUBLIC_CREDDEF_FILE, issuer.PRIVATE_KEY_FILE]:
+    for state_file in [issuer.PUBLIC_CREDDEF_FILE, issuer.PRIVATE_KEY_FILE, issuer.EKYC_DB_FILE]:
         if state_file.exists():
             state_file.unlink()
     if wallet.WALLETS_DIR.exists():
@@ -283,8 +288,7 @@ def _reset() -> dict[str, bool]:
     issuer._pending_nonces.clear()
     verifier._pending_sessions.clear()
     _verification_requests.clear()
-    issuer.EKYC_DB[:] = issuer.EKYC_DB[:1]
-    issuer.EKYC_DB[0]["credential_issued"] = False
+    issuer.EKYC_DB[:] = [dict(record) for record in issuer.SEED_EKYC_DB]
     return {"reset": True}
 
 

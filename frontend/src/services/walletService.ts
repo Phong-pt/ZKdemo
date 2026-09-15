@@ -6,10 +6,47 @@ function randomBytes(length: number): BufferSource {
   return crypto.getRandomValues(new Uint8Array(length)) as BufferSource
 }
 
+const EXTENSION_README = `Vaulta Wallet — bản demo
+
+File này thay cho gói extension thật. Bản demo chạy toàn bộ giao diện ví trên
+màn hình lớn để nhiều người cùng xem được; đóng gói thành extension của trình
+duyệt là việc của giai đoạn sau.
+
+Ví giữ ba thứ, và cả ba đều không rời khỏi thiết bị người dùng trong mô hình
+đầy đủ:
+
+  link secret   bí mật gắn credential với đúng ví này. Issuer ký lên nó mà
+                không nhìn thấy nó, verifier kiểm chứng nó mà cũng không nhìn
+                thấy nó. Mất link secret thì credential thành vô dụng, nên
+                credential bị đánh cắp cũng không dùng được ở máy khác.
+
+  credential    chữ ký CL của issuer lên toàn bộ thuộc tính trên CCCD.
+
+  passkey       khoá sinh trắc học mở kho lưu trữ cục bộ. Đây là lớp bảo vệ
+                quyền truy cập, không phải cơ chế zero-knowledge.
+
+Lưu ý về bản demo hiện tại: phần mật mã của ví đang chạy trên máy chủ cùng với
+issuer và verifier, đổi lấy tốc độ dựng demo. Muốn đúng mô hình tự chủ danh
+tính thì phần này phải được viết lại để chạy trong trình duyệt của người dùng.
+`
+
+function downloadExtensionBundle() {
+  const blob = new Blob([EXTENSION_README], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'vaulta-wallet-extension.txt'
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 export const walletService = {
   async installExtension(onProgress: (pct: number) => void): Promise<void> {
     let pct = 0
     onProgress(0)
+    downloadExtensionBundle()
     while (pct < 100) {
       await delay(160)
       pct = Math.min(100, pct + 7 + Math.random() * 9)
