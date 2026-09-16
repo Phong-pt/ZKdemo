@@ -16,7 +16,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY common.py api.py ./
+COPY common.py api.py auth.py chain.py ./
 COPY issuer ./issuer
 COPY wallet ./wallet
 COPY verifier ./verifier
