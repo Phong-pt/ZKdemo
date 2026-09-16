@@ -25,6 +25,10 @@ ATTRIBUTE_NAMES = [
     "expiry",       # Có giá trị đến / Date of expiry
 ]
 
+# Cơ sở dữ liệu căn cước giả lập của issuer. Số CCCD dựng theo đúng cấu trúc thật: 3 số mã tỉnh
+# nơi đăng ký khai sinh, 1 số thế kỷ + giới tính (0/1 = nam/nữ sinh 1900s, 2/3 = nam/nữ sinh
+# 2000s), 2 số cuối năm sinh, 6 số ngẫu nhiên. Bản ghi đầu là thẻ thật dùng để quét demo, chín
+# bản ghi còn lại là người ảo.
 EKYC_DB = [
     {
         "cccd": "012205007445",
@@ -36,7 +40,106 @@ EKYC_DB = [
         "residence": "Tổ 1, Phường Đoàn Kết, Thành phố Lai Châu",
         "expiry": "05/05/2030",
         "credential_issued": False,
-    }
+    },
+    {
+        "cccd": "001190024518",
+        "name": "Nguyễn Thị Mai Anh",
+        "dob": "14/03/1990",
+        "sex": "Nữ",
+        "nationality": "Việt Nam",
+        "origin": "Hà Nội",
+        "residence": "Số 27, Phố Hàng Bông, Phường Hàng Gai, Quận Hoàn Kiếm, Hà Nội",
+        "expiry": "14/03/2030",
+        "credential_issued": False,
+    },
+    {
+        "cccd": "079098117632",
+        "name": "Trần Quốc Bảo",
+        "dob": "02/09/1998",
+        "sex": "Nam",
+        "nationality": "Việt Nam",
+        "origin": "Bến Tre",
+        "residence": "Số 145, Đường Nguyễn Thị Minh Khai, Phường Bến Nghé, Quận 1, TP Hồ Chí Minh",
+        "expiry": "02/09/2038",
+        "credential_issued": False,
+    },
+    {
+        "cccd": "031303456189",
+        "name": "Lê Thị Hồng Nhung",
+        "dob": "21/11/2003",
+        "sex": "Nữ",
+        "nationality": "Việt Nam",
+        "origin": "Hải Phòng",
+        "residence": "Số 8, Ngõ 45, Phố Lạch Tray, Phường Đằng Giang, Quận Ngô Quyền, Hải Phòng",
+        "expiry": "21/11/2028",
+        "credential_issued": False,
+    },
+    {
+        "cccd": "048087334271",
+        "name": "Võ Minh Hoàng",
+        "dob": "30/06/1987",
+        "sex": "Nam",
+        "nationality": "Việt Nam",
+        "origin": "Quảng Nam",
+        "residence": "Số 62, Đường Lê Duẩn, Phường Thạch Thang, Quận Hải Châu, Đà Nẵng",
+        "expiry": "30/06/2027",
+        "credential_issued": False,
+    },
+    {
+        "cccd": "040195778420",
+        "name": "Hoàng Thị Thu Hà",
+        "dob": "08/02/1995",
+        "sex": "Nữ",
+        "nationality": "Việt Nam",
+        "origin": "Nghệ An",
+        "residence": "Xóm 5, Xã Nghi Phú, Thành phố Vinh, Nghệ An",
+        "expiry": "08/02/2035",
+        "credential_issued": False,
+    },
+    {
+        "cccd": "092202669537",
+        "name": "Đặng Gia Huy",
+        "dob": "17/07/2002",
+        "sex": "Nam",
+        "nationality": "Việt Nam",
+        "origin": "Cần Thơ",
+        "residence": "Số 12, Đường 3 Tháng 2, Phường Xuân Khánh, Quận Ninh Kiều, Cần Thơ",
+        "expiry": "17/07/2027",
+        "credential_issued": False,
+    },
+    {
+        "cccd": "025093812064",
+        "name": "Bùi Văn Khánh",
+        "dob": "25/12/1993",
+        "sex": "Nam",
+        "nationality": "Việt Nam",
+        "origin": "Phú Thọ",
+        "residence": "Khu 3, Xã Sơn Vi, Huyện Lâm Thao, Phú Thọ",
+        "expiry": "25/12/2033",
+        "credential_issued": False,
+    },
+    {
+        "cccd": "056196045983",
+        "name": "Ngô Thị Lan Phương",
+        "dob": "03/08/1996",
+        "sex": "Nữ",
+        "nationality": "Việt Nam",
+        "origin": "Khánh Hòa",
+        "residence": "Số 90, Đường Trần Phú, Phường Lộc Thọ, Thành phố Nha Trang, Khánh Hòa",
+        "expiry": "03/08/2036",
+        "credential_issued": False,
+    },
+    {
+        "cccd": "027304551728",
+        "name": "Dương Thị Ngọc Ánh",
+        "dob": "12/04/2004",
+        "sex": "Nữ",
+        "nationality": "Việt Nam",
+        "origin": "Bắc Ninh",
+        "residence": "Khu phố Tiền An, Phường Tiền An, Thành phố Bắc Ninh, Bắc Ninh",
+        "expiry": "12/04/2029",
+        "credential_issued": False,
+    },
 ]
 
 SEED_EKYC_DB = [dict(record) for record in EKYC_DB]

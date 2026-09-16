@@ -7,7 +7,6 @@ import { walletService } from '@/services/walletService'
 import { IdentityCardModal } from './components/IdentityCardModal'
 import { Header } from './components/Header'
 import { PasskeyModal } from './components/PasskeyModal'
-import { DEMO_CCCD_IDENTITY } from './demoIdentity'
 import type { HandoffEvent } from './handoffProtocol'
 import { GoogleModal } from './screens/GoogleModal'
 import { Handoff } from './screens/Handoff'
@@ -21,7 +20,13 @@ import { Processing } from './screens/Processing'
 import { SignedIn } from './screens/SignedIn'
 import { Verified } from './screens/Verified'
 import { WalletDashboard } from './screens/WalletDashboard'
-import { createInitialWalletState, STAGE_LABELS, type IdentityForm, type WalletState } from './types'
+import {
+  createInitialWalletState,
+  EMPTY_IDENTITY_FORM,
+  STAGE_LABELS,
+  type IdentityForm,
+  type WalletState,
+} from './types'
 
 const PRODUCT_NAME = 'Vaulta'
 
@@ -154,7 +159,11 @@ export function WalletApp() {
       if (event.type === 'connected') {
         setState((s) => ({ ...s, marks: Math.max(s.marks, 1) }))
       } else if (event.type === 'front-captured') {
-        setState((s) => ({ ...s, marks: 2, identityForm: { ...DEMO_CCCD_IDENTITY } }))
+        setState((s) => ({
+          ...s,
+          marks: 2,
+          identityForm: { ...EMPTY_IDENTITY_FORM, ...event.fields },
+        }))
       } else if (event.type === 'back-captured') {
         setState((s) => ({ ...s, marks: 3 }))
       } else if (event.type === 'face-captured') {

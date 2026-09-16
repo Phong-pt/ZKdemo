@@ -1,16 +1,31 @@
 import { createWorker } from 'tesseract.js'
 
+// Tám trường in ở mặt trước CCCD. Tesseract đọc tiếng Việt có dấu khá phập phù, nên đây chỉ là
+// nguồn phụ: mã QR trên thẻ mới là nguồn chính (xem qrService). OCR gánh đúng hai trường mà QR
+// không chứa — quê quán và ngày hết hạn — và làm phương án dự phòng khi không quét được QR.
 export interface ParsedCccdFields {
   cccd?: string
   name?: string
   dob?: string
+  sex?: string
   nationality?: string
-  address?: string
+  origin?: string
+  residence?: string
+  expiry?: string
 }
 
 export interface OcrResult {
   text: string
   fields: ParsedCccdFields
+}
+
+function afterLabel(lines: string[], label: RegExp): string | undefined {
+  const index = lines.findIndex((line) => label.test(line))
+  if (index === -1) return undefined
+  // Nhãn và giá trị có khi nằm chung một dòng, có khi giá trị rơi xuống dòng kế tiếp.
+  const sameLine = lines[index].replace(label, '').replace(/^[:.\s]+/, '').trim()
+  if (sameLine.length > 2) return sameLine
+  return lines[index + 1]?.trim()
 }
 
 function parseFields(text: string): ParsedCccdFields {
@@ -20,19 +35,30 @@ function parseFields(text: string): ParsedCccdFields {
     .filter(Boolean)
   const result: ParsedCccdFields = {}
 
-  const cccdMatch = text.match(/(?:S[ốo]|No)[.:\s]*([0-9]{9,12})/i)
+  const cccdMatch = text.match(/\b(\d{12})\b/)
   if (cccdMatch) result.cccd = cccdMatch[1]
 
-  const dobMatch = text.match(/(\d{2}\/\d{2}\/\d{4})/)
-  if (dobMatch) result.dob = dobMatch[1]
+  const dates = [...text.matchAll(/(\d{2}\/\d{2}\/\d{4})/g)].map((match) => match[1])
+  const labelledDob = afterLabel(lines, /ng[àa]y sinh|date of birth/i)?.match(/\d{2}\/\d{2}\/\d{4}/)
+  const labelledExpiry = afterLabel(lines, /c[óo] gi[áa] tr[ịi] [đd][ếe]n|date of expiry/i)?.match(
+    /\d{2}\/\d{2}\/\d{4}/,
+  )
+  result.dob = labelledDob?.[0] ?? dates[0]
+  // Không nhãn thì suy theo thứ tự in trên thẻ: ngày sinh nằm trên, hạn dùng nằm dưới cùng.
+  result.expiry = labelledExpiry?.[0] ?? (dates.length > 1 ? dates[dates.length - 1] : undefined)
 
-  const nameMatch = text.match(/(?:H[ọo] v[àa] t[êe]n|Full name)[.:\s]*\n?([A-ZÀ-Ỹ][A-ZÀ-Ỹ\s]{2,40})/i)
-  if (nameMatch) result.name = nameMatch[1].trim()
+  const name = afterLabel(lines, /h[ọo] v[àa] t[êe]n|full name/i)
+  if (name) result.name = name.replace(/[^A-Za-zÀ-ỹ\s]/g, '').trim()
 
-  if (/Vi[ệe]t Nam/i.test(text)) result.nationality = 'Việt Nam'
+  if (/n[ữu]\b/i.test(text) && !/\bnam\b/i.test(text)) result.sex = 'Nữ'
+  else if (/\bnam\b/i.test(text)) result.sex = 'Nam'
 
-  const addrIdx = lines.findIndex((line) => /th[ưu]\s?[ờo]ng tr[úu]|residence|qu[êe] qu[áa]n/i.test(line))
-  if (addrIdx !== -1 && lines[addrIdx + 1]) result.address = lines[addrIdx + 1]
+  if (/vi[ệe]t nam/i.test(text)) result.nationality = 'Việt Nam'
+
+  const origin = afterLabel(lines, /qu[êe] qu[áa]n|place of origin/i)
+  if (origin) result.origin = origin
+  const residence = afterLabel(lines, /n[ơo]i th[ưu][ờo]ng tr[úu]|place of residence/i)
+  if (residence) result.residence = residence
 
   return result
 }
