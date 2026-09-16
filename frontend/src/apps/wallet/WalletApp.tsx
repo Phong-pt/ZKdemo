@@ -65,7 +65,28 @@ export function WalletApp() {
     (account: GoogleAccount) => {
       setAuthToken(account.token)
       setState((s) => ({ ...s, step: 'signedin', account }))
-      after(1600, () => setState((s) => ({ ...s, step: 'install' })))
+      // Ví gắn với tài khoản Google chứ không gắn với phiên, nên đăng nhập lại bằng tài khoản đã
+      // có credential thì vào thẳng ví — không bắt cài lại extension, tạo lại passkey hay eKYC lại.
+      apiClient
+        .me()
+        .catch(() => null)
+        .then((me) => {
+          const identity = me?.has_credential ? me.identity : null
+          after(1600, () =>
+            setState((s) => ({
+              ...s,
+              step: identity ? 'wallet' : 'install',
+              verifiedIdentity: identity
+                ? {
+                    name: identity.name,
+                    dob: identity.dob,
+                    nationality: identity.nationality,
+                    document: 'National ID (CCCD)',
+                  }
+                : null,
+            })),
+          )
+        })
     },
     [after],
   )
