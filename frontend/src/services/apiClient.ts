@@ -2,8 +2,11 @@ export interface IdentityAttributes {
   cccd: string
   name: string
   dob: string
+  sex: string
   nationality: string
-  address: string
+  origin: string
+  residence: string
+  expiry: string
 }
 
 export interface IssueResponse {
