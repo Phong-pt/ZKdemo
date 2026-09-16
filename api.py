@@ -22,6 +22,11 @@ app = FastAPI(title="ZKP demo API")
 
 SERVER_STARTED_AT = time.time()
 
+# Nhật ký tạm để soi vì sao một thiết bị bị coi là chưa có ví: ghi lại vài lần gọi /api/me gần
+# nhất kèm câu trả lời của máy chủ. Chỉ giữ 8 ký tự đầu của wallet_id (vốn đã là mã băm) để so
+# xem hai thiết bị có đang vào cùng một ví hay không. Xoá đi khi đã tìm ra lỗi.
+_recent_logins: list[dict] = []
+
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 app.add_middleware(
@@ -104,6 +109,7 @@ def get_config() -> dict:
         # passkey và cờ đã-cấp-credential ghi lúc chạy đều mất sạch, mọi tài khoản trở lại trạng
         # thái chưa có ví. Mốc này để đối chiếu khi thấy ví "tự dưng biến mất".
         "server_started_at": SERVER_STARTED_AT,
+        "recent_logins": _recent_logins,
         "wallets_with_passkey": sum(
             1
             for directory in (
@@ -358,6 +364,13 @@ def passkey_skip(account: Account = Depends(auth.current_account)) -> dict[str, 
 @app.get("/api/me")
 def me(account: Account = Depends(auth.current_account)) -> dict:
     stored = wallet.get_passkey(account.wallet_id)
+    _recent_logins.append({
+        "at": round(time.time() - SERVER_STARTED_AT),
+        "wallet": account.wallet_id[:8],
+        "wallet_ready": stored is not None,
+        "has_passkey": bool(stored and stored["passkey"]),
+    })
+    del _recent_logins[:-10]
     return {
         "email": account.email,
         "name": account.name,

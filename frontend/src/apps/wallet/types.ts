@@ -40,6 +40,8 @@ export interface WalletState {
   pw2: string
   passkey: PasskeyState
   passkeyError: string | null
+  // Lỗi khi hỏi máy chủ xem tài khoản đã có ví chưa; còn lỗi thì không được đi tiếp.
+  loadError: string | null
   verifiedIdentity: VerifiedIdentity | null
   cardOpen: boolean
   handoffSessionId: string
@@ -86,6 +88,7 @@ export function createInitialWalletState(): WalletState {
     pw2: '',
     passkey: 'idle',
     passkeyError: null,
+    loadError: null,
     verifiedIdentity: null,
     cardOpen: false,
     handoffSessionId: crypto.randomUUID(),

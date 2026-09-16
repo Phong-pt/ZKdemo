@@ -70,14 +70,14 @@ export function WalletApp() {
       // ví mới — muốn vào thì phải có thiết bị giữ passkey đó (WebAuthn lo phần quét chéo thiết bị).
       apiClient
         .me()
-        .catch(() => null)
         .then((me) => {
-          const identity = me?.has_credential ? me.identity : null
-          const next = !me?.wallet_ready ? 'install' : me.has_passkey ? 'unlock' : 'wallet'
+          const identity = me.has_credential ? me.identity : null
+          const next = !me.wallet_ready ? 'install' : me.has_passkey ? 'unlock' : 'wallet'
           after(1600, () =>
             setState((s) => ({
               ...s,
               step: next,
+              loadError: null,
               verifiedIdentity: identity
                 ? {
                     name: identity.name,
@@ -88,6 +88,12 @@ export function WalletApp() {
                 : null,
             })),
           )
+        })
+        // Hỏi máy chủ hỏng thì dừng lại chứ tuyệt đối không mặc định cho cài ví mới: đúng lúc đó
+        // là lúc ta không biết tài khoản đã có ví hay chưa, cho qua là mở toang cửa.
+        .catch((err: unknown) => {
+          const message = err instanceof Error ? err.message : 'Không kết nối được máy chủ'
+          setState((s) => ({ ...s, loadError: message }))
         })
     },
     [after],
@@ -268,6 +274,20 @@ export function WalletApp() {
       {state.step === 'google' && <GoogleModal productName={PRODUCT_NAME} onAccount={onAccount} />}
 
       {state.step === 'signedin' && state.account && <SignedIn account={state.account} />}
+      {state.step === 'signedin' && state.loadError && (
+        <div className="text-sm text-center flex flex-col items-center gap-2">
+          <span style={{ color: '#B4763A' }}>
+            Không đọc được ví của tài khoản này: {state.loadError}
+          </span>
+          <button
+            type="button"
+            onClick={() => state.account && onAccount(state.account)}
+            className="text-ink-3 underline cursor-pointer"
+          >
+            Thử lại
+          </button>
+        </div>
+      )}
 
       {state.step === 'install' && (
         <InstallExtension
