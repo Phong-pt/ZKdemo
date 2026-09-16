@@ -183,6 +183,17 @@ export function MobileCaptureApp() {
                   >
                     Chụp lại
                   </button>
+                  <button
+                    type="button"
+                    onClick={confirmScan}
+                    className="w-full mt-3 border border-line py-3.5 rounded-[13px] text-[15px] cursor-pointer"
+                  >
+                    Nhập thẻ demo
+                  </button>
+                  <div className="text-[12px] text-ink-4 mt-3 leading-relaxed">
+                    Dành cho các thẻ trong danh sách demo: bạn nhập thông tin thẻ ở bước xác nhận
+                    trên máy tính thay vì chụp.
+                  </div>
                 </div>
               )}
             </div>
