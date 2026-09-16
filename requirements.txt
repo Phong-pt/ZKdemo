@@ -6,3 +6,4 @@ websockets==17.1
 google-auth==2.43.0
 requests==2.32.5
 web3==8.0.0
+webauthn==3.0.0

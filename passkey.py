@@ -1,0 +1,117 @@
+import base64
+import json
+import os
+
+import webauthn
+from fastapi import HTTPException
+from webauthn.helpers import base64url_to_bytes
+from webauthn.helpers.structs import (
+    AuthenticatorSelectionCriteria,
+    PublicKeyCredentialDescriptor,
+    ResidentKeyRequirement,
+    UserVerificationRequirement,
+)
+
+from wallet import wallet
+
+RP_NAME = "Vaulta Wallet"
+# rp_id phải đúng tên miền đang phục vụ trang, còn origin phải khớp tuyệt đối cả scheme lẫn cổng —
+# trình duyệt ký hai giá trị này vào chữ ký nên sai là hỏng xác thực.
+RP_ID = os.environ.get("WEBAUTHN_RP_ID", "zkp-demo.onrender.com")
+ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("WEBAUTHN_ORIGIN", f"https://{RP_ID}").split(",")
+    if origin.strip()
+]
+
+# Challenge do máy chủ phát, mỗi cái chỉ dùng được một lần. Đây là thứ khiến chữ ký không phát lại
+# được: không có nó thì kẻ bắt được một lần xác thực cũ có thể gửi lại y nguyên để vào ví.
+_challenges: dict[str, bytes] = {}
+
+
+def _b64(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).decode("ascii").rstrip("=")
+
+
+def _stored(wallet_id: str) -> dict | None:
+    record = wallet.get_passkey(wallet_id)
+    return record["passkey"] if record else None
+
+
+def registration_options(wallet_id: str, user_name: str) -> dict:
+    options = webauthn.generate_registration_options(
+        rp_id=RP_ID,
+        rp_name=RP_NAME,
+        user_id=wallet_id.encode("utf-8"),
+        user_name=user_name,
+        user_display_name=user_name,
+        authenticator_selection=AuthenticatorSelectionCriteria(
+            resident_key=ResidentKeyRequirement.PREFERRED,
+            user_verification=UserVerificationRequirement.PREFERRED,
+        ),
+    )
+    _challenges[wallet_id] = options.challenge
+    return json.loads(webauthn.options_to_json(options))
+
+
+def verify_registration(wallet_id: str, credential: dict) -> None:
+    challenge = _challenges.pop(wallet_id, None)
+    if challenge is None:
+        raise HTTPException(400, "Challenge đã hết hạn hoặc đã dùng rồi — thử tạo lại passkey")
+    try:
+        verified = webauthn.verify_registration_response(
+            credential=credential,
+            expected_challenge=challenge,
+            expected_rp_id=RP_ID,
+            expected_origin=ORIGINS,
+        )
+    except Exception as error:
+        raise HTTPException(400, f"Passkey không hợp lệ: {error}") from error
+
+    wallet.save_passkey(
+        {
+            "credential_id": _b64(verified.credential_id),
+            "public_key": _b64(verified.credential_public_key),
+            "sign_count": verified.sign_count,
+        },
+        wallet_id,
+    )
+
+
+def authentication_options(wallet_id: str) -> dict:
+    record = _stored(wallet_id)
+    if not record:
+        raise HTTPException(400, "Tài khoản này chưa đăng ký passkey nào")
+    options = webauthn.generate_authentication_options(
+        rp_id=RP_ID,
+        allow_credentials=[
+            PublicKeyCredentialDescriptor(id=base64url_to_bytes(record["credential_id"]))
+        ],
+        user_verification=UserVerificationRequirement.PREFERRED,
+    )
+    _challenges[wallet_id] = options.challenge
+    return json.loads(webauthn.options_to_json(options))
+
+
+def verify_authentication(wallet_id: str, credential: dict) -> None:
+    challenge = _challenges.pop(wallet_id, None)
+    if challenge is None:
+        raise HTTPException(400, "Challenge đã hết hạn hoặc đã dùng rồi — thử mở khoá lại")
+    record = _stored(wallet_id)
+    if not record:
+        raise HTTPException(400, "Tài khoản này chưa đăng ký passkey nào")
+    try:
+        verified = webauthn.verify_authentication_response(
+            credential=credential,
+            expected_challenge=challenge,
+            expected_rp_id=RP_ID,
+            expected_origin=ORIGINS,
+            credential_public_key=base64url_to_bytes(record["public_key"]),
+            credential_current_sign_count=record["sign_count"],
+        )
+    except Exception as error:
+        raise HTTPException(401, f"Không mở được ví bằng passkey này: {error}") from error
+
+    # Bộ đếm tăng dần do chính thiết bị giữ; lưu lại để lần sau phát hiện chữ ký cũ bị phát lại.
+    record["sign_count"] = verified.new_sign_count
+    wallet.save_passkey(record, wallet_id)

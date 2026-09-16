@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 
 import auth
 import chain
+import passkey
 from auth import Account
 from issuer import issuer
 from wallet import wallet
@@ -315,31 +316,50 @@ def verifier_login(account: Account = Depends(auth.current_account)) -> Verifier
     )
 
 
-class PasskeyRegistration(BaseModel):
-    passkey_id: str | None = None
+@app.post("/api/passkey/register/options")
+def passkey_register_options(account: Account = Depends(auth.current_account)) -> dict:
+    return passkey.registration_options(account.wallet_id, account.name or account.email)
 
 
-@app.post("/api/passkey")
-def register_passkey(
-    body: PasskeyRegistration, account: Account = Depends(auth.current_account)
+@app.post("/api/passkey/register/verify")
+def passkey_register_verify(
+    body: dict, account: Account = Depends(auth.current_account)
 ) -> dict[str, bool]:
-    """Ghi nhận ví đã được cài cho tài khoản này, kèm credential ID của passkey vừa tạo. Lưu ở máy
-    chủ chứ không phải localStorage, để máy thứ hai đăng nhập cũng biết mà đòi đúng passkey đó."""
-    wallet.save_passkey(body.passkey_id, account.wallet_id)
+    passkey.verify_registration(account.wallet_id, body)
+    return {"verified": True}
+
+
+@app.post("/api/passkey/login/options")
+def passkey_login_options(account: Account = Depends(auth.current_account)) -> dict:
+    return passkey.authentication_options(account.wallet_id)
+
+
+@app.post("/api/passkey/login/verify")
+def passkey_login_verify(
+    body: dict, account: Account = Depends(auth.current_account)
+) -> dict[str, bool]:
+    passkey.verify_authentication(account.wallet_id, body)
+    return {"verified": True}
+
+
+@app.post("/api/passkey/skip")
+def passkey_skip(account: Account = Depends(auth.current_account)) -> dict[str, bool]:
+    """Máy không có thiết bị xác thực: ghi nhận ví đã cài nhưng không có passkey nào bảo vệ."""
+    wallet.save_passkey(None, account.wallet_id)
     return {"saved": True}
 
 
 @app.get("/api/me")
 def me(account: Account = Depends(auth.current_account)) -> dict:
-    passkey = wallet.get_passkey(account.wallet_id)
+    stored = wallet.get_passkey(account.wallet_id)
     return {
         "email": account.email,
         "name": account.name,
         "wallet_id": account.wallet_id,
         "has_credential": wallet.get_credential(account.wallet_id) is not None,
         "identity": wallet.get_identity(account.wallet_id),
-        "wallet_ready": passkey is not None,
-        "passkey_id": passkey["passkey_id"] if passkey else None,
+        "wallet_ready": stored is not None,
+        "has_passkey": bool(stored and stored["passkey"]),
     }
 
 

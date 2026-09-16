@@ -42,10 +42,25 @@ export interface MeResponse {
   wallet_id: string
   has_credential: boolean
   identity: Record<string, string> | null
-  // Ví đã được cài cho tài khoản này chưa, và passkey nào mở khoá được nó. Cả hai nằm ở máy chủ
-  // nên máy nào đăng nhập cũng thấy, không phụ thuộc vào trình duyệt đang dùng.
+  // Ví đã được cài cho tài khoản này chưa, và có passkey bảo vệ không. Cả hai nằm ở máy chủ nên
+  // máy nào đăng nhập cũng thấy, không phụ thuộc vào trình duyệt đang dùng.
   wallet_ready: boolean
-  passkey_id: string | null
+  has_passkey: boolean
+}
+
+// Options WebAuthn do máy chủ phát: các trường nhị phân được mã hoá base64url để đi qua JSON,
+// trình duyệt cần chúng ở dạng ArrayBuffer nên walletService sẽ giải mã trước khi gọi WebAuthn.
+export interface PasskeyCreationOptions {
+  rp: { id: string; name: string }
+  user: { id: string; name: string; displayName: string }
+  challenge: string
+  excludeCredentials?: { id: string; type: string; transports?: string[] }[]
+}
+
+export interface PasskeyRequestOptions {
+  challenge: string
+  rpId: string
+  allowCredentials?: { id: string; type: string; transports?: string[] }[]
 }
 
 export interface ConfigResponse {
@@ -104,9 +119,19 @@ export const apiClient = {
   reset: () => apiFetch<{ reset: boolean }>('/reset', { method: 'POST' }),
   verifierLogin: () => apiFetch<VerifierLoginResponse>('/verifier/login', { method: 'POST' }),
   me: () => apiFetch<MeResponse>('/me'),
-  registerPasskey: (passkeyId: string | null) =>
-    apiFetch<{ saved: boolean }>('/passkey', {
+  passkeyRegisterOptions: () =>
+    apiFetch<PasskeyCreationOptions>('/passkey/register/options', { method: 'POST' }),
+  passkeyRegisterVerify: (credential: unknown) =>
+    apiFetch<{ verified: boolean }>('/passkey/register/verify', {
       method: 'POST',
-      body: JSON.stringify({ passkey_id: passkeyId }),
+      body: JSON.stringify(credential),
     }),
+  passkeyLoginOptions: () =>
+    apiFetch<PasskeyRequestOptions>('/passkey/login/options', { method: 'POST' }),
+  passkeyLoginVerify: (credential: unknown) =>
+    apiFetch<{ verified: boolean }>('/passkey/login/verify', {
+      method: 'POST',
+      body: JSON.stringify(credential),
+    }),
+  passkeySkip: () => apiFetch<{ saved: boolean }>('/passkey/skip', { method: 'POST' }),
 }

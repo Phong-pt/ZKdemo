@@ -35,13 +35,12 @@ def passkey_file(wallet_id: str) -> Path:
     return wallet_dir(wallet_id) / "passkey.json"
 
 
-# Passkey gắn với tài khoản chứ không gắn với máy: credential ID phải nằm ở đây thì máy thứ hai
-# đăng nhập mới biết tài khoản này đã có passkey mà đòi xác thực, thay vì cho cài ví lại từ đầu.
-# passkey_id là None khi người dùng bỏ qua bước passkey vì máy không có thiết bị xác thực.
-def save_passkey(passkey_id: str | None, wallet_id: str = DEFAULT_WALLET_ID) -> None:
-    passkey_file(wallet_id).write_text(
-        json.dumps({"passkey_id": passkey_id}), encoding="utf-8"
-    )
+# Passkey gắn với tài khoản chứ không gắn với máy, nên public key và bộ đếm chữ ký nằm ở đây để
+# máy nào đăng nhập cũng bị đòi xác thực đúng passkey đó. Ba trạng thái phân biệt được:
+# file không tồn tại = tài khoản chưa cài ví; {"passkey": null} = đã cài nhưng máy lúc đó không có
+# thiết bị xác thực; {"passkey": {...}} = đã cài và có passkey.
+def save_passkey(record: dict | None, wallet_id: str = DEFAULT_WALLET_ID) -> None:
+    passkey_file(wallet_id).write_text(json.dumps({"passkey": record}), encoding="utf-8")
 
 
 def get_passkey(wallet_id: str = DEFAULT_WALLET_ID) -> dict | None:

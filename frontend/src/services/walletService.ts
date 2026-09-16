@@ -1,9 +1,11 @@
+import {
+  apiClient,
+  type PasskeyCreationOptions,
+  type PasskeyRequestOptions,
+} from './apiClient'
+
 function delay(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms))
-}
-
-function randomBytes(length: number): BufferSource {
-  return crypto.getRandomValues(new Uint8Array(length)) as BufferSource
 }
 
 function toBase64Url(buffer: ArrayBuffer): string {
@@ -61,6 +63,59 @@ function downloadExtensionBundle() {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
+function toCreationOptions(json: PasskeyCreationOptions): PublicKeyCredentialCreationOptions {
+  return {
+    ...json,
+    challenge: fromBase64Url(json.challenge),
+    user: { ...json.user, id: fromBase64Url(json.user.id) },
+    excludeCredentials: json.excludeCredentials?.map((item) => ({
+      ...item,
+      id: fromBase64Url(item.id),
+    })),
+  } as PublicKeyCredentialCreationOptions
+}
+
+function toRequestOptions(json: PasskeyRequestOptions): PublicKeyCredentialRequestOptions {
+  return {
+    ...json,
+    challenge: fromBase64Url(json.challenge),
+    allowCredentials: json.allowCredentials?.map((item) => ({
+      ...item,
+      id: fromBase64Url(item.id),
+    })),
+  } as PublicKeyCredentialRequestOptions
+}
+
+function encodeAttestation(credential: PublicKeyCredential) {
+  const response = credential.response as AuthenticatorAttestationResponse
+  return {
+    id: credential.id,
+    rawId: toBase64Url(credential.rawId),
+    type: credential.type,
+    response: {
+      clientDataJSON: toBase64Url(response.clientDataJSON),
+      attestationObject: toBase64Url(response.attestationObject),
+    },
+    clientExtensionResults: credential.getClientExtensionResults(),
+  }
+}
+
+function encodeAssertion(credential: PublicKeyCredential) {
+  const response = credential.response as AuthenticatorAssertionResponse
+  return {
+    id: credential.id,
+    rawId: toBase64Url(credential.rawId),
+    type: credential.type,
+    response: {
+      clientDataJSON: toBase64Url(response.clientDataJSON),
+      authenticatorData: toBase64Url(response.authenticatorData),
+      signature: toBase64Url(response.signature),
+      ...(response.userHandle ? { userHandle: toBase64Url(response.userHandle) } : {}),
+    },
+    clientExtensionResults: credential.getClientExtensionResults(),
+  }
+}
+
 export const walletService = {
   async installExtension(onProgress: (pct: number) => void): Promise<void> {
     let pct = 0
@@ -73,53 +128,34 @@ export const walletService = {
     }
   },
 
-  async createPasskey(displayName: string, signal?: AbortSignal): Promise<string> {
+  // Máy chủ phát challenge và tự kiểm chữ ký; trình duyệt chỉ là nơi thiết bị xác thực ký lên đó.
+  async createPasskey(signal?: AbortSignal): Promise<void> {
     if (!window.PublicKeyCredential) {
       throw new Error('Trình duyệt này không hỗ trợ passkey (WebAuthn).')
     }
-
-    const publicKey: PublicKeyCredentialCreationOptions = {
-      challenge: randomBytes(32),
-      rp: { name: 'Vaulta Wallet' },
-      user: {
-        id: randomBytes(16),
-        name: displayName,
-        displayName,
-      },
-      pubKeyCredParams: [
-        { type: 'public-key', alg: -7 },
-        { type: 'public-key', alg: -257 },
-      ],
-      authenticatorSelection: {
-        userVerification: 'preferred',
-        residentKey: 'preferred',
-      },
-      timeout: 30000,
-      attestation: 'none',
-    }
-
-    const credential = await navigator.credentials.create({ publicKey, signal })
+    const options = await apiClient.passkeyRegisterOptions()
+    const credential = await navigator.credentials.create({
+      publicKey: toCreationOptions(options),
+      signal,
+    })
     if (!credential) {
       throw new Error('Không tạo được passkey.')
     }
-    return toBase64Url((credential as PublicKeyCredential).rawId)
+    await apiClient.passkeyRegisterVerify(encodeAttestation(credential as PublicKeyCredential))
   },
 
-  async unlockWithPasskey(passkeyId: string, signal?: AbortSignal): Promise<void> {
+  async unlockWithPasskey(signal?: AbortSignal): Promise<void> {
     if (!window.PublicKeyCredential) {
       throw new Error('Trình duyệt này không hỗ trợ passkey (WebAuthn).')
     }
-
-    const publicKey: PublicKeyCredentialRequestOptions = {
-      challenge: randomBytes(32),
-      allowCredentials: [{ type: 'public-key', id: fromBase64Url(passkeyId) }],
-      userVerification: 'preferred',
-      timeout: 30000,
-    }
-
-    const assertion = await navigator.credentials.get({ publicKey, signal })
+    const options = await apiClient.passkeyLoginOptions()
+    const assertion = await navigator.credentials.get({
+      publicKey: toRequestOptions(options),
+      signal,
+    })
     if (!assertion) {
       throw new Error('Không mở được ví bằng passkey.')
     }
+    await apiClient.passkeyLoginVerify(encodeAssertion(assertion as PublicKeyCredential))
   },
 }

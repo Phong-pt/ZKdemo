@@ -37,8 +37,6 @@ export function WalletApp() {
 
   const requestId = useRef(0)
   const timers = useRef<number[]>([])
-  // Credential ID lấy từ /api/me lúc đăng nhập; giữ ở ref vì chỉ dùng để gọi WebAuthn.
-  const passkeyIdRef = useRef<string | null>(null)
 
   const after = useCallback((ms: number, fn: () => void) => {
     const id = window.setTimeout(fn, ms)
@@ -75,8 +73,7 @@ export function WalletApp() {
         .catch(() => null)
         .then((me) => {
           const identity = me?.has_credential ? me.identity : null
-          passkeyIdRef.current = me?.passkey_id ?? null
-          const next = !me?.wallet_ready ? 'install' : me.passkey_id ? 'unlock' : 'wallet'
+          const next = !me?.wallet_ready ? 'install' : me.has_passkey ? 'unlock' : 'wallet'
           after(1600, () =>
             setState((s) => ({
               ...s,
@@ -140,15 +137,10 @@ export function WalletApp() {
     const controller = new AbortController()
     passkeyAbort.current = controller
     setState((s) => ({ ...s, passkey: 'scanning', passkeyError: null }))
-    const displayName = stateRef.current.account?.name ?? 'Wallet user'
     walletService
-      .createPasskey(displayName, controller.signal)
-      // Chỉ coi là xong khi máy chủ đã ghi nhận passkey: ghi hỏng mà vẫn cho qua thì máy khác đăng
-      // nhập sẽ không thấy ví nào và được cài ví mới, tức là mất hẳn lớp bảo vệ.
-      .then((passkeyId) => apiClient.registerPasskey(passkeyId).then(() => passkeyId))
-      .then((passkeyId) => {
+      .createPasskey(controller.signal)
+      .then(() => {
         if (requestId.current !== id) return
-        passkeyIdRef.current = passkeyId
         setState((s) => ({ ...s, passkey: 'done' }))
       })
       .catch((err: unknown) => {
@@ -163,9 +155,8 @@ export function WalletApp() {
     const controller = new AbortController()
     passkeyAbort.current = controller
     setState((s) => ({ ...s, passkey: 'scanning', passkeyError: null }))
-    const passkeyId = passkeyIdRef.current ?? ''
     walletService
-      .unlockWithPasskey(passkeyId, controller.signal)
+      .unlockWithPasskey(controller.signal)
       .then(() => {
         if (requestId.current !== id) return
         setState((s) => ({ ...s, passkey: 'done' }))
@@ -189,7 +180,7 @@ export function WalletApp() {
   // lần đăng nhập sau vào thẳng ví thay vì bắt cài lại từ đầu.
   const skipPasskey = useCallback(() => {
     passkeyAbort.current?.abort()
-    apiClient.registerPasskey(null).catch(() => {})
+    apiClient.passkeySkip().catch(() => {})
     setState((s) => ({ ...s, step: 'wallet', passkey: 'idle', passkeyError: null }))
   }, [])
 
