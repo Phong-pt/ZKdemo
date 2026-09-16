@@ -330,14 +330,22 @@ def _reset() -> dict[str, bool]:
 # docker-compose thì nginx serve SPA nên thư mục này không có và route dưới không được đăng ký.
 if STATIC_DIR.is_dir():
 
+    # Không gửi Cache-Control thì trình duyệt tự suy ra thời hạn cache riêng và có thể giữ lại
+    # index.html cũ; index.html cũ trỏ tới tên bundle cũ nên deploy xong người dùng vẫn thấy giao
+    # diện cũ. Vite đặt hash nội dung vào tên file trong /assets nên nhóm đó cache vĩnh viễn được,
+    # còn index.html phải kiểm tra lại với máy chủ mỗi lần mở.
+    NO_CACHE = {"Cache-Control": "no-cache"}
+    IMMUTABLE = {"Cache-Control": "public, max-age=31536000, immutable"}
+
     @app.get("/{full_path:path}")
     def spa(full_path: str) -> FileResponse:
         if full_path.startswith("api/"):
             raise HTTPException(404, "Không có endpoint này")
         index = STATIC_DIR / "index.html"
         if not full_path:
-            return FileResponse(index)
+            return FileResponse(index, headers=NO_CACHE)
         candidate = (STATIC_DIR / full_path).resolve()
         if not candidate.is_relative_to(STATIC_DIR.resolve()) or not candidate.is_file():
-            return FileResponse(index)
-        return FileResponse(candidate)
+            return FileResponse(index, headers=NO_CACHE)
+        headers = IMMUTABLE if full_path.startswith("assets/") else NO_CACHE
+        return FileResponse(candidate, headers=headers)
