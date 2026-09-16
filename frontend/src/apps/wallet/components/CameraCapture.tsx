@@ -7,9 +7,19 @@ export interface CameraCaptureProps {
   hint: string
   instruction: string
   onCapture: (dataUrl: string) => void
+  // Trả về true khi khung hình hiện tại đã đọc được thẻ; lúc đó component tự bấm chụp hộ người
+  // dùng, khỏi phải canh tay.
+  onFrame?: (frame: ImageData) => boolean
 }
 
-export function CameraCapture({ facingMode = 'user', frameShape = 'card', hint, instruction, onCapture }: CameraCaptureProps) {
+export function CameraCapture({
+  facingMode = 'user',
+  frameShape = 'card',
+  hint,
+  instruction,
+  onCapture,
+  onFrame,
+}: CameraCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -22,7 +32,11 @@ export function CameraCapture({ facingMode = 'user', frameShape = 'card', hint, 
     setReady(false)
 
     navigator.mediaDevices
-      ?.getUserMedia({ video: { facingMode } })
+      // Không đặt độ phân giải thì trình duyệt trả về mặc định ~640x480; ở cỡ đó mã QR trên thẻ
+      // chỉ còn vài chục pixel nên không giải mã nổi, mà chữ cũng nhoè tới mức OCR đọc ra rác.
+      ?.getUserMedia({
+        video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      })
       .then((stream) => {
         if (cancelled) {
           stream.getTracks().forEach((track) => track.stop())
@@ -55,6 +69,31 @@ export function CameraCapture({ facingMode = 'user', frameShape = 'card', hint, 
     ctx.drawImage(video, 0, 0)
     onCapture(canvas.toDataURL('image/jpeg', 0.92))
   }
+
+  // Giữ trong ref để vòng quét bên dưới không phải phụ thuộc vào định danh của hàm.
+  const captureRef = useRef(capture)
+  captureRef.current = capture
+  const onFrameRef = useRef(onFrame)
+  onFrameRef.current = onFrame
+
+  useEffect(() => {
+    if (!onFrameRef.current || !ready) return
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d', { willReadFrequently: true })
+    if (!context) return
+    const timer = window.setInterval(() => {
+      const video = videoRef.current
+      if (!video?.videoWidth) return
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      context.drawImage(video, 0, 0)
+      if (onFrameRef.current?.(context.getImageData(0, 0, canvas.width, canvas.height))) {
+        window.clearInterval(timer)
+        captureRef.current()
+      }
+    }, 300)
+    return () => window.clearInterval(timer)
+  }, [ready])
 
   return (
     <div>

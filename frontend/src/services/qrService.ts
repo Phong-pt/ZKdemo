@@ -40,6 +40,12 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 export const qrService = {
+  decodeImageData(frame: ImageData): ScannedCccd | null {
+    // Ảnh chụp thẻ hay bị ngược sáng nên thử cả bản đảo màu.
+    const found = jsQR(frame.data, frame.width, frame.height, { inversionAttempts: 'attemptBoth' })
+    return found ? parseCccdQrPayload(found.data) : null
+  },
+
   async readCccdQr(imageDataUrl: string): Promise<ScannedCccd | null> {
     const image = await loadImage(imageDataUrl)
     const canvas = document.createElement('canvas')
@@ -48,9 +54,6 @@ export const qrService = {
     const context = canvas.getContext('2d', { willReadFrequently: true })
     if (!context) return null
     context.drawImage(image, 0, 0)
-    const { data, width, height } = context.getImageData(0, 0, canvas.width, canvas.height)
-    // Ảnh chụp thẻ hay bị ngược sáng nên thử cả bản đảo màu.
-    const found = jsQR(data, width, height, { inversionAttempts: 'attemptBoth' })
-    return found ? parseCccdQrPayload(found.data) : null
+    return qrService.decodeImageData(context.getImageData(0, 0, canvas.width, canvas.height))
   },
 }

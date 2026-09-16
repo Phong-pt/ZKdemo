@@ -1,18 +1,18 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { MonoLabel } from '@/components/primitives'
+import { Button, MonoLabel } from '@/components/primitives'
 import { connectSession, type RealtimeSession } from '@/lib/realtimeSession'
-import { ocrService, type OcrResult } from '@/services/ocrService'
-import { qrService } from '@/services/qrService'
+import { ocrService, type ParsedCccdFields } from '@/services/ocrService'
+import { qrService, type ScannedCccd } from '@/services/qrService'
 import { CameraCapture } from './components/CameraCapture'
 import type { HandoffEvent } from './handoffProtocol'
 import type { IdentityForm } from './types'
 
-type Stage = 'front' | 'ocr' | 'back' | 'face' | 'done'
+type Stage = 'front' | 'review' | 'back' | 'face' | 'done'
 
 const STEP_LABEL: Record<Exclude<Stage, 'done'>, string> = {
   front: 'Step 1 of 3',
-  ocr: 'Step 1 of 3',
+  review: 'Step 1 of 3',
   back: 'Step 2 of 3',
   face: 'Step 3 of 3',
 }
@@ -28,15 +28,21 @@ const FIELD_LABELS: [keyof IdentityForm, string][] = [
   ['expiry', 'Có giá trị đến'],
 ]
 
+function readCard(dataUrl: string): Promise<ParsedCccdFields> {
+  return ocrService
+    .recognizeCccd(dataUrl)
+    .then((result) => result.fields)
+    .catch(() => ({}))
+}
+
 export function MobileCaptureApp() {
   const [params] = useSearchParams()
   const sessionId = params.get('session') ?? ''
   const [stage, setStage] = useState<Stage>('front')
-  const [scanRunning, setScanRunning] = useState(false)
-  const [ocr, setOcr] = useState<OcrResult | null>(null)
-  const [qrFound, setQrFound] = useState(false)
+  const [reading, setReading] = useState(false)
   const [fields, setFields] = useState<Partial<IdentityForm>>({})
   const sessionRef = useRef<RealtimeSession<HandoffEvent> | null>(null)
+  const detectedRef = useRef<ScannedCccd | null>(null)
 
   useEffect(() => {
     if (!sessionId) return
@@ -46,23 +52,36 @@ export function MobileCaptureApp() {
     return () => session.close()
   }, [sessionId])
 
+  // Quét liên tục trên luồng video: khi khung hình nào đọc được thẻ thì tự bấm chụp, người dùng
+  // chỉ việc giơ thẻ vào khung.
+  const onFrame = useCallback((frame: ImageData) => {
+    const card = qrService.decodeImageData(frame)
+    if (card) detectedRef.current = card
+    return card !== null
+  }, [])
+
   // Ảnh chỉ tồn tại trong biến cục bộ của hàm này rồi bị bỏ đi: không gửi qua WebSocket, không lưu
-  // xuống đâu cả. Chỉ các trường chữ đọc được mới đi về desktop.
+  // xuống đâu cả. Chỉ các trường chữ đọc được mới đi về máy tính.
   const onFrontCaptured = (dataUrl: string) => {
-    setScanRunning(true)
-    setStage('ocr')
+    setReading(true)
+    setStage('review')
+    const detected = detectedRef.current
     Promise.all([
-      qrService.readCccdQr(dataUrl).catch(() => null),
-      ocrService.recognizeCccd(dataUrl).catch<OcrResult>(() => ({ text: '', fields: {} })),
+      detected ? Promise.resolve(detected) : qrService.readCccdQr(dataUrl).catch(() => null),
+      readCard(dataUrl),
     ])
-      .then(([qr, ocrResult]) => {
-        setOcr(ocrResult)
-        setQrFound(qr !== null)
-        // QR là nguồn chính vì nó không sai dấu tiếng Việt; OCR chỉ bù quê quán và ngày hết hạn,
-        // hai trường mã QR của CCCD không chứa. Quốc tịch thì mọi CCCD đều là Việt Nam.
-        setFields({ ...ocrResult.fields, ...(qr ?? {}), nationality: 'Việt Nam' })
+      .then(([card, scanned]) => {
+        const merged: Partial<IdentityForm> = { ...scanned, ...(card ?? {}) }
+        if (merged.cccd) merged.nationality = 'Việt Nam'
+        setFields(merged)
       })
-      .finally(() => setScanRunning(false))
+      .finally(() => setReading(false))
+  }
+
+  const retake = () => {
+    detectedRef.current = null
+    setFields({})
+    setStage('front')
   }
 
   const confirmScan = () => {
@@ -89,11 +108,7 @@ export function MobileCaptureApp() {
     )
   }
 
-  const ocrLines = (ocr?.text ?? '')
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .slice(0, 12)
+  const readable = Boolean(fields.cccd)
 
   return (
     <div className="min-h-screen bg-bg-page text-ink flex flex-col items-center px-5 py-8 gap-6">
@@ -110,25 +125,22 @@ export function MobileCaptureApp() {
           <MonoLabel>{STEP_LABEL[stage]}</MonoLabel>
           <div className="text-xl font-medium mt-2 mb-5">
             {stage === 'front'
-              ? 'Scan the front of your ID'
-              : stage === 'ocr'
-                ? 'Reading your ID'
+              ? 'Quét mặt trước thẻ căn cước'
+              : stage === 'review'
+                ? 'Kiểm tra thông tin trên thẻ'
                 : stage === 'back'
-                  ? 'Scan the back of your ID'
-                  : 'Verify your face'}
+                  ? 'Quét mặt sau thẻ căn cước'
+                  : 'Xác thực khuôn mặt'}
           </div>
 
-          {stage === 'ocr' ? (
+          {stage === 'review' ? (
             <div>
-              {scanRunning ? (
-                <div className="py-20 text-center text-sm text-ink-3">
-                  Đang đọc mã QR và chạy OCR trên ảnh vừa chụp…
-                </div>
-              ) : (
+              {reading ? (
+                <div className="py-20 text-center text-sm text-ink-3">Đang đọc thẻ…</div>
+              ) : readable ? (
                 <>
                   <div className="border border-line rounded-2xl bg-bg-sunken p-4">
-                    <MonoLabel>{qrFound ? 'Đọc từ mã QR trên thẻ' : 'Đọc bằng OCR'}</MonoLabel>
-                    <div className="mt-3 flex flex-col gap-2">
+                    <div className="flex flex-col gap-2.5">
                       {FIELD_LABELS.map(([key, label]) => (
                         <div key={key} className="flex gap-3 text-[13px] leading-snug">
                           <div className="w-[104px] shrink-0 text-ink-3">{label}</div>
@@ -139,43 +151,38 @@ export function MobileCaptureApp() {
                       ))}
                     </div>
                   </div>
-
-                  {!qrFound && (
-                    <div className="text-[12px] mt-3 leading-relaxed" style={{ color: '#B4763A' }}>
-                      Không tìm thấy mã QR trong ảnh. Dữ liệu phía trên chỉ do OCR đoán nên dễ sai —
-                      chụp lại cho rõ mã QR ở góc phải mặt trước thẻ, hoặc sửa tay ở bước xác nhận
-                      trên máy tính.
-                    </div>
-                  )}
-
-                  <div className="border border-line rounded-2xl bg-bg-sunken p-4 mt-3">
-                    <MonoLabel>OCR output</MonoLabel>
-                    {ocrLines.length > 0 ? (
-                      <div className="mt-3 font-mono text-[11px] leading-[1.6] text-ink-2 break-words">
-                        {ocrLines.map((line, i) => (
-                          <div key={i}>{line}</div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="mt-3 text-[13px] text-ink-3">
-                        Không đọc được chữ nào từ ảnh vừa chụp.
-                      </div>
-                    )}
-                  </div>
-
                   <div className="text-[12px] text-ink-4 mt-3 leading-relaxed">
-                    Ảnh vừa chụp không được lưu lại và không rời khỏi điện thoại — chỉ các trường chữ
-                    phía trên được gửi về ví trên máy tính để bạn xác nhận.
+                    Ảnh vừa chụp không được lưu lại và không rời khỏi điện thoại. Thông tin còn
+                    thiếu có thể bổ sung ở bước xác nhận trên máy tính.
                   </div>
-
+                  <div className="flex gap-3 mt-5">
+                    <Button variant="secondary" onClick={retake}>
+                      Chụp lại
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={confirmScan}
+                      className="flex-1 bg-ink text-white py-3.5 rounded-[13px] text-[15px] font-medium cursor-pointer"
+                    >
+                      Tiếp tục
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center">
+                  <div className="text-[15px] leading-relaxed">Chưa đọc được thẻ</div>
+                  <div className="text-[13px] text-ink-3 mt-2 leading-relaxed">
+                    Đặt trọn tấm thẻ trong khung, giữ máy chắc tay ở nơi đủ sáng và tránh bóng loá
+                    trên mặt thẻ.
+                  </div>
                   <button
                     type="button"
-                    onClick={confirmScan}
-                    className="w-full mt-5 bg-ink text-white py-3.5 rounded-[13px] text-[15px] font-medium cursor-pointer"
+                    onClick={retake}
+                    className="w-full mt-6 bg-ink text-white py-3.5 rounded-[13px] text-[15px] font-medium cursor-pointer"
                   >
-                    Tiếp tục
+                    Chụp lại
                   </button>
-                </>
+                </div>
               )}
             </div>
           ) : (
@@ -186,11 +193,10 @@ export function MobileCaptureApp() {
               hint={stage === 'face' ? 'FACE' : 'CCCD'}
               instruction={
                 stage === 'face'
-                  ? 'Look directly at the camera'
-                  : stage === 'front'
-                    ? 'Đặt thẻ vào khung, lấy rõ mã QR ở góc phải'
-                    : 'Place your ID inside the frame'
+                  ? 'Nhìn thẳng vào camera'
+                  : 'Đặt trọn tấm thẻ trong khung, máy sẽ tự chụp khi đọc được'
               }
+              onFrame={stage === 'front' ? onFrame : undefined}
               onCapture={stage === 'front' ? onFrontCaptured : stage === 'back' ? onBackCaptured : onFaceCaptured}
             />
           )}
@@ -202,8 +208,8 @@ export function MobileCaptureApp() {
           <div className="w-16 h-16 rounded-full bg-green text-white text-2xl flex items-center justify-center mx-auto mb-4">
             ✓
           </div>
-          <div className="text-xl font-medium">All steps complete</div>
-          <div className="text-sm text-ink-3 mt-2">Return to your computer to continue.</div>
+          <div className="text-xl font-medium">Đã hoàn tất các bước</div>
+          <div className="text-sm text-ink-3 mt-2">Quay lại máy tính để tiếp tục.</div>
         </div>
       )}
     </div>
