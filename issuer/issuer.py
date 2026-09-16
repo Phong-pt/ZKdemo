@@ -173,10 +173,13 @@ ATTRIBUTE_LABELS = {
 }
 
 
+# Thông báo ra ngoài tuyệt đối không nêu trường nào bị lệch. Nói "sai nơi thường trú" là
+# xác nhận luôn rằng các trường còn lại đã đúng, biến thông báo lỗi thành một oracle: kẻ dò
+# chỉ cần thử lần lượt từng trường là dựng lại được cả hồ sơ mà không phải xâm nhập gì.
+# Danh sách trường lệch vẫn giữ trong self.mismatched cho log nội bộ.
 class EkycMismatchError(ValueError):
     def __init__(self, mismatched: list[str]) -> None:
-        fields = ", ".join(ATTRIBUTE_LABELS[name] for name in mismatched)
-        super().__init__(f"Thông tin không khớp hồ sơ của số căn cước này: {fields}.")
+        super().__init__("Thông tin không khớp dữ liệu căn cước. Vui lòng quét lại.")
         self.mismatched = mismatched
 
 

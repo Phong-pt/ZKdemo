@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { publish, subscribe } from '@/lib/sessionBus'
 import { apiClient, setAuthToken } from '@/services/apiClient'
-import { authService, type GoogleAccount } from '@/services/authService'
+import { authService, isTokenExpired, type GoogleAccount } from '@/services/authService'
 import {
   buildDiscCards,
   buildLogRecord,
@@ -81,6 +81,12 @@ export function VerifierApp() {
         orgName: string
         token: string
         user?: string
+      }
+      // Token quá một giờ là hết hạn; xoá đi và quay về màn đăng nhập thay vì để người
+      // dùng bấm một hồi rồi mới nhận lỗi từ máy chủ.
+      if (isTokenExpired(token)) {
+        localStorage.removeItem(AUTH_STORAGE_KEY)
+        return
       }
       setAuthToken(token)
       setState((s) => ({ ...s, authed: true, orgEmail: email, orgName, orgUser: user ?? '' }))

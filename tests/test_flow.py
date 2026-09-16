@@ -171,7 +171,17 @@ class MultiAccountTests(ThreePartyFlowTests):
             "/api/issue", json={**wallet.EKYC_DATA, "name": "Kẻ mạo danh"}, headers=headers(HOLDER_A)
         )
         self.assertEqual(response.status_code, 409)
-        self.assertIn("name", response.json()["detail"])
+        self.assertIsNone(wallet.get_credential(wallet_id(HOLDER_A)))
+
+    def test_mismatch_message_does_not_name_the_wrong_field(self):
+        """Nói đích danh trường nào lệch là biến thông báo lỗi thành công cụ dò: kẻ tấn công
+        thử lần lượt từng trường là dựng lại được cả hồ sơ mà không cần xâm nhập gì."""
+        response = self.client.post(
+            "/api/issue", json={**wallet.EKYC_DATA, "name": "Kẻ mạo danh"}, headers=headers(HOLDER_A)
+        )
+        detail = response.json()["detail"]
+        for leak in ["name", "Họ và tên", wallet.EKYC_DATA["name"]]:
+            self.assertNotIn(leak, detail)
 
     def test_issued_flag_survives_a_restart(self):
         self.issue(HOLDER_A)

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { connectSession } from '@/lib/realtimeSession'
 import { apiClient, setAuthToken, type IdentityAttributes } from '@/services/apiClient'
-import { authService, type GoogleAccount } from '@/services/authService'
+import { authService, isTokenExpired, type GoogleAccount } from '@/services/authService'
 import { kycService } from '@/services/kycService'
 import { walletService } from '@/services/walletService'
 import { IdentityCardModal } from './components/IdentityCardModal'
@@ -42,7 +42,7 @@ function loadSession(): GoogleAccount | null {
     const raw = localStorage.getItem(SESSION_KEY)
     if (!raw) return null
     const { account, savedAt } = JSON.parse(raw) as { account: GoogleAccount; savedAt: number }
-    if (Date.now() - savedAt > SESSION_TTL_MS) {
+    if (Date.now() - savedAt > SESSION_TTL_MS || isTokenExpired(account.token)) {
       localStorage.removeItem(SESSION_KEY)
       return null
     }

@@ -23,6 +23,19 @@ export function demoAccount(label = 'demo'): GoogleAccount {
   }
 }
 
+// ID-token của Google chỉ sống một giờ. Kiểm hạn ngay trên máy để khỏi gửi một token đã
+// chết lên máy chủ rồi mới nhận lỗi. Token demo không phải JWT nên coi như luôn còn hạn.
+export function isTokenExpired(token: string): boolean {
+  try {
+    const payload = token.split('.')[1]
+    const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
+    const claims = JSON.parse(json) as { exp?: number }
+    return !claims.exp || claims.exp * 1000 <= Date.now()
+  } catch {
+    return false
+  }
+}
+
 function decodeIdToken(token: string): { name: string; email: string } {
   const payload = token.split('.')[1]
   const bytes = atob(payload.replace(/-/g, '+').replace(/_/g, '/'))

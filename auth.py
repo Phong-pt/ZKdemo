@@ -49,7 +49,12 @@ def account_from_token(token: str) -> Account:
     try:
         claims = id_token.verify_oauth2_token(token, _request_session, client_id)
     except ValueError as error:
-        raise HTTPException(401, f"ID-token không hợp lệ: {error}") from error
+        # ID-token của Google sống một giờ. Hết hạn là chuyện bình thường chứ không phải
+        # tấn công, nên tách riêng để giao diện biết đường mời đăng nhập lại thay vì hiện
+        # nguyên văn thông báo của thư viện kèm hai mốc thời gian.
+        if "expired" in str(error).lower():
+            raise HTTPException(401, "Phiên đăng nhập đã hết hạn. Đăng nhập lại.") from error
+        raise HTTPException(401, "Đăng nhập không hợp lệ. Đăng nhập lại.") from error
     if claims.get("iss") not in _GOOGLE_ISSUERS:
         raise HTTPException(401, "ID-token không do Google phát hành")
     return Account(
