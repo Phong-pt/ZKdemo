@@ -66,12 +66,16 @@ export function MobileCaptureApp() {
     setReading(true)
     setStage('review')
     const detected = detectedRef.current
-    Promise.all([
-      detected ? Promise.resolve(detected) : qrService.readCccdQr(dataUrl).catch(() => null),
-      readCard(dataUrl),
-    ])
-      .then(([card, scanned]) => {
-        const merged: Partial<IdentityForm> = { ...scanned, ...(card ?? {}) }
+    if (detected) {
+      setFields({ ...detected, nationality: 'Việt Nam' })
+      setReading(false)
+      return
+    }
+    // Chỉ khi không đọc được mã QR mới phải nhờ tới việc đọc chữ trên ảnh — chậm hơn nhiều lần và
+    // kém chính xác hơn hẳn, nhất là với tiếng Việt có dấu.
+    Promise.all([qrService.readCccdQr(dataUrl).catch(() => null), readCard(dataUrl)])
+      .then(([card, guessed]) => {
+        const merged: Partial<IdentityForm> = { ...guessed, ...(card ?? {}) }
         if (merged.cccd) merged.nationality = 'Việt Nam'
         setFields(merged)
       })
@@ -141,19 +145,16 @@ export function MobileCaptureApp() {
                 <>
                   <div className="border border-line rounded-2xl bg-bg-sunken p-4">
                     <div className="flex flex-col gap-2.5">
-                      {FIELD_LABELS.map(([key, label]) => (
+                      {FIELD_LABELS.filter(([key]) => fields[key]).map(([key, label]) => (
                         <div key={key} className="flex gap-3 text-[13px] leading-snug">
                           <div className="w-[104px] shrink-0 text-ink-3">{label}</div>
-                          <div className={fields[key] ? 'text-ink' : 'text-ink-4'}>
-                            {fields[key] || '—'}
-                          </div>
+                          <div>{fields[key]}</div>
                         </div>
                       ))}
                     </div>
                   </div>
                   <div className="text-[12px] text-ink-4 mt-3 leading-relaxed">
-                    Ảnh vừa chụp không được lưu lại và không rời khỏi điện thoại. Thông tin còn
-                    thiếu có thể bổ sung ở bước xác nhận trên máy tính.
+                    Ảnh vừa chụp không được lưu lại và không rời khỏi điện thoại.
                   </div>
                   <div className="flex gap-3 mt-5">
                     <Button variant="secondary" onClick={retake}>

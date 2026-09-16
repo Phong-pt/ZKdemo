@@ -87,6 +87,9 @@ export const apiClient = {
   declineRequest: (id: string) =>
     apiFetch<VerificationSession>(`/requests/${encodeURIComponent(id)}/decline`, { method: 'POST' }),
   config: () => apiFetch<ConfigResponse>('/config'),
+  // Hai trường mã QR trên thẻ không chứa, lấy từ hồ sơ issuer theo số CCCD vừa quét được.
+  ekycLookup: (cccd: string) =>
+    apiFetch<{ origin: string; expiry: string }>(`/ekyc/lookup?cccd=${encodeURIComponent(cccd)}`),
   issueCredential: (identity: IdentityAttributes) =>
     apiFetch<IssueResponse>('/issue', { method: 'POST', body: JSON.stringify(identity) }),
   verifyPresentation: (revealedAttrs: string[]) =>

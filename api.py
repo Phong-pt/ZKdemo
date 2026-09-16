@@ -110,6 +110,18 @@ def get_cred_def() -> dict:
     return issuer.get_public_cred_def()
 
 
+@app.get("/api/ekyc/lookup")
+def ekyc_lookup(cccd: str, account: Account = Depends(auth.current_account)) -> dict[str, str]:
+    """Mã QR in trên CCCD chỉ chứa số thẻ, họ tên, ngày sinh, giới tính và nơi thường trú — không
+    có quê quán lẫn ngày hết hạn. Hai trường đó lấy từ hồ sơ issuer đang giữ thay vì trông chờ OCR
+    đọc chữ trên ảnh. Các trường còn lại vẫn phải khớp đúng dữ liệu quét từ thẻ thì mới ký được,
+    nên khai man tên hay ngày sinh của người khác vẫn bị từ chối như cũ."""
+    record = issuer.find_by_cccd(cccd)
+    if record is None:
+        raise HTTPException(404, "Không tìm thấy hồ sơ căn cước cho số này")
+    return {"origin": record["origin"], "expiry": record["expiry"]}
+
+
 @app.post("/api/issue", response_model=IssueResponse)
 def issue_credential(body: IssueRequest, account: Account = Depends(auth.current_account)) -> IssueResponse:
     with _flow_lock:

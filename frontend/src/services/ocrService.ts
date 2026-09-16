@@ -48,7 +48,18 @@ function parseFields(text: string): ParsedCccdFields {
   result.expiry = labelledExpiry?.[0] ?? (dates.length > 1 ? dates[dates.length - 1] : undefined)
 
   const name = afterLabel(lines, /h[ọo] v[àa] t[êe]n|full name/i)
-  if (name) result.name = name.replace(/[^A-Za-zÀ-ỹ\s]/g, '').trim()
+  // Nhãn "Họ và tên" in nhỏ nên OCR hay đọc trượt, trong khi họ tên lại là dòng chữ to nhất thẻ và
+  // in hoa toàn bộ — bắt theo đặc điểm đó chắc ăn hơn là bám vào nhãn.
+  const shouted = lines.find(
+    (line) =>
+      line === line.toUpperCase() &&
+      !/\d/.test(line) &&
+      !/full name|h[ọo] v[àa] t[êe]n|nationality|qu[ốo]c t[ịi]ch|residence|origin|sex/i.test(line) &&
+      line.trim().split(/\s+/).length >= 2 &&
+      line.replace(/\s/g, '').length >= 6,
+  )
+  const picked = name ?? shouted
+  if (picked) result.name = picked.replace(/[^A-Za-zÀ-ỹ\s]/g, '').trim()
 
   if (/n[ữu]\b/i.test(text) && !/\bnam\b/i.test(text)) result.sex = 'Nữ'
   else if (/\bnam\b/i.test(text)) result.sex = 'Nam'

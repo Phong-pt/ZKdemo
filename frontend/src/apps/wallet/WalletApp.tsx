@@ -205,11 +205,17 @@ export function WalletApp() {
       if (event.type === 'connected') {
         setState((s) => ({ ...s, marks: Math.max(s.marks, 1) }))
       } else if (event.type === 'front-captured') {
-        setState((s) => ({
-          ...s,
-          marks: 2,
-          identityForm: { ...EMPTY_IDENTITY_FORM, ...event.fields },
-        }))
+        const scanned = event.fields
+        setState((s) => ({ ...s, marks: 2, identityForm: { ...EMPTY_IDENTITY_FORM, ...scanned } }))
+        // Quê quán và ngày hết hạn không nằm trong mã QR của thẻ, hỏi issuer theo số vừa quét.
+        if (scanned.cccd) {
+          apiClient
+            .ekycLookup(scanned.cccd)
+            .then((extra) =>
+              setState((s) => ({ ...s, identityForm: { ...s.identityForm, ...extra } })),
+            )
+            .catch(() => {})
+        }
       } else if (event.type === 'back-captured') {
         setState((s) => ({ ...s, marks: 3 }))
       } else if (event.type === 'face-captured') {
