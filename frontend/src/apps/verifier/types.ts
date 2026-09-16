@@ -133,6 +133,8 @@ export interface VerifierState {
   authed: boolean
   orgName: string
   orgEmail: string
+  // Tên hiển thị lấy từ hồ sơ Google của người đang đăng nhập.
+  orgUser: string
   loginBusy: boolean
   loginError: string | null
   view: View
@@ -164,6 +166,7 @@ export function createInitialVerifierState(): VerifierState {
     authed: false,
     orgName: '',
     orgEmail: '',
+    orgUser: '',
     loginBusy: false,
     loginError: null,
     view: 'dashboard',

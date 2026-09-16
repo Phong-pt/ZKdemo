@@ -121,7 +121,7 @@ export function MobileCaptureApp() {
           className="w-[26px] h-[26px] rounded-[8px]"
           style={{ background: 'linear-gradient(145deg,#2A2C33,#0E0F12)' }}
         />
-        <div className="text-sm font-semibold">Vaulta</div>
+        <div className="text-sm font-semibold">NX Cred</div>
       </div>
 
       {stage !== 'done' && (

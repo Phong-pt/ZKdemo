@@ -28,7 +28,7 @@ import {
   type WalletState,
 } from './types'
 
-const PRODUCT_NAME = 'Vaulta'
+const PRODUCT_NAME = 'NX Cred'
 
 export function WalletApp() {
   const [state, setState] = useState<WalletState>(createInitialWalletState)

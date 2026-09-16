@@ -22,6 +22,8 @@ export interface VerifyResponse {
 export interface VerificationSession {
   id: string
   name: string
+  // Tên tổ chức verifier, backend gắn vào lúc tạo yêu cầu từ domain email người đăng nhập.
+  org_name: string
   purpose: string
   revealed_attrs: string[]
   conditions: string[]

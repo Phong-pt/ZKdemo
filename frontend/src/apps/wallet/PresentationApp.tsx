@@ -1,18 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { WalletPhone } from '@/apps/verifier/components/WalletPhone'
+import { CLAIMS, CLAIM_TO_BACKEND_ATTR, type PhoneState } from '@/apps/verifier/types'
 import { apiClient, setAuthToken, type VerificationSession } from '@/services/apiClient'
 import { authService, demoAccount, type GoogleAccount } from '@/services/authService'
-
-const labels: Record<string, string> = {
-  cccd: 'Số CCCD',
-  name: 'Họ và tên',
-  dob: 'Ngày sinh',
-  sex: 'Giới tính',
-  nationality: 'Quốc tịch',
-  origin: 'Quê quán',
-  residence: 'Nơi thường trú',
-  expiry: 'Có giá trị đến',
-}
 
 const DEMO_LABELS = ['nguoi-dung-a', 'nguoi-dung-b']
 
@@ -38,12 +29,14 @@ function SignInGate({ onAccount }: { onAccount: (account: GoogleAccount) => void
   }, [onAccount])
 
   return (
-    <>
-      <p className="mt-3 text-ink-3">
-        Sign in with the account that holds this credential. The verifier never sees which account you use —
-        it only receives the proof.
+    <div className="w-full max-w-[420px] bg-bg-surface border border-line rounded-[24px] p-8 text-center">
+      <div className="font-mono text-xs text-ink-4">NX CRED · YÊU CẦU XÁC MINH</div>
+      <h1 className="text-[22px] font-medium mt-4">Mở ví để duyệt yêu cầu</h1>
+      <p className="mt-3 text-[13px] text-ink-3 leading-[1.6]">
+        Đăng nhập bằng tài khoản đang giữ thẻ định danh. Bên xác minh không biết bạn dùng tài
+        khoản nào — họ chỉ nhận được bằng chứng.
       </p>
-      <div className="mt-5 flex flex-col items-center gap-3">
+      <div className="mt-6 flex flex-col items-center gap-3">
         <div ref={buttonRef} style={{ minHeight: 44 }} />
         {!mounted &&
           DEMO_LABELS.map((label) => (
@@ -51,22 +44,25 @@ function SignInGate({ onAccount }: { onAccount: (account: GoogleAccount) => void
               key={label}
               type="button"
               onClick={() => onAccount(demoAccount(label))}
-              className="w-full border border-line rounded-xl p-3 text-sm"
+              className="w-full border border-line rounded-xl p-3 text-sm cursor-pointer"
             >
               Continue as {demoAccount(label).email}
             </button>
           ))}
       </div>
-    </>
+    </div>
   )
 }
+
+const GENERATING_TICK_MS = 420
 
 function PresentationSession({ sessionId }: { sessionId: string }) {
   const [account, setAccount] = useState<GoogleAccount | null>(null)
   const [session, setSession] = useState<VerificationSession | null>(null)
+  const [phone, setPhone] = useState<Exclude<PhoneState, 'idle'>>('scan')
   const [selected, setSelected] = useState<Record<string, boolean>>({})
+  const [gstep, setGstep] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
   const submitting = useRef(false)
 
   useEffect(() => {
@@ -78,6 +74,16 @@ function PresentationSession({ sessionId }: { sessionId: string }) {
         const result = await apiClient.getRequest(sessionId)
         if (cancelled) return
         setSession(result)
+        // Yêu cầu vừa tải về: bật sẵn đúng những trường verifier hỏi, các trường còn lại vẫn nằm
+        // trong danh sách nhưng bị khoá ở trạng thái không chia sẻ.
+        setSelected((current) =>
+          Object.keys(current).length
+            ? current
+            : Object.fromEntries(result.revealed_attrs.map((key) => [key, true])),
+        )
+        setPhone((current) =>
+          current === 'scan' && result.status === 'pending' ? 'request' : current,
+        )
         if (result.status !== 'pending') return
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Không tải được yêu cầu')
@@ -91,99 +97,122 @@ function PresentationSession({ sessionId }: { sessionId: string }) {
     }
   }, [sessionId, account])
 
-  const signIn = (chosen: GoogleAccount) => {
+  useEffect(() => {
+    if (phone !== 'generating') return
+    const timer = setInterval(() => setGstep((step) => Math.min(step + 1, 5)), GENERATING_TICK_MS)
+    return () => clearInterval(timer)
+  }, [phone])
+
+  const signIn = useCallback((chosen: GoogleAccount) => {
     setAuthToken(chosen.token)
     setAccount(chosen)
-  }
+  }, [])
+
+  const requested = useMemo(() => new Set(session?.revealed_attrs ?? []), [session])
+
+  const discCards = CLAIMS.map((claim) => {
+    const attr = CLAIM_TO_BACKEND_ATTR[claim.key]
+    const required = requested.has(attr)
+    const on = required && !!selected[attr]
+    return {
+      key: claim.key,
+      label: claim.label.toUpperCase(),
+      value: on ? 'Value from your signed credential' : 'Not shared',
+      valueColor: on ? '#16171A' : '#8A8C94',
+      note: required
+        ? on
+          ? 'Required by this request'
+          : 'Turned off — the verifier will see nothing'
+        : 'Privacy protected ✓',
+      noteColor: on ? '#8A8C94' : '#17795E',
+      switchBg: on ? '#17795E' : '#DCDCD6',
+      knobOn: on,
+      border: on ? '#16171A' : '#EFEFEB',
+      bg: on ? '#FBFBF9' : '#FFFFFF',
+      // Verifier không hỏi trường này thì người dùng cũng không có gì để quyết định: nó nằm ngoài
+      // yêu cầu nên vĩnh viễn không được chia sẻ.
+      disabled: !required,
+      onToggle: () => setSelected((s) => ({ ...s, [attr]: !s[attr] })),
+    }
+  })
+
+  const requestedAttrs = CLAIMS.filter((claim) => requested.has(CLAIM_TO_BACKEND_ATTR[claim.key])).map(
+    (claim) => ({
+      label: claim.label,
+      value: 'Only shared with your approval',
+      tag: 'REVEAL',
+      tagBg: '#F5F5F1',
+      tagFg: '#6E7079',
+    }),
+  )
+  const conditionAttrs = (session?.conditions ?? []).map((key) => ({
+    label: key === 'credValid' ? 'Credential validity' : key,
+    value: 'Proven without revealing data',
+    tag: 'PROVE',
+    tagBg: '#EEF2FD',
+    tagFg: '#2F5FE0',
+  }))
+
+  const sharingKeys = CLAIMS.filter(
+    (claim) => requested.has(CLAIM_TO_BACKEND_ATTR[claim.key]) && selected[CLAIM_TO_BACKEND_ATTR[claim.key]],
+  )
+  const notSharing = CLAIMS.filter((claim) => !sharingKeys.includes(claim))
 
   const respond = async (approve: boolean) => {
     if (!session || submitting.current) return
     submitting.current = true
-    setBusy(true)
     setError(null)
+    setGstep(0)
+    setPhone(approve ? 'generating' : 'sent')
     try {
+      const attrs = session.revealed_attrs.filter((key) => selected[key])
       const result = approve
-        ? await apiClient.approveRequest(sessionId, session.revealed_attrs.filter((key) => selected[key]))
+        ? await apiClient.approveRequest(sessionId, attrs)
         : await apiClient.declineRequest(sessionId)
       setSession(result)
+      setPhone('sent')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không gửi được phản hồi')
+      setPhone('disclosure')
     } finally {
       submitting.current = false
-      setBusy(false)
     }
   }
 
-  const sharing = session?.revealed_attrs.filter((key) => selected[key]).length ?? 0
+  if (!account) {
+    return (
+      <main className="min-h-screen bg-bg-page p-6 flex justify-center items-start text-ink">
+        <SignInGate onAccount={signIn} />
+      </main>
+    )
+  }
 
   return (
-    <main className="min-h-screen bg-bg-page p-6 flex justify-center items-start text-ink">
-      <section className="w-full max-w-lg bg-bg-surface border border-line rounded-[24px] p-8">
-        <div className="font-mono text-xs text-ink-4">WALLET · VERIFICATION REQUEST</div>
-        <h1 className="text-[26px] font-medium mt-4">
-          {account ? (session?.name ?? 'Loading request…') : 'Approve from your wallet'}
-        </h1>
-        {error && <p role="alert" className="mt-4 text-amber">{error}</p>}
-
-        {!account && <SignInGate onAccount={signIn} />}
-
-        {account && session && (
-          <>
-            <p className="mt-3 text-ink-3">{session.purpose}</p>
-            <p className="mt-1 text-xs text-ink-4">Signed in as {account.email}</p>
-            {session.status === 'pending' ? (
-              <>
-                <p className="mt-5 text-sm text-ink-3">
-                  Nothing is shared until you turn it on. Attributes you leave off stay inside the proof —
-                  the verifier still learns the credential is valid and yours.
-                </p>
-                <div className="mt-4 flex flex-col gap-3">
-                  {session.revealed_attrs.map((key) => (
-                    <label key={key} className="flex gap-3 border border-line rounded-xl p-4">
-                      <input
-                        type="checkbox"
-                        checked={!!selected[key]}
-                        disabled={busy}
-                        onChange={(event) => setSelected((s) => ({ ...s, [key]: event.target.checked }))}
-                      />
-                      {labels[key] ?? key}
-                    </label>
-                  ))}
-                </div>
-                <p className="mt-4 text-sm text-green">
-                  Sharing {sharing} of {session.revealed_attrs.length} requested attribute(s).
-                </p>
-                <button
-                  disabled={busy}
-                  onClick={() => void respond(true)}
-                  className="w-full mt-6 bg-ink text-white rounded-xl p-3 disabled:opacity-50"
-                >
-                  {busy ? 'Processing…' : 'Approve verification'}
-                </button>
-                <button
-                  disabled={busy}
-                  onClick={() => void respond(false)}
-                  className="w-full mt-3 border border-line rounded-xl p-3 disabled:opacity-50"
-                >
-                  Decline
-                </button>
-              </>
-            ) : (
-              <p role="status" className="mt-6 text-lg">
-                {session.status === 'verified'
-                  ? 'Verification complete ✓'
-                  : session.status === 'expired'
-                    ? 'Request expired'
-                    : 'Verification declined'}
-              </p>
-            )}
-          </>
-        )}
-
-        <Link to="/" className="inline-block mt-6 text-sm text-blue">
-          Open identity wallet / issue credential
-        </Link>
-      </section>
+    <main className="min-h-screen bg-bg-page p-4 flex flex-col items-center gap-3 text-ink">
+      {error && (
+        <p role="alert" className="text-sm" style={{ color: '#B4763A' }}>
+          {error}
+        </p>
+      )}
+      <WalletPhone
+        bare
+        phone={phone}
+        requestId={sessionId.slice(0, 10)}
+        orgName={session?.org_name ?? 'Đang tải…'}
+        purposeText={session?.purpose ?? ''}
+        requestedAttrs={[...requestedAttrs, ...conditionAttrs]}
+        zkNote="Chỉ những trường bạn đồng ý mới nằm trong bằng chứng gửi đi. Phần còn lại vẫn được chứng minh là hợp lệ mà không lộ giá trị."
+        discCards={discCards}
+        sharingCount={`${sharingKeys.length} of ${CLAIMS.length} attributes`}
+        provingCount={`${session?.conditions.length ?? 0} statement(s)`}
+        notSharingText={notSharing.slice(0, 4).map((claim) => claim.label).join(', ')}
+        gstep={gstep}
+        onToDisclosure={() => setPhone('disclosure')}
+        onApprove={() => void respond(true)}
+        onDecline={() => void respond(false)}
+        onDone={() => window.location.assign('/')}
+      />
+      <div className="text-xs text-ink-4">Đăng nhập bằng {account.email}</div>
     </main>
   )
 }

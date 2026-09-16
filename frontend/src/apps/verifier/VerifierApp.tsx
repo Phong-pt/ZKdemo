@@ -76,9 +76,14 @@ export function VerifierApp() {
     try {
       const stored = localStorage.getItem(AUTH_STORAGE_KEY)
       if (!stored) return
-      const { email, orgName, token } = JSON.parse(stored) as { email: string; orgName: string; token: string }
+      const { email, orgName, token, user } = JSON.parse(stored) as {
+        email: string
+        orgName: string
+        token: string
+        user?: string
+      }
       setAuthToken(token)
-      setState((s) => ({ ...s, authed: true, orgEmail: email, orgName }))
+      setState((s) => ({ ...s, authed: true, orgEmail: email, orgName, orgUser: user ?? '' }))
     } catch {
       // ignore malformed/missing storage
     }
@@ -102,12 +107,24 @@ export function VerifierApp() {
         try {
           localStorage.setItem(
             AUTH_STORAGE_KEY,
-            JSON.stringify({ email: result.email, orgName: result.org_name, token: account.token }),
+            JSON.stringify({
+              email: result.email,
+              orgName: result.org_name,
+              token: account.token,
+              user: account.name,
+            }),
           )
         } catch {
           // localStorage unavailable — auth just won't survive a refresh
         }
-        setState((s) => ({ ...s, authed: true, orgEmail: result.email, orgName: result.org_name!, loginBusy: false }))
+        setState((s) => ({
+          ...s,
+          authed: true,
+          orgEmail: result.email,
+          orgName: result.org_name!,
+          orgUser: account.name,
+          loginBusy: false,
+        }))
       })
       .catch((err: unknown) => {
         setAuthToken(null)
@@ -331,7 +348,15 @@ export function VerifierApp() {
 
   return (
     <div className="min-h-screen bg-bg-page text-ink flex gap-[22px] items-start flex-wrap justify-center p-6">
-      <Sidebar orgName={state.orgName} view={state.view} onNavigate={navigate} onRestart={restart} onLogout={logout} />
+      <Sidebar
+        orgName={state.orgName}
+        userName={state.orgUser || state.orgEmail.split('@')[0]}
+        userEmail={state.orgEmail}
+        view={state.view}
+        onNavigate={navigate}
+        onRestart={restart}
+        onLogout={logout}
+      />
 
       <div className="flex-1 basis-[720px] min-w-80 max-w-[920px] flex flex-col gap-[22px]">
         {error && <div role="alert" className="border border-line rounded-xl p-4 text-amber">{error}</div>}

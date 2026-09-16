@@ -38,6 +38,9 @@ export interface WalletPhoneProps {
   provingCount: string
   notSharingText: string
   gstep: number
+  // Trên máy người dùng thật thì bỏ khung điện thoại giả và thanh trạng thái 9:41, chỉ giữ đúng
+  // các màn hình bên trong để hai bên nhìn giống hệt nhau.
+  bare?: boolean
   onToDisclosure: () => void
   onApprove: () => void
   onDecline: () => void
@@ -64,27 +67,26 @@ export function WalletPhone({
   provingCount,
   notSharingText,
   gstep,
+  bare = false,
   onToDisclosure,
   onApprove,
   onDecline,
   onDone,
 }: WalletPhoneProps) {
-  return (
-    <motion.div
-      className="flex-none sticky top-6 flex flex-col items-center gap-2.5"
-      initial={{ opacity: 0, x: 40 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
+  const screens = (
+    <div
+      className={
+        bare
+          ? 'w-full h-full overflow-hidden bg-bg-surface flex flex-col'
+          : 'w-full h-full rounded-[36px] overflow-hidden bg-bg-surface flex flex-col'
+      }
     >
-      <div
-        className="w-[330px] h-[690px] p-[11px]"
-        style={{ borderRadius: 46, background: '#0A0B0D', boxShadow: '0 50px 90px -45px rgba(10,11,13,.85)' }}
-      >
-        <div className="w-full h-full rounded-[36px] overflow-hidden bg-bg-surface flex flex-col">
-          <div className="h-11 flex items-center justify-between px-6 text-xs font-mono flex-none">
-            <span>9:41</span>
-            <span>5G ▮</span>
-          </div>
+          {!bare && (
+            <div className="h-11 flex items-center justify-between px-6 text-xs font-mono flex-none">
+              <span>9:41</span>
+              <span>5G ▮</span>
+            </div>
+          )}
 
           {phone === 'scan' && (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
@@ -261,7 +263,29 @@ export function WalletPhone({
               </button>
             </div>
           )}
-        </div>
+    </div>
+  )
+
+  if (bare) {
+    return (
+      <div className="w-full max-w-[420px] min-h-[600px] bg-bg-surface border border-line rounded-[24px] overflow-hidden flex flex-col">
+        {screens}
+      </div>
+    )
+  }
+
+  return (
+    <motion.div
+      className="flex-none sticky top-6 flex flex-col items-center gap-2.5"
+      initial={{ opacity: 0, x: 40 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+    >
+      <div
+        className="w-[330px] h-[690px] p-[11px]"
+        style={{ borderRadius: 46, background: '#0A0B0D', boxShadow: '0 50px 90px -45px rgba(10,11,13,.85)' }}
+      >
+        {screens}
       </div>
       <MonoLabel tracking="0.1em">User wallet</MonoLabel>
     </motion.div>

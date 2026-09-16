@@ -27,7 +27,7 @@ function fromBase64Url(value: string): BufferSource {
   return bytes
 }
 
-const EXTENSION_README = `Vaulta Wallet — bản demo
+const EXTENSION_README = `NX Cred — bản demo
 
 File này thay cho gói extension thật. Bản demo chạy toàn bộ giao diện ví trên
 màn hình lớn để nhiều người cùng xem được; đóng gói thành extension của trình
@@ -56,7 +56,7 @@ function downloadExtensionBundle() {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = 'vaulta-wallet-extension.txt'
+  link.download = 'nx-cred-extension.txt'
   document.body.appendChild(link)
   link.click()
   link.remove()

@@ -14,7 +14,7 @@ from webauthn.helpers.structs import (
 
 from wallet import wallet
 
-RP_NAME = "Vaulta Wallet"
+RP_NAME = "NX Cred"
 # rp_id phải đúng tên miền đang phục vụ trang, còn origin phải khớp tuyệt đối cả scheme lẫn cổng —
 # trình duyệt ký hai giá trị này vào chữ ký nên sai là hỏng xác thực.
 RP_ID = os.environ.get("WEBAUTHN_RP_ID", "zkp-demo.onrender.com")

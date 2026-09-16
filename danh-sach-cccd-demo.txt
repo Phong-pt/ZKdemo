@@ -1,0 +1,168 @@
+DANH SÁCH CĂN CƯỚC DÙNG ĐỂ THỬ — NX Cred
+==============================================================================
+
+Đây là cơ sở dữ liệu căn cước giả lập của bên cấp (issuer). Chọn bất kỳ hồ sơ nào
+bên dưới để thử luồng cấp thẻ định danh.
+
+Mỗi số căn cước chỉ được cấp thẻ MỘT lần duy nhất. Tài khoản thứ hai dùng lại cùng
+một số sẽ bị từ chối — đó là phần chống gian lận của bản demo, không phải lỗi.
+
+Hồ sơ số 1 là căn cước thật dùng để quét trực tiếp. Chín hồ sơ còn lại là người ảo:
+muốn quét bằng camera thì tạo mã QR từ dòng 'Chuỗi mã QR' rồi dán lên ảnh thẻ; còn
+không thì nhập tay ở bước xác nhận thông tin.
+
+------------------------------------------------------------------------------
+HỒ SƠ 1  (căn cước thật)
+
+  Số căn cước     : 012205007445
+  Họ và tên       : Phạm Thế Phong
+  Ngày sinh       : 05/05/2005
+  Giới tính       : Nam
+  Quốc tịch       : Việt Nam
+  Quê quán        : Lai Châu
+  Nơi thường trú  : Tổ 1, Phường Đoàn Kết, Thành phố Lai Châu
+  Có giá trị đến  : 05/05/2030
+
+  Chuỗi mã QR:
+  012205007445||Phạm Thế Phong|05052005|Nam|Tổ 1, Phường Đoàn Kết, Thành phố Lai Châu|01012021
+
+------------------------------------------------------------------------------
+HỒ SƠ 2
+
+  Số căn cước     : 001190024518
+  Họ và tên       : Nguyễn Thị Mai Anh
+  Ngày sinh       : 14/03/1990
+  Giới tính       : Nữ
+  Quốc tịch       : Việt Nam
+  Quê quán        : Hà Nội
+  Nơi thường trú  : Số 27, Phố Hàng Bông, Phường Hàng Gai, Quận Hoàn Kiếm, Hà Nội
+  Có giá trị đến  : 14/03/2030
+
+  Chuỗi mã QR:
+  001190024518||Nguyễn Thị Mai Anh|14031990|Nữ|Số 27, Phố Hàng Bông, Phường Hàng Gai, Quận Hoàn Kiếm, Hà Nội|01012021
+
+------------------------------------------------------------------------------
+HỒ SƠ 3
+
+  Số căn cước     : 079098117632
+  Họ và tên       : Trần Quốc Bảo
+  Ngày sinh       : 02/09/1998
+  Giới tính       : Nam
+  Quốc tịch       : Việt Nam
+  Quê quán        : Bến Tre
+  Nơi thường trú  : Số 145, Đường Nguyễn Thị Minh Khai, Phường Bến Nghé, Quận 1, TP Hồ Chí Minh
+  Có giá trị đến  : 02/09/2038
+
+  Chuỗi mã QR:
+  079098117632||Trần Quốc Bảo|02091998|Nam|Số 145, Đường Nguyễn Thị Minh Khai, Phường Bến Nghé, Quận 1, TP Hồ Chí Minh|01012021
+
+------------------------------------------------------------------------------
+HỒ SƠ 4
+
+  Số căn cước     : 031303456189
+  Họ và tên       : Lê Thị Hồng Nhung
+  Ngày sinh       : 21/11/2003
+  Giới tính       : Nữ
+  Quốc tịch       : Việt Nam
+  Quê quán        : Hải Phòng
+  Nơi thường trú  : Số 8, Ngõ 45, Phố Lạch Tray, Phường Đằng Giang, Quận Ngô Quyền, Hải Phòng
+  Có giá trị đến  : 21/11/2028
+
+  Chuỗi mã QR:
+  031303456189||Lê Thị Hồng Nhung|21112003|Nữ|Số 8, Ngõ 45, Phố Lạch Tray, Phường Đằng Giang, Quận Ngô Quyền, Hải Phòng|01012021
+
+------------------------------------------------------------------------------
+HỒ SƠ 5
+
+  Số căn cước     : 048087334271
+  Họ và tên       : Võ Minh Hoàng
+  Ngày sinh       : 30/06/1987
+  Giới tính       : Nam
+  Quốc tịch       : Việt Nam
+  Quê quán        : Quảng Nam
+  Nơi thường trú  : Số 62, Đường Lê Duẩn, Phường Thạch Thang, Quận Hải Châu, Đà Nẵng
+  Có giá trị đến  : 30/06/2027
+
+  Chuỗi mã QR:
+  048087334271||Võ Minh Hoàng|30061987|Nam|Số 62, Đường Lê Duẩn, Phường Thạch Thang, Quận Hải Châu, Đà Nẵng|01012021
+
+------------------------------------------------------------------------------
+HỒ SƠ 6
+
+  Số căn cước     : 040195778420
+  Họ và tên       : Hoàng Thị Thu Hà
+  Ngày sinh       : 08/02/1995
+  Giới tính       : Nữ
+  Quốc tịch       : Việt Nam
+  Quê quán        : Nghệ An
+  Nơi thường trú  : Xóm 5, Xã Nghi Phú, Thành phố Vinh, Nghệ An
+  Có giá trị đến  : 08/02/2035
+
+  Chuỗi mã QR:
+  040195778420||Hoàng Thị Thu Hà|08021995|Nữ|Xóm 5, Xã Nghi Phú, Thành phố Vinh, Nghệ An|01012021
+
+------------------------------------------------------------------------------
+HỒ SƠ 7
+
+  Số căn cước     : 092202669537
+  Họ và tên       : Đặng Gia Huy
+  Ngày sinh       : 17/07/2002
+  Giới tính       : Nam
+  Quốc tịch       : Việt Nam
+  Quê quán        : Cần Thơ
+  Nơi thường trú  : Số 12, Đường 3 Tháng 2, Phường Xuân Khánh, Quận Ninh Kiều, Cần Thơ
+  Có giá trị đến  : 17/07/2027
+
+  Chuỗi mã QR:
+  092202669537||Đặng Gia Huy|17072002|Nam|Số 12, Đường 3 Tháng 2, Phường Xuân Khánh, Quận Ninh Kiều, Cần Thơ|01012021
+
+------------------------------------------------------------------------------
+HỒ SƠ 8
+
+  Số căn cước     : 025093812064
+  Họ và tên       : Bùi Văn Khánh
+  Ngày sinh       : 25/12/1993
+  Giới tính       : Nam
+  Quốc tịch       : Việt Nam
+  Quê quán        : Phú Thọ
+  Nơi thường trú  : Khu 3, Xã Sơn Vi, Huyện Lâm Thao, Phú Thọ
+  Có giá trị đến  : 25/12/2033
+
+  Chuỗi mã QR:
+  025093812064||Bùi Văn Khánh|25121993|Nam|Khu 3, Xã Sơn Vi, Huyện Lâm Thao, Phú Thọ|01012021
+
+------------------------------------------------------------------------------
+HỒ SƠ 9
+
+  Số căn cước     : 056196045983
+  Họ và tên       : Ngô Thị Lan Phương
+  Ngày sinh       : 03/08/1996
+  Giới tính       : Nữ
+  Quốc tịch       : Việt Nam
+  Quê quán        : Khánh Hòa
+  Nơi thường trú  : Số 90, Đường Trần Phú, Phường Lộc Thọ, Thành phố Nha Trang, Khánh Hòa
+  Có giá trị đến  : 03/08/2036
+
+  Chuỗi mã QR:
+  056196045983||Ngô Thị Lan Phương|03081996|Nữ|Số 90, Đường Trần Phú, Phường Lộc Thọ, Thành phố Nha Trang, Khánh Hòa|01012021
+
+------------------------------------------------------------------------------
+HỒ SƠ 10
+
+  Số căn cước     : 027304551728
+  Họ và tên       : Dương Thị Ngọc Ánh
+  Ngày sinh       : 12/04/2004
+  Giới tính       : Nữ
+  Quốc tịch       : Việt Nam
+  Quê quán        : Bắc Ninh
+  Nơi thường trú  : Khu phố Tiền An, Phường Tiền An, Thành phố Bắc Ninh, Bắc Ninh
+  Có giá trị đến  : 12/04/2029
+
+  Chuỗi mã QR:
+  027304551728||Dương Thị Ngọc Ánh|12042004|Nữ|Khu phố Tiền An, Phường Tiền An, Thành phố Bắc Ninh, Bắc Ninh|01012021
+
+------------------------------------------------------------------------------
+
+Định dạng chuỗi mã QR (đúng chuẩn căn cước gắn chip):
+  số căn cước | số CMND cũ | họ tên | ngày sinh | giới tính | nơi thường trú | ngày cấp
+Hai trường ngày viết liền không dấu gạch chéo, dạng ddmmyyyy.

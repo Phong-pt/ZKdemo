@@ -3,6 +3,8 @@ import type { View } from '../types'
 
 export interface SidebarProps {
   orgName: string
+  userName: string
+  userEmail: string
   view: View
   onNavigate: (view: View) => void
   onRestart: () => void
@@ -17,7 +19,7 @@ const NAV_ITEMS: Array<[label: string, view: View]> = [
   ['Settings', 'settings'],
 ]
 
-export function Sidebar({ orgName, view, onNavigate, onRestart, onLogout }: SidebarProps) {
+export function Sidebar({ orgName, userName, userEmail, view, onNavigate, onRestart, onLogout }: SidebarProps) {
   return (
     <div className="flex-none w-[228px] sticky top-6 bg-bg-surface border border-line rounded-[22px] p-[22px_18px] flex flex-col gap-1 min-h-[520px]">
       <div className="flex items-center gap-2.5 px-2 pb-5">
@@ -57,11 +59,11 @@ export function Sidebar({ orgName, view, onNavigate, onRestart, onLogout }: Side
           className="w-8 h-8 rounded-full text-white text-[13px] flex items-center justify-center"
           style={{ background: 'linear-gradient(145deg,#3D6BEA,#2438A8)' }}
         >
-          A
+          {(userName || '?').charAt(0).toUpperCase()}
         </div>
-        <div>
-          <div className="text-[13px]">Anh Tran</div>
-          <div className="text-[11px] text-ink-5">Compliance</div>
+        <div className="min-w-0">
+          <div className="text-[13px] truncate">{userName}</div>
+          <div className="text-[11px] text-ink-5 truncate">{userEmail}</div>
         </div>
       </div>
       <button
