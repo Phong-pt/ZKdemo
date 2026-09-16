@@ -3,7 +3,7 @@ import { connectSession } from '@/lib/realtimeSession'
 import { apiClient, setAuthToken, type IdentityAttributes } from '@/services/apiClient'
 import { authService, type GoogleAccount } from '@/services/authService'
 import { kycService } from '@/services/kycService'
-import { walletService, walletStore } from '@/services/walletService'
+import { walletService } from '@/services/walletService'
 import { IdentityCardModal } from './components/IdentityCardModal'
 import { Header } from './components/Header'
 import { PasskeyModal } from './components/PasskeyModal'
@@ -37,6 +37,8 @@ export function WalletApp() {
 
   const requestId = useRef(0)
   const timers = useRef<number[]>([])
+  // Credential ID lấy từ /api/me lúc đăng nhập; giữ ở ref vì chỉ dùng để gọi WebAuthn.
+  const passkeyIdRef = useRef<string | null>(null)
 
   const after = useCallback((ms: number, fn: () => void) => {
     const id = window.setTimeout(fn, ms)
@@ -53,7 +55,6 @@ export function WalletApp() {
   const restart = useCallback(() => {
     requestId.current += 1
     clearTimers()
-    walletStore.clearAll()
     setState(createInitialWalletState())
     apiClient.reset().catch(() => {})
   }, [clearTimers])
@@ -66,18 +67,20 @@ export function WalletApp() {
     (account: GoogleAccount) => {
       setAuthToken(account.token)
       setState((s) => ({ ...s, step: 'signedin', account }))
-      // Ví gắn với tài khoản Google chứ không gắn với phiên. Máy này đã cài ví cho tài khoản đó
-      // rồi thì đăng nhập lại chỉ phải mở khoá bằng passkey; chưa cài thì mới đi qua cài đặt.
-      const device = walletStore.get(account.email)
+      // Ví và passkey gắn với tài khoản Google ở phía máy chủ, không gắn với trình duyệt. Nhờ vậy
+      // đăng nhập từ điện thoại hay máy khác vẫn bị đòi đúng passkey đã đăng ký, thay vì được cài
+      // ví mới — muốn vào thì phải có thiết bị giữ passkey đó (WebAuthn lo phần quét chéo thiết bị).
       apiClient
         .me()
         .catch(() => null)
         .then((me) => {
           const identity = me?.has_credential ? me.identity : null
+          passkeyIdRef.current = me?.passkey_id ?? null
+          const next = !me?.wallet_ready ? 'install' : me.passkey_id ? 'unlock' : 'wallet'
           after(1600, () =>
             setState((s) => ({
               ...s,
-              step: device ? (device.passkeyId ? 'unlock' : 'wallet') : 'install',
+              step: next,
               verifiedIdentity: identity
                 ? {
                     name: identity.name,
@@ -142,7 +145,8 @@ export function WalletApp() {
       .createPasskey(displayName, controller.signal)
       .then((passkeyId) => {
         if (requestId.current !== id) return
-        walletStore.save(stateRef.current.account?.email ?? '', passkeyId)
+        passkeyIdRef.current = passkeyId
+        apiClient.registerPasskey(passkeyId).catch(() => {})
         setState((s) => ({ ...s, passkey: 'done' }))
       })
       .catch((err: unknown) => {
@@ -157,7 +161,7 @@ export function WalletApp() {
     const controller = new AbortController()
     passkeyAbort.current = controller
     setState((s) => ({ ...s, passkey: 'scanning', passkeyError: null }))
-    const passkeyId = walletStore.get(stateRef.current.account?.email ?? '')?.passkeyId ?? ''
+    const passkeyId = passkeyIdRef.current ?? ''
     walletService
       .unlockWithPasskey(passkeyId, controller.signal)
       .then(() => {
@@ -183,7 +187,7 @@ export function WalletApp() {
   // lần đăng nhập sau vào thẳng ví thay vì bắt cài lại từ đầu.
   const skipPasskey = useCallback(() => {
     passkeyAbort.current?.abort()
-    walletStore.save(stateRef.current.account?.email ?? '', null)
+    apiClient.registerPasskey(null).catch(() => {})
     setState((s) => ({ ...s, step: 'wallet', passkey: 'idle', passkeyError: null }))
   }, [])
 

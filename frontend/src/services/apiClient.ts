@@ -42,6 +42,10 @@ export interface MeResponse {
   wallet_id: string
   has_credential: boolean
   identity: Record<string, string> | null
+  // Ví đã được cài cho tài khoản này chưa, và passkey nào mở khoá được nó. Cả hai nằm ở máy chủ
+  // nên máy nào đăng nhập cũng thấy, không phụ thuộc vào trình duyệt đang dùng.
+  wallet_ready: boolean
+  passkey_id: string | null
 }
 
 export interface ConfigResponse {
@@ -100,4 +104,9 @@ export const apiClient = {
   reset: () => apiFetch<{ reset: boolean }>('/reset', { method: 'POST' }),
   verifierLogin: () => apiFetch<VerifierLoginResponse>('/verifier/login', { method: 'POST' }),
   me: () => apiFetch<MeResponse>('/me'),
+  registerPasskey: (passkeyId: string | null) =>
+    apiFetch<{ saved: boolean }>('/passkey', {
+      method: 'POST',
+      body: JSON.stringify({ passkey_id: passkeyId }),
+    }),
 }

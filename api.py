@@ -308,14 +308,31 @@ def verifier_login(account: Account = Depends(auth.current_account)) -> Verifier
     )
 
 
+class PasskeyRegistration(BaseModel):
+    passkey_id: str | None = None
+
+
+@app.post("/api/passkey")
+def register_passkey(
+    body: PasskeyRegistration, account: Account = Depends(auth.current_account)
+) -> dict[str, bool]:
+    """Ghi nhận ví đã được cài cho tài khoản này, kèm credential ID của passkey vừa tạo. Lưu ở máy
+    chủ chứ không phải localStorage, để máy thứ hai đăng nhập cũng biết mà đòi đúng passkey đó."""
+    wallet.save_passkey(body.passkey_id, account.wallet_id)
+    return {"saved": True}
+
+
 @app.get("/api/me")
 def me(account: Account = Depends(auth.current_account)) -> dict:
+    passkey = wallet.get_passkey(account.wallet_id)
     return {
         "email": account.email,
         "name": account.name,
         "wallet_id": account.wallet_id,
         "has_credential": wallet.get_credential(account.wallet_id) is not None,
         "identity": wallet.get_identity(account.wallet_id),
+        "wallet_ready": passkey is not None,
+        "passkey_id": passkey["passkey_id"] if passkey else None,
     }
 
 

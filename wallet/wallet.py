@@ -30,6 +30,26 @@ def pending_request_file(wallet_id: str) -> Path:
 def identity_file(wallet_id: str) -> Path:
     return wallet_dir(wallet_id) / "identity.json"
 
+
+def passkey_file(wallet_id: str) -> Path:
+    return wallet_dir(wallet_id) / "passkey.json"
+
+
+# Passkey gắn với tài khoản chứ không gắn với máy: credential ID phải nằm ở đây thì máy thứ hai
+# đăng nhập mới biết tài khoản này đã có passkey mà đòi xác thực, thay vì cho cài ví lại từ đầu.
+# passkey_id là None khi người dùng bỏ qua bước passkey vì máy không có thiết bị xác thực.
+def save_passkey(passkey_id: str | None, wallet_id: str = DEFAULT_WALLET_ID) -> None:
+    passkey_file(wallet_id).write_text(
+        json.dumps({"passkey_id": passkey_id}), encoding="utf-8"
+    )
+
+
+def get_passkey(wallet_id: str = DEFAULT_WALLET_ID) -> dict | None:
+    path = passkey_file(wallet_id)
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
 EKYC_DATA = {
     "cccd": "012205007445",
     "name": "Phạm Thế Phong",
