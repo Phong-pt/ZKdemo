@@ -558,7 +558,7 @@
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;productName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Vaulta&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showPlaceholderCards&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;fastDemo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;productName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;NX Cred&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showPlaceholderCards&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;fastDemo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
 class Component extends DCLogic {
   state = {
     step: 'landing', googleBusy: false, install: 'idle', installPct: 0,
@@ -658,7 +658,7 @@ class Component extends DCLogic {
     const face = s.phone === 'face';
 
     return {
-      productName: this.props.productName ?? 'Vaulta',
+      productName: this.props.productName ?? 'NX Cred',
       showPlaceholderCards: this.props.showPlaceholderCards ?? true,
       stageLabel: stages[st] || '',
       isLanding: st === 'landing', isGoogle: st === 'google', isSignedIn: st === 'signedin',

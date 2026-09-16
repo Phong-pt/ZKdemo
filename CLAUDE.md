@@ -322,7 +322,7 @@ sau này cần đúng mô hình SSI thật, phải viết lại phần wallet cr
   - **Desktop** (mở `WalletApp` để bấm "Create passkey"): mở qua `http://localhost:...` là đủ.
   - **Điện thoại** (mở `/mobile-capture` sau khi quét QR): điện thoại KHÔNG coi IP LAN của máy tính là
     "localhost", nên bắt buộc phải qua HTTPS. Repo tự sinh chứng chỉ self-signed lúc build Docker
-    image ([frontend/Dockerfile](frontend/Dockerfile), CN=`vaulta.local`) và nginx lắng nghe thêm cổng
+    image ([frontend/Dockerfile](frontend/Dockerfile), CN=`nxcred.local`) và nginx lắng nghe thêm cổng
     443 (map ra host `8443`, xem phần 11) — vào app qua `https://<IP-LAN-của-máy>:8443/` (không phải
     `localhost`) thì QR sinh ra sẽ tự encode đúng origin đó, điện thoại quét vào sẽ load được trang
     qua HTTPS. Vì là chứng chỉ tự ký, trình duyệt điện thoại sẽ cảnh báo "không an toàn" — bấm "Vẫn

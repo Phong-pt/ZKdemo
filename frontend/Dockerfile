@@ -11,7 +11,7 @@ RUN apk add --no-cache openssl \
     && openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
        -keyout /etc/nginx/ssl/selfsigned.key \
        -out /etc/nginx/ssl/selfsigned.crt \
-       -subj "/CN=vaulta.local"
+       -subj "/CN=nxcred.local"
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY nginx-locations.conf /etc/nginx/snippets/nginx-locations.conf
