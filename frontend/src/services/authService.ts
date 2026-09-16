@@ -6,6 +6,9 @@ export interface GoogleAccount {
   avatarInitial: string
   // ID-token do Google ký; mọi lời gọi API kèm theo nó để backend biết đây là ví của ai.
   token: string
+  // Đăng nhập bằng tài khoản Google thật thì chính Google đã xác thực người dùng, ví không bắt đặt
+  // thêm mật khẩu nữa; bước đặt mật khẩu chỉ dành cho đường đăng nhập không phải Google.
+  isGoogle: boolean
 }
 
 // Chỉ dùng khi máy chủ chưa cấu hình GOOGLE_CLIENT_ID: token "demo:..." cho phép app chạy trọn
@@ -16,6 +19,7 @@ export function demoAccount(label = 'demo'): GoogleAccount {
     email: label.includes('@') ? label : `${label}@demo.local`,
     avatarInitial: label.charAt(0).toUpperCase(),
     token: `demo:${label}`,
+    isGoogle: false,
   }
 }
 
@@ -89,6 +93,7 @@ export const authService = {
             email,
             avatarInitial: (name || email || '?').charAt(0).toUpperCase(),
             token: response.credential,
+            isGoogle: true,
           })
         },
       })

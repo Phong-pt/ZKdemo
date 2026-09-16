@@ -86,7 +86,9 @@ export function WalletApp() {
       .then(() => {
         if (requestId.current !== id) return
         after(700, () => setState((s) => ({ ...s, install: 'done' })))
-        after(2000, () => setState((s) => ({ ...s, step: 'password' })))
+        after(2000, () =>
+          setState((s) => ({ ...s, step: s.account?.isGoogle ? 'passkey' : 'password' })),
+        )
       })
   }, [after])
 
