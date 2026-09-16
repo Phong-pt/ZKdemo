@@ -19,6 +19,8 @@ from verifier import verifier
 
 app = FastAPI(title="ZKP demo API")
 
+SERVER_STARTED_AT = time.time()
+
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 app.add_middleware(
@@ -93,10 +95,15 @@ class VerifierLoginResponse(BaseModel):
 
 
 @app.get("/api/config")
-def get_config() -> dict[str, str | list[str]]:
+def get_config() -> dict:
     return {
         "google_client_id": os.environ.get("GOOGLE_CLIENT_ID", ""),
         "verifier_domains": sorted(issuer.TRUSTED_VERIFIER_DOMAINS),
+        # Gói free của Render không có ổ đĩa bền: mỗi lần deploy hoặc service ngủ dậy là ví,
+        # passkey và cờ đã-cấp-credential ghi lúc chạy đều mất sạch, mọi tài khoản trở lại trạng
+        # thái chưa có ví. Mốc này để đối chiếu khi thấy ví "tự dưng biến mất".
+        "server_started_at": SERVER_STARTED_AT,
+        "wallets_on_disk": len(list(wallet.WALLETS_DIR.iterdir())) if wallet.WALLETS_DIR.is_dir() else 0,
     }
 
 

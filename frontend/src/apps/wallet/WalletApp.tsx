@@ -143,10 +143,12 @@ export function WalletApp() {
     const displayName = stateRef.current.account?.name ?? 'Wallet user'
     walletService
       .createPasskey(displayName, controller.signal)
+      // Chỉ coi là xong khi máy chủ đã ghi nhận passkey: ghi hỏng mà vẫn cho qua thì máy khác đăng
+      // nhập sẽ không thấy ví nào và được cài ví mới, tức là mất hẳn lớp bảo vệ.
+      .then((passkeyId) => apiClient.registerPasskey(passkeyId).then(() => passkeyId))
       .then((passkeyId) => {
         if (requestId.current !== id) return
         passkeyIdRef.current = passkeyId
-        apiClient.registerPasskey(passkeyId).catch(() => {})
         setState((s) => ({ ...s, passkey: 'done' }))
       })
       .catch((err: unknown) => {
