@@ -30,6 +30,37 @@ import {
 
 const PRODUCT_NAME = 'NX Cred'
 
+// Phiên đăng nhập sống qua việc tải lại trang. Mốc thời gian được làm mới đều đặn khi tab còn
+// mở, nên thực tế TTL này tính từ lúc người dùng đóng tab: quay lại trong vòng năm phút thì vẫn
+// còn phiên, lâu hơn thì phải đăng nhập lại. Bấm Sign out là xoá ngay lập tức.
+const SESSION_KEY = 'nxcred-wallet-session'
+const SESSION_TTL_MS = 5 * 60 * 1000
+const SESSION_HEARTBEAT_MS = 30 * 1000
+
+function loadSession(): GoogleAccount | null {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY)
+    if (!raw) return null
+    const { account, savedAt } = JSON.parse(raw) as { account: GoogleAccount; savedAt: number }
+    if (Date.now() - savedAt > SESSION_TTL_MS) {
+      localStorage.removeItem(SESSION_KEY)
+      return null
+    }
+    return account
+  } catch {
+    return null
+  }
+}
+
+function saveSession(account: GoogleAccount | null): void {
+  try {
+    if (account) localStorage.setItem(SESSION_KEY, JSON.stringify({ account, savedAt: Date.now() }))
+    else localStorage.removeItem(SESSION_KEY)
+  } catch {
+    // Tab ẩn danh chặn localStorage: phiên chỉ sống trong bộ nhớ, tải lại trang là mất.
+  }
+}
+
 export function WalletApp() {
   const [state, setState] = useState<WalletState>(createInitialWalletState)
   const stateRef = useRef(state)
@@ -50,9 +81,20 @@ export function WalletApp() {
 
   useEffect(() => clearTimers, [clearTimers])
 
+  // Tab còn mở thì phiên còn sống; TTL chỉ bắt đầu đếm từ lúc đóng tab.
+  useEffect(() => {
+    if (!state.account) return
+    const timer = window.setInterval(
+      () => saveSession(stateRef.current.account),
+      SESSION_HEARTBEAT_MS,
+    )
+    return () => window.clearInterval(timer)
+  }, [state.account])
+
   const restart = useCallback(() => {
     requestId.current += 1
     clearTimers()
+    saveSession(null)
     setState(createInitialWalletState())
     apiClient.reset().catch(() => {})
   }, [clearTimers])
@@ -64,6 +106,7 @@ export function WalletApp() {
   const onAccount = useCallback(
     (account: GoogleAccount) => {
       setAuthToken(account.token)
+      saveSession(account)
       setState((s) => ({ ...s, step: 'signedin', account }))
       // Ví và passkey gắn với tài khoản Google ở phía máy chủ, không gắn với trình duyệt. Nhờ vậy
       // đăng nhập từ điện thoại hay máy khác vẫn bị đòi đúng passkey đã đăng ký, thay vì được cài
@@ -99,6 +142,14 @@ export function WalletApp() {
     [after],
   )
 
+  // Mở lại trang thì lấy phiên cũ ra dùng tiếp thay vì bắt đăng nhập lại từ đầu.
+  useEffect(() => {
+    const stored = loadSession()
+    if (stored) onAccount(stored)
+    // Chỉ chạy đúng một lần lúc mở trang.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Đăng xuất chỉ rời phiên; credential của tài khoản đó vẫn nằm nguyên trong ví phía máy chủ,
   // đăng nhập lại là thấy lại thẻ. Muốn xoá sạch mọi ví thì dùng "Restart demo".
   const signOut = useCallback(() => {
@@ -106,6 +157,7 @@ export function WalletApp() {
     clearTimers()
     authService.signOut()
     setAuthToken(null)
+    saveSession(null)
     setState(createInitialWalletState())
   }, [clearTimers])
 
@@ -279,13 +331,22 @@ export function WalletApp() {
           <span style={{ color: '#B4763A' }}>
             Không đọc được ví của tài khoản này: {state.loadError}
           </span>
-          <button
-            type="button"
-            onClick={() => state.account && onAccount(state.account)}
-            className="text-ink-3 underline cursor-pointer"
-          >
-            Thử lại
-          </button>
+          <div className="flex gap-4">
+            <button
+              type="button"
+              onClick={() => state.account && onAccount(state.account)}
+              className="text-ink-3 underline cursor-pointer"
+            >
+              Thử lại
+            </button>
+            <button
+              type="button"
+              onClick={signOut}
+              className="text-ink-3 underline cursor-pointer"
+            >
+              Đăng nhập lại
+            </button>
+          </div>
         </div>
       )}
 
@@ -350,7 +411,7 @@ export function WalletApp() {
         />
       )}
       {state.step === 'processing' && (
-        <Processing proc={state.proc} error={state.processingError} onRetry={startProcessing} />
+        <Processing proc={state.proc} error={state.processingError} onRetry={rescan} />
       )}
       {state.step === 'verified' && <Verified onOpenWallet={toWallet} />}
     </div>

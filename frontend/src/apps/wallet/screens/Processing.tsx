@@ -50,7 +50,7 @@ export function Processing({ proc, error, onRetry }: ProcessingProps) {
           </div>
           {onRetry && (
             <Button variant="secondary" className="mt-6" onClick={onRetry}>
-              Try again
+              Quét lại giấy tờ
             </Button>
           )}
         </>
