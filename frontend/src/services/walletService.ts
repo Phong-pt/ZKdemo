@@ -6,6 +6,58 @@ function randomBytes(length: number): BufferSource {
   return crypto.getRandomValues(new Uint8Array(length)) as BufferSource
 }
 
+function toBase64Url(buffer: ArrayBuffer): string {
+  let binary = ''
+  new Uint8Array(buffer).forEach((byte) => {
+    binary += String.fromCharCode(byte)
+  })
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+function fromBase64Url(value: string): Uint8Array {
+  const binary = atob(value.replace(/-/g, '+').replace(/_/g, '/'))
+  return Uint8Array.from(binary, (char) => char.charCodeAt(0))
+}
+
+// Extension và passkey là thứ gắn với từng máy, không phải với phiên đăng nhập — nên trạng thái
+// "tài khoản này đã cài ví trên máy này" nằm ở localStorage. Nhờ vậy đăng xuất rồi đăng nhập lại
+// chỉ phải mở khoá bằng passkey, không phải cài lại ví từ đầu. passkeyId là null khi người dùng
+// bỏ qua bước passkey vì máy không có thiết bị xác thực.
+const WALLET_KEY_PREFIX = 'vaulta:wallet:'
+
+export interface DeviceWallet {
+  passkeyId: string | null
+}
+
+export const walletStore = {
+  get(email: string): DeviceWallet | null {
+    try {
+      const raw = localStorage.getItem(WALLET_KEY_PREFIX + email)
+      return raw ? (JSON.parse(raw) as DeviceWallet) : null
+    } catch {
+      return null
+    }
+  },
+
+  save(email: string, passkeyId: string | null): void {
+    try {
+      localStorage.setItem(WALLET_KEY_PREFIX + email, JSON.stringify({ passkeyId }))
+    } catch {
+      // Tab ẩn danh chặn localStorage: coi như máy này chưa cài ví, người dùng cài lại là xong.
+    }
+  },
+
+  clearAll(): void {
+    try {
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith(WALLET_KEY_PREFIX))
+        .forEach((key) => localStorage.removeItem(key))
+    } catch {
+      // Không đọc được localStorage thì cũng chẳng có gì để xoá.
+    }
+  },
+}
+
 const EXTENSION_README = `Vaulta Wallet — bản demo
 
 File này thay cho gói extension thật. Bản demo chạy toàn bộ giao diện ví trên
@@ -54,7 +106,7 @@ export const walletService = {
     }
   },
 
-  async createPasskey(displayName: string, signal?: AbortSignal): Promise<void> {
+  async createPasskey(displayName: string, signal?: AbortSignal): Promise<string> {
     if (!window.PublicKeyCredential) {
       throw new Error('Trình duyệt này không hỗ trợ passkey (WebAuthn).')
     }
@@ -82,6 +134,25 @@ export const walletService = {
     const credential = await navigator.credentials.create({ publicKey, signal })
     if (!credential) {
       throw new Error('Không tạo được passkey.')
+    }
+    return toBase64Url((credential as PublicKeyCredential).rawId)
+  },
+
+  async unlockWithPasskey(passkeyId: string, signal?: AbortSignal): Promise<void> {
+    if (!window.PublicKeyCredential) {
+      throw new Error('Trình duyệt này không hỗ trợ passkey (WebAuthn).')
+    }
+
+    const publicKey: PublicKeyCredentialRequestOptions = {
+      challenge: randomBytes(32),
+      allowCredentials: [{ type: 'public-key', id: fromBase64Url(passkeyId) }],
+      userVerification: 'preferred',
+      timeout: 30000,
+    }
+
+    const assertion = await navigator.credentials.get({ publicKey, signal })
+    if (!assertion) {
+      throw new Error('Không mở được ví bằng passkey.')
     }
   },
 }

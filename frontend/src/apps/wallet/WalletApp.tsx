@@ -3,7 +3,7 @@ import { connectSession } from '@/lib/realtimeSession'
 import { apiClient, setAuthToken, type IdentityAttributes } from '@/services/apiClient'
 import { authService, type GoogleAccount } from '@/services/authService'
 import { kycService } from '@/services/kycService'
-import { walletService } from '@/services/walletService'
+import { walletService, walletStore } from '@/services/walletService'
 import { IdentityCardModal } from './components/IdentityCardModal'
 import { Header } from './components/Header'
 import { PasskeyModal } from './components/PasskeyModal'
@@ -53,6 +53,7 @@ export function WalletApp() {
   const restart = useCallback(() => {
     requestId.current += 1
     clearTimers()
+    walletStore.clearAll()
     setState(createInitialWalletState())
     apiClient.reset().catch(() => {})
   }, [clearTimers])
@@ -65,8 +66,9 @@ export function WalletApp() {
     (account: GoogleAccount) => {
       setAuthToken(account.token)
       setState((s) => ({ ...s, step: 'signedin', account }))
-      // Ví gắn với tài khoản Google chứ không gắn với phiên, nên đăng nhập lại bằng tài khoản đã
-      // có credential thì vào thẳng ví — không bắt cài lại extension, tạo lại passkey hay eKYC lại.
+      // Ví gắn với tài khoản Google chứ không gắn với phiên. Máy này đã cài ví cho tài khoản đó
+      // rồi thì đăng nhập lại chỉ phải mở khoá bằng passkey; chưa cài thì mới đi qua cài đặt.
+      const device = walletStore.get(account.email)
       apiClient
         .me()
         .catch(() => null)
@@ -75,7 +77,7 @@ export function WalletApp() {
           after(1600, () =>
             setState((s) => ({
               ...s,
-              step: identity ? 'wallet' : 'install',
+              step: device ? (device.passkeyId ? 'unlock' : 'wallet') : 'install',
               verifiedIdentity: identity
                 ? {
                     name: identity.name,
@@ -138,13 +140,33 @@ export function WalletApp() {
     const displayName = stateRef.current.account?.name ?? 'Wallet user'
     walletService
       .createPasskey(displayName, controller.signal)
+      .then((passkeyId) => {
+        if (requestId.current !== id) return
+        walletStore.save(stateRef.current.account?.email ?? '', passkeyId)
+        setState((s) => ({ ...s, passkey: 'done' }))
+      })
+      .catch((err: unknown) => {
+        if (requestId.current !== id) return
+        const message = err instanceof Error ? err.message : 'Không tạo được passkey'
+        setState((s) => ({ ...s, passkey: 'idle', passkeyError: message }))
+      })
+  }, [])
+
+  const unlockWallet = useCallback(() => {
+    const id = ++requestId.current
+    const controller = new AbortController()
+    passkeyAbort.current = controller
+    setState((s) => ({ ...s, passkey: 'scanning', passkeyError: null }))
+    const passkeyId = walletStore.get(stateRef.current.account?.email ?? '')?.passkeyId ?? ''
+    walletService
+      .unlockWithPasskey(passkeyId, controller.signal)
       .then(() => {
         if (requestId.current !== id) return
         setState((s) => ({ ...s, passkey: 'done' }))
       })
       .catch((err: unknown) => {
         if (requestId.current !== id) return
-        const message = err instanceof Error ? err.message : 'Không tạo được passkey'
+        const message = err instanceof Error ? err.message : 'Không mở được ví bằng passkey'
         setState((s) => ({ ...s, passkey: 'idle', passkeyError: message }))
       })
   }, [])
@@ -157,8 +179,11 @@ export function WalletApp() {
     setState((s) => ({ ...s, step: 'wallet', passkey: 'idle' }))
   }, [])
 
+  // Máy không có thiết bị xác thực thì vẫn coi là đã cài ví, chỉ không có passkey để mở khoá —
+  // lần đăng nhập sau vào thẳng ví thay vì bắt cài lại từ đầu.
   const skipPasskey = useCallback(() => {
     passkeyAbort.current?.abort()
+    walletStore.save(stateRef.current.account?.email ?? '', null)
     setState((s) => ({ ...s, step: 'wallet', passkey: 'idle', passkeyError: null }))
   }, [])
 
@@ -261,8 +286,16 @@ export function WalletApp() {
       )}
 
       {state.step === 'passkey' && <PasskeySetup onCreatePasskey={createPasskey} />}
-      {state.passkey !== 'idle' && <PasskeyModal passkey={state.passkey} onFinish={finishPasskey} onCancel={cancelPasskey} />}
-      {state.step === 'passkey' && state.passkeyError && (
+      {state.step === 'unlock' && <PasskeySetup mode="unlock" onCreatePasskey={unlockWallet} />}
+      {state.passkey !== 'idle' && (
+        <PasskeyModal
+          passkey={state.passkey}
+          mode={state.step === 'unlock' ? 'unlock' : 'create'}
+          onFinish={finishPasskey}
+          onCancel={cancelPasskey}
+        />
+      )}
+      {(state.step === 'passkey' || state.step === 'unlock') && state.passkeyError && (
         <div className="text-sm text-center -mt-2 flex flex-col items-center gap-2">
           <span style={{ color: '#B4763A' }}>{state.passkeyError}</span>
           <button type="button" onClick={skipPasskey} className="text-ink-3 underline cursor-pointer">

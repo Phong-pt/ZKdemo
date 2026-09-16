@@ -8,6 +8,7 @@ export type Step =
   | 'install'
   | 'password'
   | 'passkey'
+  | 'unlock'
   | 'wallet'
   | 'kycdoc'
   | 'handoff'
@@ -55,6 +56,7 @@ export const STAGE_LABELS: Record<Step, string> = {
   install: 'Extension',
   password: 'Wallet setup',
   passkey: 'Wallet setup',
+  unlock: 'Unlock wallet',
   wallet: 'Wallet',
   kycdoc: 'eKYC 1/3',
   handoff: 'eKYC 2/3',

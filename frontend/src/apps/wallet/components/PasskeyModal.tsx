@@ -5,9 +5,24 @@ export interface PasskeyModalProps {
   passkey: Exclude<PasskeyState, 'idle'>
   onFinish: () => void
   onCancel: () => void
+  mode?: 'create' | 'unlock'
 }
 
-export function PasskeyModal({ passkey, onFinish, onCancel }: PasskeyModalProps) {
+const COPY = {
+  create: {
+    scanning: 'Look at your device to create the passkey.',
+    doneTitle: 'Passkey created',
+    doneHint: 'Stored securely on this device.',
+  },
+  unlock: {
+    scanning: 'Look at your device to unlock your wallet.',
+    doneTitle: 'Wallet unlocked',
+    doneHint: 'Welcome back.',
+  },
+}
+
+export function PasskeyModal({ passkey, onFinish, onCancel, mode = 'create' }: PasskeyModalProps) {
+  const copy = COPY[mode]
   return (
     <motion.div
       className="fixed inset-0 flex items-center justify-center z-50"
@@ -35,7 +50,7 @@ export function PasskeyModal({ passkey, onFinish, onCancel }: PasskeyModalProps)
               <span className="absolute inset-0 rounded-[26px] border-[3px] border-ink animate-[breathe_1.6s_ease-in-out_infinite]" />
             </div>
             <div className="text-[17px] font-medium">Face ID</div>
-            <div className="text-[13px] text-ink-3 mt-2">Look at your device to create the passkey.</div>
+            <div className="text-[13px] text-ink-3 mt-2">{copy.scanning}</div>
             <button
               type="button"
               onClick={onCancel}
@@ -56,8 +71,8 @@ export function PasskeyModal({ passkey, onFinish, onCancel }: PasskeyModalProps)
             >
               ✓
             </motion.div>
-            <div className="text-[17px] font-medium">Passkey created</div>
-            <div className="text-[13px] text-ink-3 mt-2">Stored securely on this device.</div>
+            <div className="text-[17px] font-medium">{copy.doneTitle}</div>
+            <div className="text-[13px] text-ink-3 mt-2">{copy.doneHint}</div>
             <button
               type="button"
               onClick={onFinish}
