@@ -14,9 +14,15 @@ function toBase64Url(buffer: ArrayBuffer): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
-function fromBase64Url(value: string): Uint8Array {
+// Cấp phát ArrayBuffer tường minh: Uint8Array.from() trả về Uint8Array<ArrayBufferLike>, mà
+// BufferSource của WebAuthn chỉ nhận ArrayBufferView<ArrayBuffer>.
+function fromBase64Url(value: string): BufferSource {
   const binary = atob(value.replace(/-/g, '+').replace(/_/g, '/'))
-  return Uint8Array.from(binary, (char) => char.charCodeAt(0))
+  const bytes = new Uint8Array(new ArrayBuffer(binary.length))
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+  return bytes
 }
 
 // Extension và passkey là thứ gắn với từng máy, không phải với phiên đăng nhập — nên trạng thái
