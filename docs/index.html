@@ -3,37 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Giới thiệu kỹ thuật về NX Cred</title>
-<meta name="description" content="Giới thiệu kỹ thuật về NX Cred: hệ thống cấp và xác minh giấy tờ định danh bằng bằng chứng không tiết lộ.">
+<title>NX Cred — Ứng dụng định danh bảo vệ quyền riêng tư</title>
+<meta name="description" content="NX Cred là ứng dụng định danh dựa trên tiêu chuẩn AnonCreds, dùng zero-knowledge proof để ba bên xác minh lẫn nhau mà vẫn bảo đảm quyền riêng tư của người dùng.">
 <style>
   :root{
     --bg:#FFFFFF; --surface:#FBFBF9; --sunken:#F5F5F1;
     --ink:#16171A; --ink-2:#3C3E45; --ink-3:#6E7079; --ink-4:#8A8C94;
-    --line:#E6E6E2; --line-2:#EFEFEB;
+    --line:#E6E6E2;
     --accent:#2F5FE0; --accent-bg:#EEF2FD;
     --good:#17795E; --good-bg:#F4FAF7; --good-line:#D9E6DF;
-    --nav-w:280px;
+    --nav-w:260px;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
       --bg:#0F1013; --surface:#16171A; --sunken:#1B1D21;
       --ink:#F2F2EF; --ink-2:#D2D3D6; --ink-3:#9FA1A8; --ink-4:#7C7E86;
-      --line:#2A2C32; --line-2:#24262B;
+      --line:#2A2C32;
       --accent:#7FA0F5; --accent-bg:#1A2138;
       --good:#6FC7A5; --good-bg:#132420; --good-line:#22453A;
     }
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth; scroll-padding-top:24px}
-  body{
-    margin:0; background:var(--bg); color:var(--ink);
-    font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
+  body{margin:0; background:var(--bg); color:var(--ink);
+       font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+       -webkit-font-smoothing:antialiased}
   a{color:var(--accent); text-decoration:none}
   a:hover{text-decoration:underline}
 
-  .wrap{max-width:1180px; margin:0 auto; padding:0 24px}
+  .wrap{max-width:1160px; margin:0 auto; padding:0 24px}
   header.top{border-bottom:1px solid var(--line); background:var(--surface)}
   .top-in{display:flex; align-items:center; gap:12px; padding:18px 0}
   .logo{width:30px;height:30px;border-radius:9px;
@@ -41,8 +39,14 @@
   .brand{font-weight:650; letter-spacing:-.01em}
   .brand small{display:block; font-weight:400; color:var(--ink-3); font-size:12.5px}
 
+  .hero{padding:56px 0 8px; border-bottom:1px solid var(--line)}
+  .hero h1{font-size:44px; line-height:1.12; letter-spacing:-.035em; margin:0 0 18px; max-width:18ch}
+  .hero p{font-size:19px; line-height:1.6; color:var(--ink-2); max-width:62ch; margin:0 0 30px}
+
   .layout{display:grid; grid-template-columns:var(--nav-w) minmax(0,1fr); gap:52px; padding:40px 0 96px}
-  @media (max-width:900px){ .layout{grid-template-columns:1fr; gap:24px} nav.toc{position:static !important; max-height:none !important; border-right:0 !important} }
+  @media (max-width:900px){.layout{grid-template-columns:1fr; gap:24px}
+    nav.toc{position:static !important; max-height:none !important; border-right:0 !important}
+    .hero h1{font-size:34px}}
 
   nav.toc{position:sticky; top:24px; align-self:start; max-height:calc(100vh - 48px); overflow:auto;
           font-size:14px; border-right:1px solid var(--line); padding-right:18px}
@@ -51,20 +55,24 @@
   nav.toc .sub{padding-left:14px; font-size:13.5px; color:var(--ink-3)}
 
   main{min-width:0}
-  h1{font-size:40px; line-height:1.15; letter-spacing:-.03em; margin:0 0 18px}
-  h2{font-size:26px; letter-spacing:-.022em; margin:52px 0 14px}
+  h2{font-size:27px; letter-spacing:-.024em; margin:56px 0 14px}
+  h2:first-child{margin-top:0}
   h3{font-size:18.5px; letter-spacing:-.012em; margin:32px 0 8px}
-  p{margin:0 0 16px; max-width:72ch}
-  ul,ol{max-width:72ch; padding-left:22px}
+  p{margin:0 0 16px; max-width:70ch}
+  ul,ol{max-width:70ch; padding-left:22px}
   li{margin:8px 0}
-  hr{border:0; border-top:1px solid var(--line); margin:48px 0}
-  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.9em;
-       background:var(--sunken); padding:1.5px 5px; border-radius:5px}
 
   .note{background:var(--good-bg); border:1px solid var(--good-line); color:var(--good);
-        border-radius:12px; padding:15px 18px; margin:22px 0; font-size:15px; max-width:72ch}
+        border-radius:12px; padding:15px 18px; margin:22px 0; font-size:15px; max-width:70ch}
+  .callout{background:var(--accent-bg); border:1px solid var(--accent); color:var(--ink);
+        border-radius:12px; padding:16px 18px; margin:24px 0; font-size:15px; max-width:70ch}
 
-  figure{margin:28px 0; background:var(--surface); border:1px solid var(--line);
+  .roles{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin:24px 0}
+  .role{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px 20px}
+  .role b{display:block; font-size:16px; margin-bottom:6px}
+  .role p{font-size:14.5px; color:var(--ink-3); margin:0; max-width:none}
+
+  figure{margin:26px 0; background:var(--surface); border:1px solid var(--line);
          border-radius:16px; padding:22px 18px 14px}
   figure svg{display:block; width:100%; height:auto}
   figcaption{color:var(--ink-3); font-size:13.5px; text-align:center; margin-top:12px}
@@ -79,20 +87,9 @@
   svg .ar-d{stroke:var(--ink-4); stroke-width:1.5; fill:none; stroke-dasharray:5 4}
   svg .hd{fill:var(--ink-3)}
 
-  /* Bảng thuật ngữ, theo kiểu mục Terminology */
-  .term{border-top:1px solid var(--line); padding:20px 0; max-width:72ch}
-  .term:last-of-type{border-bottom:1px solid var(--line)}
-  .term h3{margin:0 0 6px; font-size:17px}
-  .term p{margin:0 0 8px; color:var(--ink-2)}
-  .term .more{font-size:14px}
-
-  table{border-collapse:collapse; width:100%; margin:20px 0; font-size:15px}
-  th,td{text-align:left; padding:11px 12px; border-bottom:1px solid var(--line); vertical-align:top}
-  th{font-size:12px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-4); font-weight:600}
-  .tbl-wrap{overflow-x:auto}
-
   .dl{display:flex; align-items:center; gap:18px; flex-wrap:wrap;
-      background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px 22px; margin:22px 0; max-width:72ch}
+      background:var(--surface); border:1px solid var(--line); border-radius:16px;
+      padding:20px 22px; margin:22px 0; max-width:70ch}
   .dl .ico{width:44px;height:44px;border-radius:12px;background:var(--sunken);
            display:flex;align-items:center;justify-content:center;font-size:19px;flex:none}
   .dl b{display:block; font-size:16px}
@@ -100,6 +97,18 @@
   .btn{margin-left:auto; border:1px solid var(--ink); color:var(--ink); border-radius:11px;
        padding:9px 18px; font-size:14px; font-weight:500; white-space:nowrap}
   .btn:hover{background:var(--ink); color:var(--bg); text-decoration:none}
+
+  .uc{border-left:3px solid var(--line); padding:2px 0 2px 20px; margin:26px 0; max-width:70ch}
+  .uc h3{margin-top:0}
+  .uc .tag{display:inline-block; font:600 11px/1 ui-monospace,monospace; letter-spacing:.1em;
+           text-transform:uppercase; padding:5px 9px; border-radius:20px;
+           background:var(--good-bg); color:var(--good); margin-bottom:10px}
+  .uc .tag.plan{background:var(--sunken); color:var(--ink-3)}
+
+  table{border-collapse:collapse; width:100%; margin:20px 0; font-size:15px}
+  th,td{text-align:left; padding:11px 12px; border-bottom:1px solid var(--line); vertical-align:top}
+  th{font-size:12px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-4); font-weight:600}
+  .tbl-wrap{overflow-x:auto}
 
   .empty{color:var(--ink-4); font-style:italic}
   footer{border-top:1px solid var(--line); color:var(--ink-4); font-size:13.5px; padding:26px 0 40px}
@@ -110,548 +119,339 @@
 <header class="top">
   <div class="wrap top-in">
     <div class="logo"></div>
-    <div class="brand">NX Cred<small>Tài liệu</small></div>
+    <div class="brand">NX Cred<small>Tài liệu giới thiệu</small></div>
   </div>
 </header>
+
+<section class="hero">
+  <div class="wrap">
+    <h1>Chứng minh bạn là bạn, mà không cần nói bạn là ai</h1>
+    <p>
+      NX Cred là ứng dụng định danh dựa trên tiêu chuẩn AnonCreds. Ứng dụng sử dụng thuật toán
+      zero-knowledge proof để ba bên xác minh lẫn nhau, đồng thời bảo đảm quyền riêng tư của
+      người dùng.
+    </p>
+  </div>
+</section>
 
 <div class="wrap layout">
 
 <nav class="toc">
-  <a href="#dinh-danh">Vấn đề của định danh hôm nay</a>
-  <a href="#zkp">Bằng chứng không tiết lộ là gì?</a>
-  <a href="#anoncreds">AnonCreds là gì?</a>
-  <a href="#nxcred">NX Cred là gì?</a>
-  <a href="#thanh-phan">Hệ thống gồm những gì?</a>
-  <a href="#cap-the">Cấp thẻ diễn ra thế nào?</a>
-  <a href="#xac-minh">Xác minh diễn ra thế nào?</a>
-  <a href="#khong-lien-lac">Vì sao hai bên không liên lạc?</a>
-  <a href="#blockchain">Blockchain dùng ở đâu?</a>
-  <a href="#thuat-ngu">Thuật ngữ</a>
-  <a href="#di-tiep">Đi tiếp từ đâu</a>
-  <a href="#doc-them">Đọc thêm</a>
-  <a href="#thu-vien">Thư viện sử dụng</a>
+  <a href="#overview">Tổng quan</a>
+  <a href="#anoncreds">AnonCreds là gì</a>
+  <a href="#zkp">Zero-knowledge proof là gì</a>
+  <a href="#ba-ben">Ba bên tham gia</a>
+  <a href="#luong">Luồng hoạt động</a>
+  <a href="#luong-1" class="sub">Issuer và Wallet</a>
+  <a href="#luong-2" class="sub">Wallet và Verifier</a>
+  <a href="#luong-3" class="sub">Issuer và Verifier</a>
+  <a href="#advanced">Nâng cao</a>
+  <a href="#crypto" class="sub">Lõi mật mã</a>
+  <a href="#thu-vien" class="sub">Thư viện sử dụng</a>
+  <a href="#usecase">Các tình huống ứng dụng</a>
+  <a href="#bao-mat">Thiết kế bảo mật</a>
   <a href="#huong-dan">Hướng dẫn sử dụng</a>
 </nav>
 
 <main>
-  <h1>Giới thiệu kỹ thuật về NX Cred</h1>
 
+  <h2 id="overview">Tổng quan</h2>
   <p>
-    NX Cred là hệ thống cấp và xác minh giấy tờ định danh, trong đó bên xác minh có thể tin
-    chắc bạn là bạn nhưng không hề nhìn thấy dữ liệu gốc của bạn. Tài liệu này giải thích hệ
-    thống hoạt động ra sao, bắt đầu từ vấn đề mà nó giải quyết, không đòi hỏi người đọc biết
-    trước về mật mã học.
-  </p>
-
-  <h2 id="dinh-danh">Vấn đề của định danh hôm nay là gì?</h2>
-
-  <p>
-    Mỗi lần bạn mở tài khoản ngân hàng, thuê nhà, hay nhận phòng khách sạn, bạn đưa căn cước
-    ra. Bên kia chụp lại hoặc nhập vào hệ thống của họ. Thao tác đó tạo ra một bản sao dữ liệu
-    định danh của bạn, nằm trong một cơ sở dữ liệu mà bạn không kiểm soát và thường không biết
-    nó được bảo vệ ra sao.
+    Mỗi lần bạn mở tài khoản ngân hàng, thuê nhà hay nhận phòng khách sạn, bạn đưa căn cước ra và
+    bên kia chụp lại. Sau mười lần như vậy, dữ liệu định danh của bạn nằm trong mười cơ sở dữ
+    liệu mà bạn không kiểm soát. Chỉ cần một nơi bị tấn công là dữ liệu ra ngoài — và không có
+    cách nào thu hồi một tấm căn cước đã bị chụp.
   </p>
   <p>
-    Vấn đề thứ nhất là <b>nhân bản</b>. Mười dịch vụ nghĩa là mười bản sao. Chỉ cần một trong
-    mười nơi đó bị tấn công, dữ liệu của bạn ra ngoài — và bạn không thể thu hồi một tấm căn
-    cước đã bị chụp.
-  </p>
-  <p>
-    Vấn đề thứ hai là <b>lộ thừa</b>. Khi quán bar cần biết bạn đủ 18 tuổi, bạn đưa tấm thẻ nói
-    cho họ luôn cả tên, ngày sinh chính xác, quê quán và địa chỉ nhà. Bạn trả lời một câu hỏi
-    bằng cách tiết lộ mười câu trả lời.
-  </p>
-  <p>
-    Vấn đề thứ ba ít ai để ý: <b>giám sát phát sinh</b>. Trong nhiều hệ thống, bên xác minh phải
-    hỏi lại cơ quan cấp giấy tờ để chắc tấm thẻ là thật. Câu hỏi đó, lặp lại hàng nghìn lần,
-    biến cơ quan cấp thành nơi nắm được toàn bộ lịch sử đi lại và giao dịch của bạn — dù không
-    ai thiết kế ra nó với mục đích đó.
-  </p>
-  <p>
-    NX Cred giải quyết cả ba vấn đề bằng một ý tưởng: thay vì đưa dữ liệu, bạn đưa một
-    <em>bằng chứng toán học</em> về dữ liệu đó.
-  </p>
-
-  <h2 id="zkp">Bằng chứng không tiết lộ là gì?</h2>
-
-  <p>
-    Bằng chứng không tiết lộ (zero-knowledge proof) là cách chứng minh một điều là đúng mà
-    không nói ra vì sao nó đúng.
-  </p>
-  <p>
-    Nghe như nghịch lý, nên hãy lấy một ví dụ không dùng tới toán. Giả sử bạn muốn chứng minh
-    mình biết mật khẩu của một căn phòng có hai cửa thông nhau, mà không đọc mật khẩu ra. Bạn
-    đi vào bằng một cửa do người kiểm chọn ngẫu nhiên, và đi ra bằng cửa họ yêu cầu. Làm được
-    một lần có thể là may. Làm đúng hai mươi lần liên tiếp thì khả năng ăn may nhỏ tới mức
-    người kiểm buộc phải tin bạn thật sự biết mật khẩu — dù họ chưa từng nghe mật khẩu đó.
-  </p>
-  <p>Một bằng chứng như vậy có ba tính chất:</p>
-  <ul>
-    <li><b>Đầy đủ</b> — điều đúng thì luôn chứng minh được.</li>
-    <li><b>Chắc chắn</b> — điều sai thì không cách nào chứng minh được, kể cả khi người chứng
-      minh có máy tính mạnh và cố tình gian lận.</li>
-    <li><b>Không tiết lộ</b> — bên kiểm kết thúc phiên mà không biết thêm bất cứ điều gì ngoài
-      đúng một chữ “đúng”.</li>
-  </ul>
-  <p>
-    Điểm mấu chốt khiến nó hoạt động, và cũng là điểm khiến nó không phải ma thuật: bên chứng
-    minh phải trả lời một câu hỏi ngẫu nhiên mà họ <em>không thể đoán trước</em>. Nếu đoán
-    trước được, họ đã dựng sẵn câu trả lời giả. Vì không đoán được, cách duy nhất để trả lời
-    đúng là thật sự nắm giữ bí mật.
-  </p>
-
-  <h2 id="anoncreds">AnonCreds là gì?</h2>
-
-  <p>
-    Biết cách tạo bằng chứng không tiết lộ vẫn chưa đủ để làm ra một hệ thống định danh. Còn
-    phải trả lời: ai ký giấy tờ, ký thế nào để không đọc được bí mật của người dùng, và làm sao
-    để hai lần trình cùng một tấm thẻ không bị ghép lại thành dấu vết theo dõi.
-  </p>
-  <p>
-    AnonCreds (<em>Anonymous Credentials</em>) là bộ tiêu chuẩn trả lời những câu hỏi đó. Nó
-    được dùng trong các hệ thống định danh quốc gia, tiêu biểu là Bhutan NDI. NX Cred hiện thực
-    lại phần lõi của tiêu chuẩn này. Bốn ý tưởng dưới đây là toàn bộ những gì cần nhớ.
-  </p>
-
-  <h3>Link secret — bí mật gắn thẻ với chủ thẻ</h3>
-  <p>
-    Ví tự sinh ra một con số ngẫu nhiên và không bao giờ cho ai xem, kể cả cơ quan cấp thẻ. Thẻ
-    được ký sao cho chỉ dùng được cùng với con số đó. Hệ quả rất thực tế: ai đó chép trộm được
-    file thẻ của bạn cũng không dùng được, vì họ không có link secret.
-  </p>
-
-  <h3>Ký mù — cơ quan cấp ký lên thứ nó không đọc được</h3>
-  <p>
-    Nếu ví phải gửi link secret lên để được ký, thì cơ quan cấp biết nó — và bí mật không còn
-    là bí mật. Thay vào đó, ví gửi lên một <em>cam kết</em>: một con số che kín link secret, kiểu
-    như một chiếc phong bì dán kín. Cơ quan cấp ký đè lên phong bì. Chữ ký ràng buộc chặt vào
-    thứ bên trong, nhưng người ký chưa từng nhìn thấy nó.
-  </p>
-
-  <h3>Tiết lộ chọn lọc — chỉ mở đúng ô được hỏi</h3>
-  <p>
-    Thẻ có tám trường. Khi bên xác minh hỏi một trường, bảy trường còn lại vẫn nằm trong bằng
-    chứng dưới dạng đã che — đủ để chứng minh tấm thẻ là hợp lệ và trọn vẹn, nhưng không lộ giá
-    trị. Đây là thứ giải quyết vấn đề “lộ thừa” ở trên.
-  </p>
-
-  <h3>Không liên kết được — mỗi lần trình là một lần mới</h3>
-  <p>
-    Mỗi lần trình thẻ, ví ngẫu nhiên hoá lại chữ ký trước khi gửi. Hai bên xác minh khác nhau có
-    gộp dữ liệu với nhau cũng không tìm ra điểm chung nào để kết luận “hai lần này là cùng một
-    người”. Không có mã số cố định nào đi theo bạn.
-  </p>
-
-  <h2 id="nxcred">NX Cred là gì?</h2>
-
-  <p>
-    NX Cred là hiện thực của mô hình trên: một ví định danh chạy trên trình duyệt, một cơ quan
-    cấp thẻ mô phỏng, một cổng dành cho bên xác minh, và một hợp đồng trên blockchain giữ khoá
-    công khai.
-  </p>
-  <p>
-    Giấy tờ được dùng là căn cước công dân, với đúng tám trường in ở mặt trước: số thẻ, họ và
-    tên, ngày sinh, giới tính, quốc tịch, quê quán, nơi thường trú, và ngày hết hạn. Cơ quan cấp
-    không ký bất cứ thứ gì ngoài tám trường này, và bên xác minh cũng không hỏi được gì ngoài
-    tám trường này. Ràng buộc đó được thi hành bằng khuôn mẫu đã đăng công khai trên chain, chứ
-    không phải bằng thoả thuận miệng.
+    NX Cred đảo ngược chuyện đó. Thay vì đưa dữ liệu, bạn đưa một <b>bằng chứng toán học</b> về
+    dữ liệu. Bên xác minh biết chắc tấm thẻ là thật, do đúng cơ quan có thẩm quyền cấp, và đúng
+    là của bạn — nhưng không nhìn thấy bất kỳ thông tin nào ngoài những gì bạn chủ động mở.
   </p>
   <div class="note">
-    Kết quả cuối cùng: mười dịch vụ nhận về mười bằng chứng toán học khác nhau. Không bản nào
-    chứa dữ liệu gốc, và không bản nào liên kết được với bản còn lại.
+    Kết quả: mười dịch vụ nhận về mười bằng chứng khác nhau. Không bản nào chứa dữ liệu gốc, và
+    không bản nào ghép được với bản còn lại để lần ra bạn.
   </div>
 
-  <h2 id="thanh-phan">Hệ thống gồm những gì?</h2>
+  <h2 id="anoncreds">AnonCreds là gì</h2>
+  <p>
+    AnonCreds (viết tắt của <i>Anonymous Credentials</i>) là một tiêu chuẩn mô tả cách cấp phát
+    và trình bày giấy tờ số sao cho bên xác minh tin được, mà người dùng không phải lộ dữ liệu
+    thừa và không bị ai theo dõi.
+  </p>
+  <p>
+    Đây không phải lý thuyết trên giấy. Vương quốc Bhutan đã áp dụng tiêu chuẩn này cho hệ thống
+    định danh quốc gia của họ — <b>Bhutan NDI</b> — phục vụ khoảng <b>200.000 người dân</b>.
+  </p>
+  <p>Tiêu chuẩn này đứng trên bốn ý tưởng:</p>
+  <ul>
+    <li><b>Link secret</b> — ví tự sinh một con số bí mật, không cho ai xem kể cả cơ quan cấp.
+      Thẻ chỉ dùng được cùng con số đó, nên bản sao bị đánh cắp là vô dụng.</li>
+    <li><b>Ký mù</b> — cơ quan cấp ký lên con số bí mật đó mà không hề nhìn thấy nó, giống như
+      ký lên một chiếc phong bì dán kín.</li>
+    <li><b>Tiết lộ chọn lọc</b> — thẻ có tám trường, bên xác minh hỏi một trường thì bảy trường
+      kia vẫn kín.</li>
+    <li><b>Không liên kết được</b> — mỗi lần trình thẻ là một bằng chứng hoàn toàn mới, hai nơi
+      khác nhau không ghép dữ liệu lại được.</li>
+  </ul>
 
-  <p>Bốn thành phần: ba bên tham gia và một sổ cái công khai.</p>
+  <h2 id="zkp">Zero-knowledge proof là gì</h2>
+  <p>
+    Zero-knowledge proof — bằng chứng không tiết lộ — là thuật toán mật mã cho phép chứng minh
+    một điều là đúng mà không nói ra vì sao nó đúng. Đây là cái lõi và là trái tim của ứng dụng.
+  </p>
+  <p>
+    Hãy hình dung một hang động hình vòng: lối vào chia làm hai nhánh trái và phải, cuối hang hai
+    nhánh nối nhau bằng một cánh cửa khoá. Bạn nói mình biết mật khẩu cánh cửa đó. Người kiểm
+    đứng ngoài, không thấy bạn đi nhánh nào. Bạn vào một nhánh tuỳ ý, rồi người kiểm hô “trái”
+    hoặc “phải”, và bạn phải đi ra đúng nhánh được hô.
+  </p>
+  <p>
+    Biết mật khẩu thì lần nào bạn cũng ra đúng. Không biết thì bạn chỉ đúng khi may mắn đã chọn
+    sẵn nhánh đó — khả năng 50%. Lặp lại hai mươi lần, khả năng ăn may còn khoảng một phần
+    triệu. Người kiểm buộc phải tin bạn biết mật khẩu, dù chưa từng nghe mật khẩu đó.
+  </p>
+  <div class="callout">
+    Điểm mấu chốt khiến nó hoạt động: bạn phải phản ứng với một câu hỏi ngẫu nhiên mà bạn
+    <b>không thể đoán trước</b>. Đoán trước được thì đã dựng sẵn câu trả lời giả. Không đoán
+    được, cách duy nhất để trả lời đúng là thật sự nắm giữ bí mật.
+  </div>
+
+  <h2 id="ba-ben">Ba bên tham gia</h2>
+
+  <div class="roles">
+    <div class="role">
+      <b>Wallet — ví của bạn</b>
+      <p>Nơi bạn tạo tài khoản, làm eKYC một lần, và dùng nó để tạo bằng chứng gửi tới bên xác
+        minh. Đây là bên duy nhất giữ bí mật của bạn.</p>
+    </div>
+    <div class="role">
+      <b>Issuer — bên cấp</b>
+      <p>Bên có thẩm quyền cao nhất trong việc cung cấp định danh. Họ ký thẻ cho bạn và công bố
+        khuôn mẫu giấy tờ của mình để bên xác minh dùng về sau.</p>
+    </div>
+    <div class="role">
+      <b>Verifier — bên xác minh</b>
+      <p>Bên yêu cầu bạn chứng minh danh tính. Họ đặt câu hỏi dựa trên khuôn mẫu mà issuer đã
+        công bố lên blockchain.</p>
+    </div>
+    <div class="role">
+      <b>Blockchain — sổ cái công khai</b>
+      <p>Nơi lưu khuôn mẫu giấy tờ và khoá công khai, giúp bên xác minh kiểm chứng mà không cần
+        hỏi lại issuer.</p>
+    </div>
+  </div>
+
+  <h2 id="luong">Luồng hoạt động giữa ba bên</h2>
+  <p>
+    Ba bên phối hợp với nhau theo cách bảo đảm mỗi bên chỉ biết đúng phần việc của mình, không
+    bên nào phải tin bên nào.
+  </p>
 
   <figure>
-    <svg viewBox="0 0 700 320" role="img" aria-label="Sơ đồ bốn thành phần của NX Cred">
+    <svg viewBox="0 0 700 320" role="img" aria-label="Sơ đồ tổng quan ba bên và blockchain">
       <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
         <path d="M0,0 L10,5 L0,10 z" class="hd"/></marker></defs>
-      <rect class="bx-c" x="280" y="14" width="140" height="54" rx="12"/>
-      <text class="tb" x="350" y="38" text-anchor="middle">Chain</text>
-      <text class="ts" x="350" y="56" text-anchor="middle">sổ cái công khai</text>
+      <rect class="bx-c" x="275" y="14" width="150" height="54" rx="12"/>
+      <text class="tb" x="350" y="38" text-anchor="middle">Blockchain</text>
+      <text class="ts" x="350" y="56" text-anchor="middle">khuôn mẫu + khoá công khai</text>
       <rect class="bx-a" x="30" y="150" width="150" height="58" rx="12"/>
       <text class="tb" x="105" y="175" text-anchor="middle">Issuer</text>
-      <text class="ts" x="105" y="193" text-anchor="middle">cơ quan cấp</text>
+      <text class="ts" x="105" y="193" text-anchor="middle">bên cấp</text>
       <rect class="bx-a" x="275" y="228" width="150" height="58" rx="12"/>
-      <text class="tb" x="350" y="253" text-anchor="middle">Holder</text>
+      <text class="tb" x="350" y="253" text-anchor="middle">Wallet</text>
       <text class="ts" x="350" y="271" text-anchor="middle">ví của bạn</text>
       <rect class="bx-a" x="520" y="150" width="150" height="58" rx="12"/>
       <text class="tb" x="595" y="175" text-anchor="middle">Verifier</text>
       <text class="ts" x="595" y="193" text-anchor="middle">bên xác minh</text>
-      <path class="ar" d="M150,150 C190,110 240,80 278,62" marker-end="url(#a1)"/>
-      <text class="ts" x="176" y="100" text-anchor="middle">đăng khoá công khai</text>
-      <path class="ar" d="M422,62 C460,80 510,110 550,150" marker-end="url(#a1)"/>
-      <text class="ts" x="528" y="100" text-anchor="middle">đọc khoá công khai</text>
+      <path class="ar" d="M150,150 C190,110 240,80 273,62" marker-end="url(#a1)"/>
+      <text class="ts" x="172" y="100" text-anchor="middle">công bố một lần</text>
+      <path class="ar" d="M427,62 C460,80 510,110 550,150" marker-end="url(#a1)"/>
+      <text class="ts" x="532" y="100" text-anchor="middle">đọc khi cần</text>
       <path class="ar" d="M150,208 C200,245 235,255 273,257" marker-end="url(#a1)"/>
       <text class="ts" x="196" y="250" text-anchor="middle">cấp thẻ</text>
       <path class="ar" d="M427,257 C465,255 500,245 550,208" marker-end="url(#a1)"/>
       <text class="ts" x="508" y="250" text-anchor="middle">trình bằng chứng</text>
+      <path class="ar-d" d="M105,208 C105,300 595,300 595,208"/>
+      <text class="ts" x="350" y="312" text-anchor="middle">✕ không có kênh trực tiếp</text>
     </svg>
-    <figcaption>Dữ liệu gốc không bao giờ rời khỏi ví của người dùng.</figcaption>
+    <figcaption>Issuer cấp thẻ một lần. Việc xác minh diễn ra trực tiếp giữa ví và bên xác minh.</figcaption>
   </figure>
 
-  <p>
-    <b>Issuer</b> là bên có thẩm quyền xác nhận danh tính — trong thực tế là cơ quan quản lý căn
-    cước. Nó đối chiếu hồ sơ, ký thẻ, rồi thôi. Nó không lưu thẻ đã cấp, không biết thẻ được
-    dùng ở đâu, và không bao giờ thấy link secret. Nó chỉ ghi nhận đúng một việc: số căn cước
-    này đã được cấp thẻ rồi, nên không thể có hai ví cùng lúc cho một số.
-  </p>
-  <p>
-    <b>Holder</b> là ví của người dùng. Nó giữ link secret, giữ thẻ đã ký, và là bên duy nhất có
-    thể tạo ra bằng chứng. Mỗi lần trình thẻ, nó dựng một bằng chứng hoàn toàn mới.
-  </p>
-  <p>
-    <b>Verifier</b> là bất kỳ ai cần kiểm tra danh tính: ngân hàng, khách sạn, nhà tuyển dụng.
-    Họ soạn một yêu cầu nêu rõ cần biết gì, kèm một số ngẫu nhiên dùng một lần để bằng chứng cũ
-    không thể phát lại.
-  </p>
+  <h3 id="luong-1">1. Issuer và Wallet — cấp thẻ</h3>
+  <p>Luồng này chạy đúng một lần cho mỗi người dùng.</p>
+  <ol>
+    <li>Bạn bấm <b>eKYC</b> trong ví và quét giấy tờ. Ví gửi dữ liệu cho issuer đối chiếu.</li>
+    <li>Issuer đối chiếu hồ sơ, rồi gửi về một con số dùng một lần, yêu cầu ví chứng minh nó
+      thật sự nắm giữ bí mật của mình.</li>
+    <li>Ví tạo bằng chứng và gửi lại. Issuer kiểm, thấy hợp lệ thì <b>ký mù</b> lên thẻ.</li>
+    <li>Ví nhận thẻ về, tự kiểm chữ ký, rồi lưu lại. Xong — từ đây không phải làm lại nữa.</li>
+  </ol>
+  <div class="note">
+    Suốt quá trình này, issuer <b>không hề nhìn thấy</b> con số bí mật của ví, dù chữ ký của họ
+    ràng buộc chặt vào nó.
+  </div>
 
-  <h2 id="cap-the">Cấp thẻ diễn ra thế nào?</h2>
-
-  <p>Đây là luồng chạy một lần duy nhất cho mỗi người dùng.</p>
+  <h3 id="luong-2">2. Wallet và Verifier — xác minh</h3>
+  <p>Đây là luồng chính, chạy xuyên suốt ứng dụng, mỗi lần bạn cần chứng minh danh tính.</p>
 
   <figure>
-    <svg viewBox="0 0 700 430" role="img" aria-label="Sơ đồ luồng cấp thẻ giữa ví và cơ quan cấp">
+    <svg viewBox="0 0 700 250" role="img" aria-label="Sơ đồ luồng xác minh giữa ví và bên xác minh">
       <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
         <path d="M0,0 L10,5 L0,10 z" class="hd"/></marker></defs>
-      <rect class="bx-a" x="40" y="10" width="240" height="36" rx="10"/>
-      <text class="tb" x="160" y="33" text-anchor="middle">Holder — ví của bạn</text>
-      <rect class="bx-a" x="420" y="10" width="240" height="36" rx="10"/>
-      <text class="tb" x="540" y="33" text-anchor="middle">Issuer — cơ quan cấp</text>
-      <rect class="bx" x="40" y="70" width="240" height="46" rx="10"/>
-      <text class="t" x="160" y="90" text-anchor="middle">1. Quét căn cước,</text>
-      <text class="t" x="160" y="107" text-anchor="middle">trích xuất tám trường</text>
-      <rect class="bx" x="420" y="70" width="240" height="46" rx="10"/>
-      <text class="t" x="540" y="90" text-anchor="middle">2. Đối chiếu hồ sơ eKYC,</text>
-      <text class="t" x="540" y="107" text-anchor="middle">phát số dùng một lần</text>
-      <rect class="bx" x="40" y="146" width="240" height="46" rx="10"/>
-      <text class="t" x="160" y="166" text-anchor="middle">3. Sinh link secret,</text>
-      <text class="t" x="160" y="183" text-anchor="middle">tính cam kết che kín nó</text>
-      <rect class="bx" x="40" y="212" width="240" height="46" rx="10"/>
-      <text class="t" x="160" y="232" text-anchor="middle">4. Kèm bằng chứng nhỏ:</text>
-      <text class="t" x="160" y="249" text-anchor="middle">“tôi biết cái bên trong”</text>
-      <rect class="bx" x="420" y="212" width="240" height="36" rx="10"/>
-      <text class="t" x="540" y="235" text-anchor="middle">5. Kiểm bằng chứng nhỏ</text>
-      <rect class="bx" x="420" y="266" width="240" height="46" rx="10"/>
-      <text class="t" x="540" y="286" text-anchor="middle">6. Ký mù lên cam kết</text>
-      <text class="t" x="540" y="303" text-anchor="middle">và tám thuộc tính</text>
-      <rect class="bx" x="40" y="340" width="240" height="46" rx="10"/>
-      <text class="t" x="160" y="360" text-anchor="middle">7. Gỡ mù, tự kiểm chữ ký,</text>
-      <text class="t" x="160" y="377" text-anchor="middle">lưu thẻ vào ví</text>
-      <path class="ar" d="M280,93 L416,93" marker-end="url(#a2)"/>
-      <text class="ts" x="348" y="86" text-anchor="middle">dữ liệu eKYC</text>
-      <path class="ar" d="M420,110 L300,110 L284,146" marker-end="url(#a2)"/>
-      <text class="ts" x="352" y="128" text-anchor="middle">số dùng một lần</text>
-      <path class="ar" d="M280,235 L416,230" marker-end="url(#a2)"/>
-      <text class="ts" x="348" y="222" text-anchor="middle">cam kết + bằng chứng</text>
-      <path class="ar" d="M540,248 L540,262" marker-end="url(#a2)"/>
-      <path class="ar" d="M420,300 L300,320 L200,336" marker-end="url(#a2)"/>
-      <text class="ts" x="330" y="338" text-anchor="middle">thẻ đã ký</text>
+      <rect class="bx-a" x="40" y="16" width="250" height="34" rx="10"/>
+      <text class="tb" x="165" y="38" text-anchor="middle">Verifier</text>
+      <rect class="bx-a" x="410" y="16" width="250" height="34" rx="10"/>
+      <text class="tb" x="535" y="38" text-anchor="middle">Wallet</text>
+      <rect class="bx" x="40" y="70" width="250" height="44" rx="10"/>
+      <text class="t" x="165" y="89" text-anchor="middle">1. Tạo mã QR chứa yêu cầu</text>
+      <text class="t" x="165" y="106" text-anchor="middle">kèm số dùng một lần</text>
+      <rect class="bx" x="410" y="70" width="250" height="44" rx="10"/>
+      <text class="t" x="535" y="89" text-anchor="middle">2. Bạn quét QR và chọn</text>
+      <text class="t" x="535" y="106" text-anchor="middle">thông tin muốn chia sẻ</text>
+      <rect class="bx" x="410" y="130" width="250" height="44" rx="10"/>
+      <text class="t" x="535" y="149" text-anchor="middle">3. Ví làm mù thông tin,</text>
+      <text class="t" x="535" y="166" text-anchor="middle">tạo bằng chứng mới</text>
+      <rect class="bx" x="40" y="190" width="250" height="34" rx="10"/>
+      <text class="t" x="165" y="212" text-anchor="middle">4. Kiểm bằng chứng</text>
+      <path class="ar" d="M290,92 L406,92" marker-end="url(#a2)"/>
+      <text class="ts" x="348" y="84" text-anchor="middle">yêu cầu</text>
+      <path class="ar" d="M535,114 L535,126" marker-end="url(#a2)"/>
+      <path class="ar" d="M410,160 L300,180 L200,186" marker-end="url(#a2)"/>
+      <text class="ts" x="330" y="200" text-anchor="middle">bằng chứng</text>
     </svg>
+    <figcaption>Mỗi lần yêu cầu, ví làm mù lại và tạo bằng chứng mới từ đầu.</figcaption>
   </figure>
 
   <p>
-    Bước 4 dễ bị bỏ qua nhưng không thể thiếu. Nếu chỉ gửi cam kết mà không kèm bằng chứng, một
-    kẻ gian có thể chặn lấy cam kết của người khác rồi nộp như của mình — và nhận về một tấm thẻ
-    gắn với link secret mà hắn không có. Bằng chứng nhỏ ở bước này buộc người nộp phải thật sự
-    biết con số nằm bên trong phong bì.
+    Điểm quan trọng nhất: bước 3 chạy lại <b>từ đầu</b> cho mỗi lần yêu cầu. Ví không lưu sẵn một
+    bằng chứng rồi dùng lại. Nhờ vậy hai nơi khác nhau nhận về hai bằng chứng không có điểm chung
+    nào, và bằng chứng cũ bị bắt trộm cũng không dùng lại được.
   </p>
   <p>
-    Bước 7 cũng vậy. Ví tự kiểm chữ ký trước khi lưu, để cơ quan cấp không thể trả về một chữ ký
-    hỏng rồi sau này đổ lỗi cho ví.
+    Về mặt trải nghiệm, quyền quyết định nằm ở bạn. Bên xác minh chỉ được <b>hỏi</b>; ví hỏi lại
+    bạn trước khi trả lời. Những trường không nằm trong yêu cầu thì bị khoá cứng — bạn không thể
+    vô tình chia sẻ.
   </p>
 
-  <h2 id="xac-minh">Xác minh diễn ra thế nào?</h2>
-
-  <p>Đây là luồng chạy mỗi lần bạn cần chứng minh danh tính.</p>
-
-  <figure>
-    <svg viewBox="0 0 700 400" role="img" aria-label="Sơ đồ luồng xác minh giữa ví và bên xác minh">
-      <defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-        <path d="M0,0 L10,5 L0,10 z" class="hd"/></marker></defs>
-      <rect class="bx-a" x="40" y="10" width="240" height="36" rx="10"/>
-      <text class="tb" x="160" y="33" text-anchor="middle">Verifier — bên xác minh</text>
-      <rect class="bx-a" x="420" y="10" width="240" height="36" rx="10"/>
-      <text class="tb" x="540" y="33" text-anchor="middle">Holder — ví của bạn</text>
-      <rect class="bx" x="40" y="70" width="240" height="62" rx="10"/>
-      <text class="t" x="160" y="90" text-anchor="middle">1. Soạn yêu cầu: cần lộ gì,</text>
-      <text class="t" x="160" y="107" text-anchor="middle">cần chứng minh điều gì,</text>
-      <text class="t" x="160" y="124" text-anchor="middle">kèm số ngẫu nhiên một lần</text>
-      <rect class="bx" x="420" y="70" width="240" height="46" rx="10"/>
-      <text class="t" x="540" y="90" text-anchor="middle">2. Người dùng xem và</text>
-      <text class="t" x="540" y="107" text-anchor="middle">tự quyết định chia sẻ gì</text>
-      <rect class="bx" x="420" y="132" width="240" height="36" rx="10"/>
-      <text class="t" x="540" y="155" text-anchor="middle">3. Ngẫu nhiên hoá chữ ký</text>
-      <rect class="bx" x="420" y="184" width="240" height="46" rx="10"/>
-      <text class="t" x="540" y="204" text-anchor="middle">4. Che link secret và</text>
-      <text class="t" x="540" y="221" text-anchor="middle">các trường không chia sẻ</text>
-      <rect class="bx" x="420" y="246" width="240" height="36" rx="10"/>
-      <text class="t" x="540" y="269" text-anchor="middle">5. Tạo bằng chứng</text>
-      <rect class="bx" x="40" y="292" width="240" height="36" rx="10"/>
-      <text class="t" x="160" y="315" text-anchor="middle">6. Lấy khoá công khai từ chain</text>
-      <rect class="bx" x="40" y="344" width="240" height="36" rx="10"/>
-      <text class="t" x="160" y="367" text-anchor="middle">7. Kiểm bằng chứng</text>
-      <path class="ar" d="M280,100 L416,93" marker-end="url(#a3)"/>
-      <text class="ts" x="348" y="86" text-anchor="middle">yêu cầu</text>
-      <path class="ar" d="M540,116 L540,128" marker-end="url(#a3)"/>
-      <path class="ar" d="M540,168 L540,180" marker-end="url(#a3)"/>
-      <path class="ar" d="M540,230 L540,242" marker-end="url(#a3)"/>
-      <path class="ar" d="M420,270 L300,284 L200,288" marker-end="url(#a3)"/>
-      <text class="ts" x="330" y="300" text-anchor="middle">bằng chứng</text>
-      <path class="ar" d="M160,328 L160,340" marker-end="url(#a3)"/>
-    </svg>
-    <figcaption>Bên xác minh kết thúc với đúng một chữ “hợp lệ”, cộng những trường bạn đồng ý mở.</figcaption>
-  </figure>
-
+  <h3 id="luong-3">3. Issuer và Verifier — không có liên lạc</h3>
   <p>
-    Bước 3 là thứ tạo ra tính không liên kết được. Chữ ký gửi đi mỗi lần một khác, nên hai bên
-    xác minh không thể đối chiếu sổ sách để lần ra bạn.
+    Đây là phần ngắn nhất, vì nội dung của nó là một sự vắng mặt: hai bên này
+    <b>không hề liên lạc trực tiếp</b> với nhau.
   </p>
   <p>
-    Bước 2 đáng nhấn mạnh về mặt sản phẩm: quyền quyết định nằm ở người dùng, không nằm ở bên
-    xác minh. Bên xác minh chỉ được <em>hỏi</em>; bên trả lời là ví, và ví hỏi chủ của nó trước.
-    Những trường không được hỏi thì bị khoá cứng, người dùng cũng không vô tình chia sẻ được.
-  </p>
-
-  <h2 id="khong-lien-lac">Vì sao issuer và verifier không liên lạc với nhau?</h2>
-
-  <p>Đây là phần quan trọng nhất của tài liệu, và nội dung của nó là một sự vắng mặt.</p>
-
-  <figure>
-    <svg viewBox="0 0 700 220" role="img" aria-label="Issuer và Verifier không có kênh liên lạc trực tiếp">
-      <defs><marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-        <path d="M0,0 L10,5 L0,10 z" class="hd"/></marker></defs>
-      <rect class="bx-a" x="30" y="40" width="160" height="56" rx="12"/>
-      <text class="tb" x="110" y="74" text-anchor="middle">Issuer</text>
-      <rect class="bx-c" x="270" y="40" width="160" height="56" rx="12"/>
-      <text class="tb" x="350" y="74" text-anchor="middle">Chain</text>
-      <rect class="bx-a" x="510" y="40" width="160" height="56" rx="12"/>
-      <text class="tb" x="590" y="74" text-anchor="middle">Verifier</text>
-      <path class="ar" d="M190,68 L266,68" marker-end="url(#a4)"/>
-      <text class="ts" x="228" y="34" text-anchor="middle">đăng một lần</text>
-      <text class="ts" x="228" y="112" text-anchor="middle">khoá công khai</text>
-      <path class="ar" d="M430,68 L506,68" marker-end="url(#a4)"/>
-      <text class="ts" x="468" y="34" text-anchor="middle">đọc khi cần</text>
-      <text class="ts" x="468" y="112" text-anchor="middle">không xin phép</text>
-      <path class="ar-d" d="M110,96 C110,175 590,175 590,96"/>
-      <text class="ts" x="350" y="196" text-anchor="middle">✕ không có kênh liên lạc nào ở đây</text>
-    </svg>
-  </figure>
-
-  <p>
-    Trong mô hình cũ, mỗi lần bạn dùng giấy tờ ở đâu đó, bên đó phải hỏi lại cơ quan cấp: “thẻ
-    này có thật không?”. Câu hỏi đó, lặp lại đủ nhiều, biến cơ quan cấp thành nơi biết toàn bộ
-    lịch sử đi lại, vay mượn và thuê nhà của bạn.
+    Trong mô hình cũ, bên xác minh phải gọi về cơ quan cấp để hỏi “giấy tờ này có thật không”.
+    Câu hỏi đó, lặp lại đủ nhiều, biến cơ quan cấp thành nơi nắm được toàn bộ lịch sử đi lại và
+    giao dịch của bạn.
   </p>
   <p>
-    NX Cred cắt đứt kênh đó. Cơ quan cấp đăng khoá công khai lên chain một lần, rồi không tham
-    gia gì nữa. Bên xác minh tự đọc, tự kiểm. Cơ quan cấp không biết, và về mặt kỹ thuật là
-    <em>không thể</em> biết, thẻ của bạn đang được dùng ở đâu.
+    NX Cred cắt đứt kênh đó. Issuer công bố khoá công khai lên blockchain một lần, rồi không tham
+    gia gì nữa. Verifier tự đọc, tự kiểm. Issuer không biết — và về mặt kỹ thuật là
+    <b>không thể</b> biết — thẻ của bạn đang được dùng ở đâu.
   </p>
 
-  <h2 id="blockchain">Blockchain được dùng ở đâu?</h2>
+  <div class="callout">
+    Bên trên vừa trình bày ba luồng hoạt động. Nếu bạn muốn tìm hiểu trái tim của ứng dụng — phần
+    lõi mật mã — hãy đọc tiếp mục <a href="#advanced">Nâng cao</a> và tải tài liệu PDF ở đó.
+  </div>
 
+  <h2 id="advanced">Nâng cao</h2>
+
+  <h3 id="crypto">Lõi mật mã</h3>
   <p>
-    Blockchain ở đây có một vai trò hẹp và rõ ràng. Nó không lưu dữ liệu cá nhân, không lưu thẻ,
-    và không ghi lại các lần xác minh.
+    Toàn bộ phần toán học — công thức sinh khoá, cam kết, giao thức chứng minh, chữ ký mù, bằng
+    chứng trình bày, cùng chứng minh tính đúng đắn của từng phép kiểm — nằm trong tài liệu đặc tả
+    đầy đủ. Bạn có thể tải về nếu muốn nghiên cứu kỹ.
   </p>
-  <div class="tbl-wrap">
-  <table>
-    <tr><th style="width:50%">Có trên chain</th><th>Không lên chain</th></tr>
-    <tr><td>Khoá công khai của cơ quan cấp</td><td>Dữ liệu cá nhân của bất kỳ ai</td></tr>
-    <tr><td>Khuôn mẫu tám trường của giấy tờ</td><td>Thẻ đã cấp</td></tr>
-    <tr><td>Danh sách cơ quan cấp được tin cậy</td><td>Link secret</td></tr>
-    <tr><td></td><td>Lịch sử ai xác minh cái gì, ở đâu</td></tr>
-  </table>
-  </div>
-  <p>
-    Lý do cần đến blockchain chỉ có một: bên xác minh phải lấy được khoá công khai từ một nguồn
-    mà không ai sửa được, kể cả chính cơ quan cấp. Nếu khoá nằm trên một máy chủ thông thường,
-    người kiểm soát máy chủ đó có thể âm thầm đổi khoá và từ đó ký được thẻ giả mà không ai phát
-    hiện. Sổ cái công khai loại bỏ khả năng đó: mọi thay đổi đều để lại dấu vết và ai cũng kiểm
-    tra được.
-  </p>
-  <div class="note">
-    Nói cách khác, blockchain ở đây đóng vai một <strong>bảng tin công khai không thể tẩy
-    xoá</strong>, chứ không phải một cơ sở dữ liệu.
-  </div>
-
-  <hr>
-
-  <h2 id="thuat-ngu">Thuật ngữ</h2>
-
-  <div class="term">
-    <h3>Link secret</h3>
-    <p>Con số ngẫu nhiên do ví tự sinh và không bao giờ tiết lộ cho ai. Thẻ được ký sao cho chỉ
-      dùng được cùng con số này, nên thẻ bị sao chép sang máy khác là vô dụng.</p>
-    <p class="more"><a href="#anoncreds">Đọc thêm về link secret</a></p>
-  </div>
-
-  <div class="term">
-    <h3>Cam kết (commitment)</h3>
-    <p>Một con số che kín giá trị bên trong, giống chiếc phong bì dán kín. Người khác ký được lên
-      phong bì mà không đọc được nội dung, và về sau không thể đánh tráo nội dung đó.</p>
-    <p class="more"><a href="#cap-the">Đọc thêm ở luồng cấp thẻ</a></p>
-  </div>
-
-  <div class="term">
-    <h3>Credential — thẻ định danh</h3>
-    <p>Chữ ký của cơ quan cấp lên toàn bộ tám thuộc tính cộng với link secret. Đây là thứ ví lưu
-      lại sau khi hoàn tất cấp thẻ.</p>
-    <p class="more"><a href="#thanh-phan">Đọc thêm về các thành phần</a></p>
-  </div>
-
-  <div class="term">
-    <h3>Ký mù (blind signature)</h3>
-    <p>Cách ký trong đó người ký không nhìn thấy một phần nội dung mình đang ký, nhưng chữ ký vẫn
-      ràng buộc chặt vào phần bị che đó.</p>
-    <p class="more"><a href="#anoncreds">Đọc thêm về ký mù</a></p>
-  </div>
-
-  <div class="term">
-    <h3>Tiết lộ chọn lọc (selective disclosure)</h3>
-    <p>Khả năng mở đúng những trường được hỏi trên một tấm thẻ, giữ kín phần còn lại, mà bên xác
-      minh vẫn kiểm chứng được tấm thẻ là trọn vẹn và hợp lệ.</p>
-    <p class="more"><a href="#xac-minh">Đọc thêm ở luồng xác minh</a></p>
-  </div>
-
-  <div class="term">
-    <h3>Không liên kết được (unlinkability)</h3>
-    <p>Tính chất khiến hai lần trình cùng một tấm thẻ không thể bị ghép lại với nhau. Đạt được
-      nhờ ví ngẫu nhiên hoá chữ ký trước mỗi lần gửi.</p>
-    <p class="more"><a href="#anoncreds">Đọc thêm về tính không liên kết</a></p>
-  </div>
-
-  <div class="term">
-    <h3>Issuer — cơ quan cấp</h3>
-    <p>Bên có thẩm quyền xác nhận danh tính và ký thẻ. Sau khi ký xong thì không tham gia gì nữa,
-      và không biết thẻ được dùng ở đâu.</p>
-    <p class="more"><a href="#thanh-phan">Đọc thêm về issuer</a></p>
-  </div>
-
-  <div class="term">
-    <h3>Holder — ví người dùng</h3>
-    <p>Phần mềm phía người dùng, giữ link secret và thẻ đã ký. Là bên duy nhất có thể tạo ra bằng
-      chứng, vì chỉ nó biết link secret.</p>
-    <p class="more"><a href="#thanh-phan">Đọc thêm về holder</a></p>
-  </div>
-
-  <div class="term">
-    <h3>Verifier — bên xác minh</h3>
-    <p>Bất kỳ ai cần kiểm tra danh tính. Họ soạn yêu cầu, nhận bằng chứng, rồi tự kiểm bằng khoá
-      công khai lấy từ chain.</p>
-    <p class="more"><a href="#thanh-phan">Đọc thêm về verifier</a></p>
-  </div>
-
-  <div class="term">
-    <h3>eKYC</h3>
-    <p>Bước đối chiếu danh tính điện tử: người dùng quét giấy tờ, cơ quan cấp so với hồ sơ mình
-      đang giữ. Đây là bước duy nhất dữ liệu định danh được đối chiếu trực tiếp, và nó chỉ xảy ra
-      một lần.</p>
-    <p class="more"><a href="#cap-the">Đọc thêm ở luồng cấp thẻ</a></p>
-  </div>
-
-  <div class="term">
-    <h3>Passkey</h3>
-    <p>Khoá sinh trắc học (vân tay, khuôn mặt) mở kho lưu trữ của ví. Đây là lớp bảo vệ quyền
-      truy cập, không phải cơ chế mật mã của bằng chứng — hai thứ này thường bị nhầm lẫn.</p>
-    <p class="more"><a href="https://www.w3.org/TR/webauthn-3/">Chuẩn WebAuthn</a></p>
-  </div>
-
-  <div class="term">
-    <h3>Chain — sổ cái công khai</h3>
-    <p>Nơi đăng khoá công khai và khuôn mẫu giấy tờ của cơ quan cấp. Không lưu dữ liệu cá nhân,
-      không lưu thẻ, không ghi lịch sử xác minh.</p>
-    <p class="more"><a href="#blockchain">Đọc thêm về vai trò của blockchain</a></p>
-  </div>
-
-  <h2 id="di-tiep">Đi tiếp từ đâu</h2>
-
-  <p>Phần lớn người đọc đi tuần tự, nhưng đường ngắn nhất tuỳ vào việc bạn đang cần gì:</p>
-  <ul>
-    <li><b>Muốn hiểu ý tưởng trong năm phút:</b>
-      <a href="#zkp">bằng chứng không tiết lộ</a>, rồi
-      <a href="#xac-minh">luồng xác minh</a>.</li>
-    <li><b>Muốn biết hệ thống gồm những gì:</b>
-      <a href="#thanh-phan">các thành phần</a>, rồi <a href="#thuat-ngu">thuật ngữ</a>.</li>
-    <li><b>Muốn thẩm định về mặt kỹ thuật:</b>
-      <a href="#cap-the">luồng cấp thẻ</a> và <a href="#xac-minh">luồng xác minh</a>, rồi tải
-      <a href="#doc-them">tài liệu lõi mật mã</a>.</li>
-    <li><b>Muốn đánh giá về quyền riêng tư:</b>
-      <a href="#khong-lien-lac">vì sao hai bên không liên lạc</a> và
-      <a href="#blockchain">blockchain dùng ở đâu</a>.</li>
-  </ul>
-
-  <h2 id="doc-them">Đọc thêm</h2>
 
   <div class="dl">
     <div class="ico">∑</div>
     <div>
-      <b>Lõi mật mã NX Cred</b>
-      <span>Chữ ký Camenisch–Lysyanskaya và bằng chứng không tiết lộ — đầy đủ định lý và chứng minh</span>
+      <b>NX Cred — Tài liệu đặc tả ứng dụng</b>
+      <span>Đặc tả đầy đủ: khái niệm, luồng hoạt động, lõi mật mã, thiết kế bảo mật và blockchain</span>
     </div>
-    <a class="btn" href="nxcred-crypto.pdf" download>Tải PDF</a>
+    <a class="btn" href="nxcred-spec.pdf" download>Tải PDF</a>
   </div>
 
-  <p>
-    Tài liệu trên dành cho người muốn thẩm định, không cần thiết để hiểu sản phẩm. Nội dung gồm
-    cấu trúc nhóm và lý do chọn safe prime, tính giấu kín của cam kết, tính đầy đủ và tính chắc
-    chắn của giao thức sigma, chứng minh đẳng thức chữ ký được bảo toàn qua phép ngẫu nhiên hoá,
-    và chứng minh bên xác minh khôi phục lại đúng giá trị cần so sánh.
+  <h3 id="thu-vien">Các thư viện ứng dụng</h3>
+  <div class="tbl-wrap">
+  <table>
+    <tr><th style="width:20%">Thư viện</th><th>Dùng để làm gì</th><th style="width:26%">Địa chỉ</th></tr>
+    <tr><td><b>gmpy2</b></td><td>Số học số lớn — gánh toàn bộ phần nặng của lõi mật mã</td><td><a href="https://pypi.org/project/gmpy2/">pypi.org/project/gmpy2</a></td></tr>
+    <tr><td><b>FastAPI</b></td><td>Khung web dựng các dịch vụ của ba bên</td><td><a href="https://fastapi.tiangolo.com/">fastapi.tiangolo.com</a></td></tr>
+    <tr><td><b>py_webauthn</b></td><td>Xác minh passkey theo chuẩn WebAuthn</td><td><a href="https://pypi.org/project/webauthn/">pypi.org/project/webauthn</a></td></tr>
+    <tr><td><b>web3.py</b></td><td>Đọc khoá công khai và khuôn mẫu từ blockchain</td><td><a href="https://pypi.org/project/web3/">pypi.org/project/web3</a></td></tr>
+    <tr><td><b>React</b></td><td>Dựng giao diện ví và cổng xác minh</td><td><a href="https://react.dev/">react.dev</a></td></tr>
+    <tr><td><b>jsQR</b></td><td>Đọc mã QR trên giấy tờ và mã QR xác minh</td><td><a href="https://www.npmjs.com/package/jsqr">npmjs.com/package/jsqr</a></td></tr>
+    <tr><td><b>Tesseract.js</b></td><td>Đọc chữ trên ảnh giấy tờ</td><td><a href="https://tesseract.projectnaptha.com/">tesseract.projectnaptha.com</a></td></tr>
+  </table>
+  </div>
+  <p style="font-size:14.5px;color:var(--ink-3)">
+    Danh sách đầy đủ có trong phụ lục A của tài liệu đặc tả.
   </p>
 
-  <p>Nguồn bên ngoài:</p>
-  <ul>
-    <li><a href="https://hyperledger.github.io/anoncreds-spec/">AnonCreds Specification</a>
-      — đặc tả đầy đủ của tiêu chuẩn mà NX Cred hiện thực lại phần lõi.</li>
-    <li><a href="https://www.w3.org/TR/vc-data-model-2.0/">W3C Verifiable Credentials Data Model</a>
-      — chuẩn mô tả cấu trúc dữ liệu của giấy tờ số.</li>
-    <li><a href="https://www.bhutanndi.com/">Bhutan NDI</a>
-      — hệ thống định danh quốc gia đang vận hành theo mô hình này.</li>
-    <li><a href="https://hyperledger-indy.readthedocs.io/">Hyperledger Indy</a>
-      — sổ cái chuyên dụng cho định danh tự chủ.</li>
-    <li><a href="https://www.w3.org/TR/webauthn-3/">WebAuthn</a>
-      — chuẩn passkey dùng để mở khoá ví.</li>
-  </ul>
+  <h2 id="usecase">Các tình huống ứng dụng</h2>
+  <p>Có ba tình huống chính mà NX Cred hướng tới.</p>
 
-  <h2 id="thu-vien">Thư viện sử dụng</h2>
-
-  <h3>Phía máy chủ — Python</h3>
-  <div class="tbl-wrap">
-  <table>
-    <tr><th style="width:18%">Thư viện</th><th>Dùng để làm gì</th><th style="width:24%">Tải về</th></tr>
-    <tr><td><b>gmpy2</b></td><td>Số học số lớn: sinh safe prime, luỹ thừa modulo. Gánh toàn bộ phần nặng của lõi mật mã.</td><td><a href="https://pypi.org/project/gmpy2/">pypi.org/project/gmpy2</a></td></tr>
-    <tr><td><b>FastAPI</b></td><td>Khung web dựng các endpoint của issuer, ví và verifier.</td><td><a href="https://fastapi.tiangolo.com/">fastapi.tiangolo.com</a></td></tr>
-    <tr><td><b>Uvicorn</b></td><td>Máy chủ chạy ứng dụng FastAPI.</td><td><a href="https://www.uvicorn.org/">uvicorn.org</a></td></tr>
-    <tr><td><b>Pydantic</b></td><td>Kiểm tra và ràng buộc kiểu dữ liệu vào ra của API.</td><td><a href="https://pypi.org/project/pydantic/">pypi.org/project/pydantic</a></td></tr>
-    <tr><td><b>py_webauthn</b></td><td>Xác minh passkey theo chuẩn WebAuthn: phát thách thức, kiểm chữ ký thiết bị.</td><td><a href="https://pypi.org/project/webauthn/">pypi.org/project/webauthn</a></td></tr>
-    <tr><td><b>google-auth</b></td><td>Kiểm tra ID-token khi người dùng đăng nhập bằng tài khoản Google.</td><td><a href="https://pypi.org/project/google-auth/">pypi.org/project/google-auth</a></td></tr>
-    <tr><td><b>web3.py</b></td><td>Đọc khoá công khai và khuôn mẫu giấy tờ từ hợp đồng trên chain.</td><td><a href="https://pypi.org/project/web3/">pypi.org/project/web3</a></td></tr>
-    <tr><td><b>websockets</b></td><td>Kênh thời gian thực giữa máy tính và điện thoại khi quét giấy tờ.</td><td><a href="https://pypi.org/project/websockets/">pypi.org/project/websockets</a></td></tr>
-  </table>
+  <div class="uc">
+    <span class="tag">Đã triển khai</span>
+    <h3>1. Bhutan NDI</h3>
+    <p>
+      Vương quốc Bhutan đã áp dụng tiêu chuẩn này cho hệ thống định danh quốc gia, phục vụ khoảng
+      200.000 người dân. Kết quả: thủ tục mở tài khoản ngân hàng rút từ nhiều ngày xuống còn vài
+      phút, doanh nghiệp không còn phải lưu bản sao giấy tờ nên giảm rủi ro pháp lý, và người dân
+      giữ được quyền quyết định chia sẻ gì với ai.
+    </p>
   </div>
 
-  <h3>Phía trình duyệt — TypeScript</h3>
-  <div class="tbl-wrap">
-  <table>
-    <tr><th style="width:18%">Thư viện</th><th>Dùng để làm gì</th><th style="width:24%">Tải về</th></tr>
-    <tr><td><b>React</b></td><td>Dựng giao diện ví và cổng xác minh.</td><td><a href="https://react.dev/">react.dev</a></td></tr>
-    <tr><td><b>Vite</b></td><td>Công cụ đóng gói và máy chủ phát triển.</td><td><a href="https://vite.dev/">vite.dev</a></td></tr>
-    <tr><td><b>TypeScript</b></td><td>Ngôn ngữ có kiểu tĩnh, bắt lỗi trước khi chạy.</td><td><a href="https://www.typescriptlang.org/">typescriptlang.org</a></td></tr>
-    <tr><td><b>Tailwind CSS</b></td><td>Hệ thống tạo kiểu giao diện.</td><td><a href="https://tailwindcss.com/">tailwindcss.com</a></td></tr>
-    <tr><td><b>Framer Motion</b></td><td>Hiệu ứng chuyển cảnh giữa các bước.</td><td><a href="https://motion.dev/">motion.dev</a></td></tr>
-    <tr><td><b>jsQR</b></td><td>Đọc mã QR in trên mặt trước căn cước.</td><td><a href="https://www.npmjs.com/package/jsqr">npmjs.com/package/jsqr</a></td></tr>
-    <tr><td><b>Tesseract.js</b></td><td>Đọc chữ trên ảnh giấy tờ, bổ sung các trường mã QR không chứa.</td><td><a href="https://tesseract.projectnaptha.com/">tesseract.projectnaptha.com</a></td></tr>
-    <tr><td><b>qrcode</b></td><td>Sinh mã QR để chuyển phiên từ máy tính sang điện thoại.</td><td><a href="https://www.npmjs.com/package/qrcode">npmjs.com/package/qrcode</a></td></tr>
-    <tr><td><b>React Router</b></td><td>Điều hướng giữa các màn hình.</td><td><a href="https://reactrouter.com/">reactrouter.com</a></td></tr>
-  </table>
+  <div class="uc">
+    <span class="tag plan">Đề xuất áp dụng</span>
+    <h3>2. Chống thi hộ tại các trường đại học</h3>
+    <p>
+      Tình trạng gian lận danh tính trong thi cử — thi hộ, mượn thẻ sinh viên — diễn ra khá phổ
+      biến ở Việt Nam. Với NX Cred, trước kỳ thi nhà trường cấp cho mỗi sinh viên một thẻ số. Tại
+      phòng thi, giám thị chỉ cần tạo vài yêu cầu đơn giản: “có tên trong danh sách dự thi
+      không?”, “có đúng mã lớp không?”, “thẻ còn hiệu lực không?”. Sinh viên quét mã QR, vài giây
+      là xong.
+    </p>
+    <p>
+      <b>Vì sao cơ chế này chặn được thi hộ:</b> muốn nhờ người khác thi hộ, sinh viên phải giao
+      cả ví lẫn con số bí mật cho người đó. Nhưng con số ấy không dùng riêng cho kỳ thi — nó mở
+      khoá <b>toàn bộ</b> giấy tờ số trong ví: thẻ ngân hàng, giấy tờ tuỳ thân, mọi thứ khác. Cái
+      giá của việc cho mượn là trao toàn bộ danh tính số của mình cho người khác. Chi phí đó đủ
+      lớn để cơ chế tự bảo vệ chính nó.
+    </p>
+  </div>
+
+  <div class="uc">
+    <span class="tag plan">Đề xuất áp dụng</span>
+    <h3>3. Ngân hàng và dịch vụ tài chính</h3>
+    <p>
+      Quy trình định danh khách hàng hiện nay tốn kém ở cả hai phía: khách hàng nộp hồ sơ nhiều
+      lần cho nhiều ngân hàng, còn ngân hàng phải lưu trữ và bảo vệ kho dữ liệu đó suốt vòng đời
+      quan hệ khách hàng. Với NX Cred, khách hàng làm eKYC một lần, sau đó mỗi ngân hàng chỉ cần
+      một bằng chứng rằng khách hàng có giấy tờ hợp lệ do cơ quan nhà nước cấp và chưa hết hạn.
+      Ngân hàng đạt mục đích tuân thủ mà không phải trở thành nơi lưu trữ dữ liệu nhạy cảm.
+    </p>
+  </div>
+
+  <h2 id="bao-mat">Thiết kế bảo mật</h2>
+  <p>
+    Một máy của bạn có thể giữ nhiều thẻ định danh cùng lúc, tất cả được bảo vệ bằng
+    <b>passkey</b> — vân tay, khuôn mặt hoặc mã PIN của chính thiết bị.
+  </p>
+  <p>
+    Đổi lại, nếu bạn làm mất máy thì coi như mất hết thẻ, và phải xin cấp lại từ issuer. Đây là
+    đánh đổi có chủ đích: chính vì bí mật chỉ nằm trên máy bạn nên <b>không ai có thể giả mạo
+    bạn</b>.
+  </p>
+  <div class="note">
+    Hệ quả dễ chịu cho người dùng: bạn <b>không cần</b> quay video sinh trắc hay chụp ảnh khuôn
+    mặt mỗi lần xác minh. Chỉ một bằng chứng là đủ để khẳng định bạn là bạn.
   </div>
 
   <h2 id="huong-dan">Hướng dẫn sử dụng</h2>
   <p class="empty">Phần này sẽ được bổ sung sau.</p>
+
 </main>
 </div>
 
