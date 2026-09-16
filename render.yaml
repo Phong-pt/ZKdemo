@@ -8,11 +8,13 @@ services:
     region: singapore
     healthCheckPath: /api/config
     envVars:
-      # Google OAuth Client ID (Web application). Authorized JavaScript origin phải là đúng domain
-      # Render cấp cho service này (https://<tên-service>.onrender.com). Để trống thì App A dùng
-      # nút "tài khoản demo" thay cho nút Google thật.
+      # Google OAuth Client ID (Web application) — giá trị công khai, vốn lộ trong HTML của mọi
+      # trang dùng Google Sign-In nên để thẳng trong Blueprint được. Client ID này phải có
+      # https://zkp-demo.onrender.com trong Authorized JavaScript origins, và OAuth consent screen
+      # phải ở trạng thái đã publish thì mọi tài khoản Gmail mới đăng nhập được (còn ở "Testing"
+      # thì chỉ các email nằm trong danh sách test user).
       - key: GOOGLE_CLIENT_ID
-        sync: false
+        value: 477011472862-pcc371j0kpd2fe17a2unqujou7iffgr2.apps.googleusercontent.com
       # Tuỳ chọn: JSON object thêm domain email công ty được chấp nhận ở Verifier Portal, ngoài
       # mặc định {"ntq-solution.com.vn": "NTQ Solution"}.
       - key: VERIFIER_TRUSTED_DOMAINS_JSON
