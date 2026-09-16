@@ -161,11 +161,22 @@ load_ekyc_db()
 _pending_nonces: dict[str, dict] = {}
 
 
+ATTRIBUTE_LABELS = {
+    "cccd": "Số CCCD",
+    "name": "Họ và tên",
+    "dob": "Ngày sinh",
+    "sex": "Giới tính",
+    "nationality": "Quốc tịch",
+    "origin": "Quê quán",
+    "residence": "Nơi thường trú",
+    "expiry": "Có giá trị đến",
+}
+
+
 class EkycMismatchError(ValueError):
     def __init__(self, mismatched: list[str]) -> None:
-        super().__init__(
-            "Dữ liệu eKYC không khớp hồ sơ của CCCD này: " + ", ".join(mismatched)
-        )
+        fields = ", ".join(ATTRIBUTE_LABELS[name] for name in mismatched)
+        super().__init__(f"Thông tin không khớp hồ sơ của số căn cước này: {fields}.")
         self.mismatched = mismatched
 
 
