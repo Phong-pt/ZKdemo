@@ -12,15 +12,29 @@ PUBLIC_CREDDEF_FILE = ISSUER_DIR / "cred_def_public.json"
 PRIVATE_KEY_FILE = ISSUER_DIR / "issuer_private_key.json"
 EKYC_DB_FILE = ISSUER_DIR / "ekyc_db.json"
 
-ATTRIBUTE_NAMES = ["cccd", "name", "dob", "nationality", "address"]
+# Đúng những gì in trên MẶT TRƯỚC thẻ căn cước công dân, theo đúng thứ tự trên thẻ. Issuer không ký
+# thứ gì ngoài danh sách này, và verifier cũng không hỏi được gì ngoài danh sách này.
+ATTRIBUTE_NAMES = [
+    "cccd",         # Số / No.
+    "name",         # Họ và tên / Full name
+    "dob",          # Ngày sinh / Date of birth
+    "sex",          # Giới tính / Sex
+    "nationality",  # Quốc tịch / Nationality
+    "origin",       # Quê quán / Place of origin
+    "residence",    # Nơi thường trú / Place of residence
+    "expiry",       # Có giá trị đến / Date of expiry
+]
 
 EKYC_DB = [
     {
         "cccd": "012205007445",
         "name": "Phạm Thế Phong",
         "dob": "05/05/2005",
+        "sex": "Nam",
         "nationality": "Việt Nam",
-        "address": "Tổ 1, Phường Đoàn Kết, Thành phố Lai Châu",
+        "origin": "Lai Châu",
+        "residence": "Tổ 1, Phường Đoàn Kết, Thành phố Lai Châu",
+        "expiry": "05/05/2030",
         "credential_issued": False,
     }
 ]
@@ -138,15 +152,9 @@ def get_private_key() -> dict:
     return json.loads(PRIVATE_KEY_FILE.read_text(encoding="utf-8"))
 
 
-def find_ekyc_record(cccd: str, name: str, dob: str, nationality: str, address: str) -> dict | None:
+def find_ekyc_record(**attributes) -> dict | None:
     for record in EKYC_DB:
-        if (
-            record["cccd"] == cccd
-            and record["name"] == name
-            and record["dob"] == dob
-            and record["nationality"] == nationality
-            and record["address"] == address
-        ):
+        if all(record[name] == attributes[name] for name in ATTRIBUTE_NAMES):
             return record
     return None
 

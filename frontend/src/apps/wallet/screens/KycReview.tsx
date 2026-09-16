@@ -10,11 +10,14 @@ export interface KycReviewProps {
 }
 
 const FIELDS: Array<[key: keyof IdentityForm, label: string, placeholder: string]> = [
-  ['cccd', 'CCCD number', '012345678901'],
-  ['name', 'Full name', 'NGUYEN VAN A'],
-  ['dob', 'Date of birth', '01/01/1990'],
-  ['nationality', 'Nationality', 'Việt Nam'],
-  ['address', 'Address', 'Residential address'],
+  ['cccd', 'Số / No.', '012345678901'],
+  ['name', 'Họ và tên / Full name', 'NGUYEN VAN A'],
+  ['dob', 'Ngày sinh / Date of birth', '01/01/1990'],
+  ['sex', 'Giới tính / Sex', 'Nam'],
+  ['nationality', 'Quốc tịch / Nationality', 'Việt Nam'],
+  ['origin', 'Quê quán / Place of origin', 'Tỉnh, thành phố'],
+  ['residence', 'Nơi thường trú / Place of residence', 'Địa chỉ thường trú'],
+  ['expiry', 'Có giá trị đến / Date of expiry', '01/01/2030'],
 ]
 
 const inputClass =

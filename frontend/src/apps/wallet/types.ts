@@ -18,12 +18,16 @@ export type Step =
 export type InstallState = 'idle' | 'busy' | 'done'
 export type PasskeyState = 'idle' | 'scanning' | 'done'
 
+// Khớp đúng tám trường in trên mặt trước CCCD, cùng thứ tự với issuer.ATTRIBUTE_NAMES.
 export interface IdentityForm {
   cccd: string
   name: string
   dob: string
+  sex: string
   nationality: string
-  address: string
+  origin: string
+  residence: string
+  expiry: string
 }
 
 export interface WalletState {
@@ -64,7 +68,10 @@ export const EMPTY_IDENTITY_FORM: IdentityForm = {
   name: '',
   dob: '',
   nationality: '',
-  address: '',
+  sex: '',
+  origin: '',
+  residence: '',
+  expiry: '',
 }
 
 export function createInitialWalletState(): WalletState {

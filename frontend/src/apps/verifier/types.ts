@@ -18,19 +18,25 @@ export interface Condition {
 // Anything the issuer does not sign has no place in this list: the wizard could offer it, but no
 // proof could ever back it.
 export const CLAIMS: Claim[] = [
-  { key: 'cccd', label: 'ID number (CCCD)', desc: 'Reveal the full national ID number — the most identifying field in the credential.' },
-  { key: 'fullName', label: 'Full name', desc: "Reveal the user's legal name." },
-  { key: 'dob', label: 'Date of birth', desc: "Reveal the user's exact date of birth." },
-  { key: 'nationality', label: 'Nationality', desc: "Reveal the user's nationality." },
-  { key: 'address', label: 'Address', desc: 'Reveal the full residential address.' },
+  { key: 'cccd', label: 'Số / No.', desc: 'Số căn cước 12 chữ số — trường định danh mạnh nhất trên thẻ.' },
+  { key: 'name', label: 'Họ và tên / Full name', desc: 'Tên đầy đủ in trên thẻ.' },
+  { key: 'dob', label: 'Ngày sinh / Date of birth', desc: 'Ngày tháng năm sinh chính xác.' },
+  { key: 'sex', label: 'Giới tính / Sex', desc: 'Giới tính ghi trên thẻ.' },
+  { key: 'nationality', label: 'Quốc tịch / Nationality', desc: 'Quốc tịch ghi trên thẻ.' },
+  { key: 'origin', label: 'Quê quán / Place of origin', desc: 'Quê quán ghi trên thẻ.' },
+  { key: 'residence', label: 'Nơi thường trú / Place of residence', desc: 'Địa chỉ thường trú đầy đủ.' },
+  { key: 'expiry', label: 'Có giá trị đến / Date of expiry', desc: 'Ngày hết hạn của thẻ.' },
 ]
 
 export const CLAIM_TO_BACKEND_ATTR: Record<string, string> = {
   cccd: 'cccd',
-  fullName: 'name',
+  name: 'name',
   dob: 'dob',
+  sex: 'sex',
   nationality: 'nationality',
-  address: 'address',
+  origin: 'origin',
+  residence: 'residence',
+  expiry: 'expiry',
 }
 
 export const CONDS: Condition[] = [
@@ -68,7 +74,7 @@ export const TEMPLATES: Template[] = [
     name: 'Identity verification',
     desc: 'Reveal the legal name and prove the credential is valid.',
     purpose: 'Required to open an account.',
-    reveal: { fullName: true },
+    reveal: { name: true },
     ageOn: false,
     age: 18,
     conds: { credValid: true },
@@ -165,7 +171,7 @@ export function createInitialVerifierState(): VerifierState {
     name: 'Identity verification',
     desc: 'Verify a signed identity credential.',
     purpose: 'Required to access this service.',
-    reveal: { fullName: true },
+    reveal: { name: true },
     ageOn: false,
     age: 18,
     conds: { credValid: true },

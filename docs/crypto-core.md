@@ -6,6 +6,10 @@ cũng lấy đúng từ mã.
 
 Toàn bộ phép tính diễn ra trong nhóm nhân modulo `n`. Khi viết `x·y` hiểu là `x·y mod n`.
 
+Schema gồm đúng tám trường in trên **mặt trước** thẻ căn cước công dân: số thẻ, họ và tên, ngày sinh,
+giới tính, quốc tịch, quê quán, nơi thường trú, và ngày hết hạn. Issuer không ký gì ngoài tám trường
+này, verifier cũng không hỏi được gì ngoài tám trường này.
+
 ---
 
 ## 0. Ký hiệu và hằng số
@@ -18,7 +22,7 @@ Toàn bộ phép tính diễn ra trong nhóm nhân modulo `n`. Khi viết `x·y`
 | `S` | cơ số của phần ngẫu nhiên `v` | |
 | `R` | cơ số của link secret | |
 | `Z` | đích của đẳng thức chữ ký | |
-| `R_i` | cơ số riêng của thuộc tính thứ `i` | 5 thuộc tính → 5 số |
+| `R_i` | cơ số riêng của thuộc tính thứ `i` | 8 thuộc tính → 8 số |
 | `ls` | link secret, chỉ ví biết | 256 bit |
 | `m_i` | giá trị thuộc tính đã mã hoá thành số nguyên | |
 | `A, e, v` | credential: chữ ký CL trên bộ thuộc tính | |
@@ -79,7 +83,7 @@ tố lớn `p'`. Điều này chặn các thuật toán khai thác nhóm bậc t
 nhóm đó bài toán logarit rời rạc vẫn khó, và quan trọng hơn là mọi phần tử đều nằm cùng một nhóm con
 — không có phần tử nào rơi ra ngoài làm hỏng phép kiểm.
 
-Công khai: `n, S, R, Z, R_i` — đây chính là chín số issuer đăng lên chain. Giữ kín: `p, q`.
+Công khai: `n, S, R, Z, R_i` — đây chính là 12 số issuer đăng lên chain (bốn số cố định và tám cơ số thuộc tính). Giữ kín: `p, q`.
 
 ---
 

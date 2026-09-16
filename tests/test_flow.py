@@ -83,7 +83,7 @@ class ThreePartyFlowTests(unittest.TestCase):
 
     def test_issue_approve_poll_and_replay(self):
         self.issue()
-        session = self.request(["name", "dob", "address"])
+        session = self.request(["name", "dob", "residence"])
         response = self.client.post(f"/api/requests/{session}/approve", json={"revealed_attrs": ["name"]}, headers=headers(HOLDER_A))
         self.assertEqual(response.status_code, 200, response.text)
         self.assertEqual(response.json()["status"], "verified")

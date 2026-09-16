@@ -14,7 +14,7 @@ import chain
 
 SOLC_VERSION = "0.8.24"
 CONTRACT = Path(__file__).resolve().parent.parent / "contracts" / "CredentialRegistry.sol"
-ATTRIBUTES = ["cccd", "name", "dob", "nationality", "address"]
+ATTRIBUTES = ["cccd", "name", "dob", "sex", "nationality", "origin", "residence", "expiry"]
 CRED_DEF = {
     "n": 2**2047 + 11,
     "S": 2**2040 + 7,

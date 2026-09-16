@@ -65,8 +65,11 @@ class IssueRequest(BaseModel):
     cccd: str
     name: str
     dob: str
+    sex: str
     nationality: str
-    address: str
+    origin: str
+    residence: str
+    expiry: str
 
 
 class IssueResponse(BaseModel):
@@ -211,12 +214,12 @@ def _verify(body: VerifyRequest, wallet_id: str) -> VerifyResponse:
 class PresentationRequest(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     purpose: str = Field(default="", max_length=1000)
-    revealed_attrs: list[str] = Field(default_factory=list, max_length=5)
+    revealed_attrs: list[str] = Field(default_factory=list, max_length=8)
     conditions: list[str] = Field(default_factory=list, max_length=10)
 
 
 class PresentationApproval(BaseModel):
-    revealed_attrs: list[str] = Field(default_factory=list, max_length=5)
+    revealed_attrs: list[str] = Field(default_factory=list, max_length=8)
 
 
 def _request(session_id: str) -> dict:

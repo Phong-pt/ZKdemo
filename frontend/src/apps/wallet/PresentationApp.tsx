@@ -4,11 +4,14 @@ import { apiClient, setAuthToken, type VerificationSession } from '@/services/ap
 import { authService, demoAccount, type GoogleAccount } from '@/services/authService'
 
 const labels: Record<string, string> = {
-  cccd: 'ID number (CCCD)',
-  name: 'Full name',
-  dob: 'Date of birth',
-  nationality: 'Nationality',
-  address: 'Address',
+  cccd: 'Số CCCD',
+  name: 'Họ và tên',
+  dob: 'Ngày sinh',
+  sex: 'Giới tính',
+  nationality: 'Quốc tịch',
+  origin: 'Quê quán',
+  residence: 'Nơi thường trú',
+  expiry: 'Có giá trị đến',
 }
 
 const DEMO_LABELS = ['nguoi-dung-a', 'nguoi-dung-b']

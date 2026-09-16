@@ -34,8 +34,11 @@ EKYC_DATA = {
     "cccd": "012205007445",
     "name": "Phạm Thế Phong",
     "dob": "05/05/2005",
+    "sex": "Nam",
     "nationality": "Việt Nam",
-    "address": "Tổ 1, Phường Đoàn Kết, Thành phố Lai Châu",
+    "origin": "Lai Châu",
+    "residence": "Tổ 1, Phường Đoàn Kết, Thành phố Lai Châu",
+    "expiry": "05/05/2030",
 }
 
 
