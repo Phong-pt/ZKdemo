@@ -10,9 +10,14 @@ DEFAULT_WALLET_ID = "demo"
 
 
 def wallet_dir(wallet_id: str) -> Path:
-    directory = WALLETS_DIR / wallet_id
-    directory.mkdir(parents=True, exist_ok=True)
-    return directory
+    return WALLETS_DIR / wallet_id
+
+
+# Chỉ lúc ghi mới tạo thư mục. Trước đây wallet_dir() tự mkdir nên mọi lần đọc — kể cả /api/me chỉ
+# hỏi xem tài khoản đã có ví chưa — đều đẻ ra một thư mục rỗng, làm việc đếm ví thành vô nghĩa.
+def write_wallet_file(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
 
 
 def link_secret_file(wallet_id: str) -> Path:
@@ -40,7 +45,7 @@ def passkey_file(wallet_id: str) -> Path:
 # file không tồn tại = tài khoản chưa cài ví; {"passkey": null} = đã cài nhưng máy lúc đó không có
 # thiết bị xác thực; {"passkey": {...}} = đã cài và có passkey.
 def save_passkey(record: dict | None, wallet_id: str = DEFAULT_WALLET_ID) -> None:
-    passkey_file(wallet_id).write_text(json.dumps({"passkey": record}), encoding="utf-8")
+    write_wallet_file(passkey_file(wallet_id), json.dumps({"passkey": record}))
 
 
 def get_passkey(wallet_id: str = DEFAULT_WALLET_ID) -> dict | None:
@@ -66,7 +71,7 @@ def get_link_secret(wallet_id: str = DEFAULT_WALLET_ID, bits: int = 256) -> int:
     if path.exists():
         return int(json.loads(path.read_text(encoding="utf-8"))["link_secret"], 16)
     link_secret = secrets.randbits(bits)
-    path.write_text(json.dumps({"link_secret": format(link_secret, "x")}), encoding="utf-8")
+    write_wallet_file(path, json.dumps({"link_secret": format(link_secret, "x")}))
     return link_secret
 
 
@@ -79,9 +84,9 @@ def compute_commitment(S: int, R: int, n: int, v_prime: int, ls: int) -> int:
 
 
 def save_pending_request(nonce: str, v_prime: int, ls: int, wallet_id: str = DEFAULT_WALLET_ID) -> None:
-    pending_request_file(wallet_id).write_text(
+    write_wallet_file(
+        pending_request_file(wallet_id),
         json.dumps({"nonce": nonce, "v_prime": format(v_prime, "x"), "ls": format(ls, "x")}),
-        encoding="utf-8",
     )
 
 
@@ -142,8 +147,8 @@ def unblind_signature(
     if not verify_credential(credential, attributes, cred_def, ls):
         raise ValueError("chữ ký issuer trả về không hợp lệ với credential vừa giải mù")
 
-    credential_file(wallet_id).write_text(
-        json.dumps({k: str(val) for k, val in credential.items()}), encoding="utf-8"
+    write_wallet_file(
+        credential_file(wallet_id), json.dumps({k: str(val) for k, val in credential.items()})
     )
     clear_pending_request(wallet_id)
     return credential
@@ -158,7 +163,7 @@ def get_credential(wallet_id: str = DEFAULT_WALLET_ID) -> dict | None:
 
 
 def save_identity(attributes: dict, wallet_id: str = DEFAULT_WALLET_ID) -> None:
-    identity_file(wallet_id).write_text(json.dumps(attributes, ensure_ascii=False), encoding="utf-8")
+    write_wallet_file(identity_file(wallet_id), json.dumps(attributes, ensure_ascii=False))
 
 
 def get_identity(wallet_id: str = DEFAULT_WALLET_ID) -> dict | None:

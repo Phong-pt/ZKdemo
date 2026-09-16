@@ -104,7 +104,13 @@ def get_config() -> dict:
         # passkey và cờ đã-cấp-credential ghi lúc chạy đều mất sạch, mọi tài khoản trở lại trạng
         # thái chưa có ví. Mốc này để đối chiếu khi thấy ví "tự dưng biến mất".
         "server_started_at": SERVER_STARTED_AT,
-        "wallets_on_disk": len(list(wallet.WALLETS_DIR.iterdir())) if wallet.WALLETS_DIR.is_dir() else 0,
+        "wallets_with_passkey": sum(
+            1
+            for directory in (
+                wallet.WALLETS_DIR.iterdir() if wallet.WALLETS_DIR.is_dir() else []
+            )
+            if (directory / "passkey.json").exists()
+        ),
     }
 
 
