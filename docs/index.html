@@ -110,6 +110,7 @@
   th{font-size:12px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-4); font-weight:600}
   .tbl-wrap{overflow-x:auto}
 
+  .gloss{display:block; font-weight:400; font-size:13px; color:var(--ink-3); margin-top:2px}
   .empty{color:var(--ink-4); font-style:italic}
   footer{border-top:1px solid var(--line); color:var(--ink-4); font-size:13.5px; padding:26px 0 40px}
 </style>
@@ -159,13 +160,13 @@
   <p>
     Mỗi lần bạn mở tài khoản ngân hàng, thuê nhà hay nhận phòng khách sạn, bạn đưa căn cước ra và
     bên kia chụp lại. Sau mười lần như vậy, dữ liệu định danh của bạn nằm trong mười cơ sở dữ
-    liệu mà bạn không kiểm soát. Chỉ cần một nơi bị tấn công là dữ liệu ra ngoài — và không có
+    liệu mà bạn không kiểm soát. Chỉ cần một nơi bị tấn công là dữ liệu ra ngoài, và không có
     cách nào thu hồi một tấm căn cước đã bị chụp.
   </p>
   <p>
     NX Cred đảo ngược chuyện đó. Thay vì đưa dữ liệu, bạn đưa một <b>bằng chứng toán học</b> về
     dữ liệu. Bên xác minh biết chắc tấm thẻ là thật, do đúng cơ quan có thẩm quyền cấp, và đúng
-    là của bạn — nhưng không nhìn thấy bất kỳ thông tin nào ngoài những gì bạn chủ động mở.
+    là của bạn, nhưng không nhìn thấy bất kỳ thông tin nào ngoài những gì bạn chủ động mở.
   </p>
   <div class="note">
     Kết quả: mười dịch vụ nhận về mười bằng chứng khác nhau. Không bản nào chứa dữ liệu gốc, và
@@ -180,23 +181,23 @@
   </p>
   <p>
     Đây không phải lý thuyết trên giấy. Vương quốc Bhutan đã áp dụng tiêu chuẩn này cho hệ thống
-    định danh quốc gia của họ — <b>Bhutan NDI</b> — phục vụ khoảng <b>200.000 người dân</b>.
+    định danh quốc gia của họ là <b>Bhutan NDI</b>, phục vụ khoảng <b>200.000 người dân</b>.
   </p>
   <p>Tiêu chuẩn này đứng trên bốn ý tưởng:</p>
   <ul>
-    <li><b>Link secret</b> — ví tự sinh một con số bí mật, không cho ai xem kể cả cơ quan cấp.
+    <li><b>Link secret</b>: ví tự sinh một con số bí mật, không cho ai xem kể cả cơ quan cấp.
       Thẻ chỉ dùng được cùng con số đó, nên bản sao bị đánh cắp là vô dụng.</li>
-    <li><b>Ký mù</b> — cơ quan cấp ký lên con số bí mật đó mà không hề nhìn thấy nó, giống như
+    <li><b>Ký mù</b>: cơ quan cấp ký lên con số bí mật đó mà không hề nhìn thấy nó, giống như
       ký lên một chiếc phong bì dán kín.</li>
-    <li><b>Tiết lộ chọn lọc</b> — thẻ có tám trường, bên xác minh hỏi một trường thì bảy trường
+    <li><b>Tiết lộ chọn lọc</b>: thẻ có tám trường, bên xác minh hỏi một trường thì bảy trường
       kia vẫn kín.</li>
-    <li><b>Không liên kết được</b> — mỗi lần trình thẻ là một bằng chứng hoàn toàn mới, hai nơi
+    <li><b>Không liên kết được</b>: mỗi lần trình thẻ là một bằng chứng hoàn toàn mới, hai nơi
       khác nhau không ghép dữ liệu lại được.</li>
   </ul>
 
   <h2 id="zkp">Zero-knowledge proof là gì</h2>
   <p>
-    Zero-knowledge proof — bằng chứng không tiết lộ — là thuật toán mật mã cho phép chứng minh
+    Zero-knowledge proof, bằng chứng không tiết lộ, là thuật toán mật mã cho phép chứng minh
     một điều là đúng mà không nói ra vì sao nó đúng. Đây là cái lõi và là trái tim của ứng dụng.
   </p>
   <p>
@@ -207,7 +208,7 @@
   </p>
   <p>
     Biết mật khẩu thì lần nào bạn cũng ra đúng. Không biết thì bạn chỉ đúng khi may mắn đã chọn
-    sẵn nhánh đó — khả năng 50%. Lặp lại hai mươi lần, khả năng ăn may còn khoảng một phần
+    sẵn nhánh đó, khả năng 50%. Lặp lại hai mươi lần, khả năng ăn may còn khoảng một phần
     triệu. Người kiểm buộc phải tin bạn biết mật khẩu, dù chưa từng nghe mật khẩu đó.
   </p>
   <div class="callout">
@@ -220,22 +221,22 @@
 
   <div class="roles">
     <div class="role">
-      <b>Wallet — ví của bạn</b>
+      <b>Wallet</b><span class="gloss">ví của bạn</span>
       <p>Nơi bạn tạo tài khoản, làm eKYC một lần, và dùng nó để tạo bằng chứng gửi tới bên xác
         minh. Đây là bên duy nhất giữ bí mật của bạn.</p>
     </div>
     <div class="role">
-      <b>Issuer — bên cấp</b>
+      <b>Issuer</b><span class="gloss">bên cấp</span>
       <p>Bên có thẩm quyền cao nhất trong việc cung cấp định danh. Họ ký thẻ cho bạn và công bố
         khuôn mẫu giấy tờ của mình để bên xác minh dùng về sau.</p>
     </div>
     <div class="role">
-      <b>Verifier — bên xác minh</b>
+      <b>Verifier</b><span class="gloss">bên xác minh</span>
       <p>Bên yêu cầu bạn chứng minh danh tính. Họ đặt câu hỏi dựa trên khuôn mẫu mà issuer đã
         công bố lên blockchain.</p>
     </div>
     <div class="role">
-      <b>Blockchain — sổ cái công khai</b>
+      <b>Blockchain</b><span class="gloss">sổ cái công khai</span>
       <p>Nơi lưu khuôn mẫu giấy tờ và khoá công khai, giúp bên xác minh kiểm chứng mà không cần
         hỏi lại issuer.</p>
     </div>
@@ -277,21 +278,21 @@
     <figcaption>Issuer cấp thẻ một lần. Việc xác minh diễn ra trực tiếp giữa ví và bên xác minh.</figcaption>
   </figure>
 
-  <h3 id="luong-1">1. Issuer và Wallet — cấp thẻ</h3>
+  <h3 id="luong-1">1. Issuer và Wallet: cấp thẻ</h3>
   <p>Luồng này chạy đúng một lần cho mỗi người dùng.</p>
   <ol>
     <li>Bạn bấm <b>eKYC</b> trong ví và quét giấy tờ. Ví gửi dữ liệu cho issuer đối chiếu.</li>
     <li>Issuer đối chiếu hồ sơ, rồi gửi về một con số dùng một lần, yêu cầu ví chứng minh nó
       thật sự nắm giữ bí mật của mình.</li>
     <li>Ví tạo bằng chứng và gửi lại. Issuer kiểm, thấy hợp lệ thì <b>ký mù</b> lên thẻ.</li>
-    <li>Ví nhận thẻ về, tự kiểm chữ ký, rồi lưu lại. Xong — từ đây không phải làm lại nữa.</li>
+    <li>Ví nhận thẻ về, tự kiểm chữ ký, rồi lưu lại. Xong, từ đây không phải làm lại nữa.</li>
   </ol>
   <div class="note">
     Suốt quá trình này, issuer <b>không hề nhìn thấy</b> con số bí mật của ví, dù chữ ký của họ
     ràng buộc chặt vào nó.
   </div>
 
-  <h3 id="luong-2">2. Wallet và Verifier — xác minh</h3>
+  <h3 id="luong-2">2. Wallet và Verifier: xác minh</h3>
   <p>Đây là luồng chính, chạy xuyên suốt ứng dụng, mỗi lần bạn cần chứng minh danh tính.</p>
 
   <figure>
@@ -329,11 +330,11 @@
   </p>
   <p>
     Về mặt trải nghiệm, quyền quyết định nằm ở bạn. Bên xác minh chỉ được <b>hỏi</b>; ví hỏi lại
-    bạn trước khi trả lời. Những trường không nằm trong yêu cầu thì bị khoá cứng — bạn không thể
+    bạn trước khi trả lời. Những trường không nằm trong yêu cầu thì bị khoá cứng, bạn không thể
     vô tình chia sẻ.
   </p>
 
-  <h3 id="luong-3">3. Issuer và Verifier — không có liên lạc</h3>
+  <h3 id="luong-3">3. Issuer và Verifier: không có liên lạc</h3>
   <p>
     Đây là phần ngắn nhất, vì nội dung của nó là một sự vắng mặt: hai bên này
     <b>không hề liên lạc trực tiếp</b> với nhau.
@@ -345,28 +346,28 @@
   </p>
   <p>
     NX Cred cắt đứt kênh đó. Issuer công bố khoá công khai lên blockchain một lần, rồi không tham
-    gia gì nữa. Verifier tự đọc, tự kiểm. Issuer không biết — và về mặt kỹ thuật là
-    <b>không thể</b> biết — thẻ của bạn đang được dùng ở đâu.
+    gia gì nữa. Verifier tự đọc, tự kiểm. Issuer không biết, và về mặt kỹ thuật là
+    <b>không thể</b> biết, thẻ của bạn đang được dùng ở đâu.
   </p>
 
   <div class="callout">
-    Bên trên vừa trình bày ba luồng hoạt động. Nếu bạn muốn tìm hiểu trái tim của ứng dụng — phần
-    lõi mật mã — hãy đọc tiếp mục <a href="#advanced">Nâng cao</a> và tải tài liệu PDF ở đó.
+    Bên trên vừa trình bày ba luồng hoạt động. Nếu bạn muốn tìm hiểu trái tim của ứng dụng, tức phần
+    lõi mật mã, hãy đọc tiếp mục <a href="#advanced">Nâng cao</a> và tải tài liệu PDF ở đó.
   </div>
 
   <h2 id="advanced">Nâng cao</h2>
 
   <h3 id="crypto">Lõi mật mã</h3>
   <p>
-    Toàn bộ phần toán học — công thức sinh khoá, cam kết, giao thức chứng minh, chữ ký mù, bằng
-    chứng trình bày, cùng chứng minh tính đúng đắn của từng phép kiểm — nằm trong tài liệu đặc tả
+    Toàn bộ phần toán học, gồm công thức sinh khoá, cam kết, giao thức chứng minh, chữ ký mù, bằng
+    chứng trình bày, cùng chứng minh tính đúng đắn của từng phép kiểm, nằm trong tài liệu đặc tả
     đầy đủ. Bạn có thể tải về nếu muốn nghiên cứu kỹ.
   </p>
 
   <div class="dl">
     <div class="ico">∑</div>
     <div>
-      <b>NX Cred — Tài liệu đặc tả ứng dụng</b>
+      <b>NX Cred</b><span class="gloss">Tài liệu đặc tả ứng dụng</span>
       <span>Đặc tả đầy đủ: khái niệm, luồng hoạt động, lõi mật mã, thiết kế bảo mật và blockchain</span>
     </div>
     <a class="btn" href="flow.pdf" download>Tải PDF</a>
@@ -376,7 +377,7 @@
   <div class="tbl-wrap">
   <table>
     <tr><th style="width:20%">Thư viện</th><th>Dùng để làm gì</th><th style="width:26%">Địa chỉ</th></tr>
-    <tr><td><b>gmpy2</b></td><td>Số học số lớn — gánh toàn bộ phần nặng của lõi mật mã</td><td><a href="https://pypi.org/project/gmpy2/">pypi.org/project/gmpy2</a></td></tr>
+    <tr><td><b>gmpy2</b></td><td>Số học số lớn, gánh toàn bộ phần nặng của lõi mật mã</td><td><a href="https://pypi.org/project/gmpy2/">pypi.org/project/gmpy2</a></td></tr>
     <tr><td><b>FastAPI</b></td><td>Khung web dựng các dịch vụ của ba bên</td><td><a href="https://fastapi.tiangolo.com/">fastapi.tiangolo.com</a></td></tr>
     <tr><td><b>py_webauthn</b></td><td>Xác minh passkey theo chuẩn WebAuthn</td><td><a href="https://pypi.org/project/webauthn/">pypi.org/project/webauthn</a></td></tr>
     <tr><td><b>web3.py</b></td><td>Đọc khoá công khai và khuôn mẫu từ blockchain</td><td><a href="https://pypi.org/project/web3/">pypi.org/project/web3</a></td></tr>
@@ -407,7 +408,7 @@
     <span class="tag plan">Đề xuất áp dụng</span>
     <h3>2. Chống thi hộ tại các trường đại học</h3>
     <p>
-      Tình trạng gian lận danh tính trong thi cử — thi hộ, mượn thẻ sinh viên — diễn ra khá phổ
+      Tình trạng gian lận danh tính trong thi cử, gồm thi hộ và mượn thẻ sinh viên, diễn ra khá phổ
       biến ở Việt Nam. Với NX Cred, trước kỳ thi nhà trường cấp cho mỗi sinh viên một thẻ số. Tại
       phòng thi, giám thị chỉ cần tạo vài yêu cầu đơn giản: “có tên trong danh sách dự thi
       không?”, “có đúng mã lớp không?”, “thẻ còn hiệu lực không?”. Sinh viên quét mã QR, vài giây
@@ -415,7 +416,7 @@
     </p>
     <p>
       <b>Vì sao cơ chế này chặn được thi hộ:</b> muốn nhờ người khác thi hộ, sinh viên phải giao
-      cả ví lẫn con số bí mật cho người đó. Nhưng con số ấy không dùng riêng cho kỳ thi — nó mở
+      cả ví lẫn con số bí mật cho người đó. Nhưng con số ấy không dùng riêng cho kỳ thi, nó mở
       khoá <b>toàn bộ</b> giấy tờ số trong ví: thẻ ngân hàng, giấy tờ tuỳ thân, mọi thứ khác. Cái
       giá của việc cho mượn là trao toàn bộ danh tính số của mình cho người khác. Chi phí đó đủ
       lớn để cơ chế tự bảo vệ chính nó.
@@ -437,7 +438,7 @@
   <h2 id="bao-mat">Thiết kế bảo mật</h2>
   <p>
     Một máy của bạn có thể giữ nhiều thẻ định danh cùng lúc, tất cả được bảo vệ bằng
-    <b>passkey</b> — vân tay, khuôn mặt hoặc mã PIN của chính thiết bị.
+    <b>passkey</b>: vân tay, khuôn mặt hoặc mã PIN của chính thiết bị.
   </p>
   <p>
     Đổi lại, nếu bạn làm mất máy thì coi như mất hết thẻ, và phải xin cấp lại từ issuer. Đây là
@@ -456,7 +457,7 @@
 </div>
 
 <footer>
-  <div class="wrap">NX Cred — tài liệu bản demo.</div>
+  <div class="wrap">NX Cred, tài liệu bản demo.</div>
 </footer>
 
 </body>
