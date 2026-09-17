@@ -1064,6 +1064,18 @@ Một giới hạn thứ ba thuộc về kiến trúc: trong bản demo, phần 
 rút ngắn thời gian dựng sản phẩm. Đúng tinh thần \g{ssi}{định danh tự chủ} thì phần này phải chạy
 trong trình duyệt, để link secret không bao giờ rời khỏi thiết bị người dùng.
 
+Giới hạn thứ tư nằm ở chính \g{blockchain}{blockchain}. Mã nguồn có sẵn phần đọc
+\g{pubkey}{khoá công khai} và \g{schema}{schema} từ hợp đồng, nhưng phần đó chỉ hoạt động khi
+đã cấu hình đủ ba tham số: địa chỉ RPC, địa chỉ hợp đồng và mã định danh cred-def. Bản demo đang
+chạy chưa cấu hình, nên \g{verifier}{Verifier} rơi về đường lui là đọc thẳng file cục bộ của
+\g{issuer}{Issuer}. Toàn bộ phép toán vẫn đúng, nhưng tính chất quan trọng nhất mà blockchain
+mang lại, là hai bên lấy khoá từ một nguồn độc lập không ai sửa được, thì chưa được chứng minh
+trong bản demo này.
+
+Cuối cùng, mỗi ví hiện chỉ giữ được đúng một \g{credential}{credential}. Cấu trúc lưu trữ dùng
+một tệp duy nhất cho mỗi tài khoản, nên chưa hỗ trợ một người cầm nhiều loại giấy tờ cùng lúc,
+chẳng hạn vừa căn cước vừa thẻ sinh viên.
+
 \chapter{Hướng phát triển tương lai}
 
 \begin{enumerate}[leftmargin=1.6em,itemsep=8pt]
