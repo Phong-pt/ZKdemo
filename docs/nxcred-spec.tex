@@ -50,9 +50,7 @@
 \renewcommand{\proofname}{Chứng minh}
 
 % ---- Cơ chế thuật ngữ -------------------------------------------------
-% \gd{khoa}{Tên hiển thị}  : định nghĩa một mục trong chương Topology
 % \g{khoa}{chữ hiển thị}   : biến chữ đó thành liên kết nhảy về định nghĩa
-\newcommand{\gd}[2]{\subsection{#2}\label{term:#1}}
 \newcommand{\g}[2]{\hyperref[term:#1]{#2}}
 
 \newcommand{\Zn}{\mathbb{Z}_n^{*}}
@@ -95,7 +93,7 @@ theo tiêu chuẩn AnonCreds}\\[46pt]
 \vspace{1.4cm}
 
 \noindent
-Đây là bộ tài liệu đặc tả về \textbf{NX Cred} --- ứng dụng định danh sử dụng
+Đây là bộ tài liệu đặc tả về \textbf{NX Cred}, ứng dụng định danh sử dụng
 \g{zkp}{bằng chứng không tiết lộ}, áp dụng tiêu chuẩn của \g{anoncreds}{AnonCreds}.
 
 \bigskip
@@ -108,7 +106,7 @@ nhận gánh rủi ro lưu trữ, và bên cấp giấy tờ vô tình trở th�
 \bigskip
 \noindent
 NX Cred thay việc đưa dữ liệu bằng việc đưa một bằng chứng toán học về dữ liệu. Hệ thống gồm ba
-bên --- \g{issuer}{Issuer}, \g{holder}{Holder} và \g{verifier}{Verifier} --- cùng một
+bên, \g{issuer}{Issuer}, \g{holder}{Holder} và \g{verifier}{Verifier}, cùng một
 \g{blockchain}{blockchain} giữ khoá công khai. Bên xác minh khẳng định được tấm thẻ là thật, do
 đúng cơ quan có thẩm quyền ký, và đúng là của người đang đứng trước mặt, mà không nhìn thấy bất
 kỳ trường dữ liệu nào ngoài những trường người dùng chủ động mở.
@@ -127,7 +125,7 @@ triển.
 \noindent
 \textbf{\sffamily Cách đọc tài liệu này.}
 Mọi thuật ngữ chuyên môn đều là một liên kết bấm được, dẫn về chương~\ref{ch:topology}
-(\emph{Topology}) --- nơi thuật ngữ đó được định nghĩa. Bạn bấm vào bất kỳ từ nào chưa rõ để
+(\emph{Topology}), nơi thuật ngữ đó được định nghĩa. Bạn bấm vào bất kỳ từ nào chưa rõ để
 nhảy tới định nghĩa, rồi quay lại đọc tiếp. Chương~\ref{ch:crypto} chứa toàn bộ phần toán học và
 có thể bỏ qua nếu không cần đi sâu.
 
@@ -143,186 +141,139 @@ có thể bỏ qua nếu không cần đi sâu.
 Danh sách toàn bộ thuật ngữ dùng trong tài liệu. Từ chương Introduction trở đi, mỗi thuật ngữ
 ở lần xuất hiện đầu tiên là một liên kết dẫn thẳng về mục tương ứng dưới đây.
 
-\section{Các bên tham gia}
+\section*{Các bên tham gia}
+\addcontentsline{toc}{section}{Các bên tham gia}
 
-\gd{issuer}{Issuer --- bên cấp}
-Bên có thẩm quyền cao nhất trong việc xác nhận danh tính: cơ quan quản lý căn cước, trường đại
-học, hoặc tổ chức phát hành giấy tờ. Issuer đối chiếu hồ sơ \g{ekyc}{eKYC}, ký
-\g{credential}{credential} bằng \g{blindsign}{chữ ký mù}, và công bố \g{pubkey}{khoá công khai}
-cùng \g{schema}{schema} lên \g{blockchain}{blockchain}. Sau khi ký xong, Issuer không tham gia gì
-nữa và không biết thẻ được dùng ở đâu.
+\begin{longtable}{@{}p{4.1cm}p{10.4cm}@{}}
+\toprule
+\textbf{\sffamily Thuật ngữ} & \textbf{\sffamily Định nghĩa} \\
+\midrule
+\endhead
+\textbf{Issuer}\label{term:issuer}\newline{\small\itshape bên cấp} &
+Bên có thẩm quyền cao nhất trong việc xác nhận danh tính: cơ quan quản lý căn cước, trường đại học, hoặc tổ chức phát hành giấy tờ. Issuer đối chiếu hồ sơ \g{ekyc}{eKYC}, ký \g{credential}{credential} bằng \g{blindsign}{chữ ký mù}, và công bố \g{pubkey}{khoá công khai} cùng \g{schema}{schema} lên \g{blockchain}{blockchain}. Sau khi ký xong, Issuer không tham gia gì nữa và không biết thẻ được dùng ở đâu. \\
+\addlinespace
+\textbf{Holder}\label{term:holder}\newline{\small\itshape ví người dùng} &
+Phần mềm phía người dùng, còn gọi là \emph{wallet}. Holder sinh và giữ \g{linksecret}{link secret}, nhận và lưu \g{credential}{credential}, rồi tạo \g{zkp}{bằng chứng không tiết lộ} mỗi khi cần chứng minh danh tính. Đây là bên duy nhất có thể tạo ra bằng chứng hợp lệ, vì chỉ nó biết link secret. \\
+\addlinespace
+\textbf{Verifier}\label{term:verifier}\newline{\small\itshape bên xác minh} &
+Bất kỳ tổ chức nào cần kiểm tra danh tính: ngân hàng, khách sạn, nhà tuyển dụng, hội đồng thi. Verifier soạn \g{presreq}{yêu cầu trình bày} dựa trên \g{schema}{schema} lấy từ \g{blockchain}{blockchain}, rồi kiểm bằng chứng nhận được bằng \g{pubkey}{khoá công khai} cũng lấy từ blockchain. \\
+\addlinespace
+\textbf{Blockchain}\label{term:blockchain}\newline{\small\itshape sổ cái công khai} &
+Nơi \g{issuer}{Issuer} công bố \g{pubkey}{khoá công khai} và \g{schema}{schema}. Điểm mấu chốt là dữ liệu trên đó không ai sửa được, kể cả chính Issuer. Blockchain trong NX Cred không lưu dữ liệu cá nhân, không lưu \g{credential}{credential}, và không ghi lại các lần xác minh. \\
+\bottomrule
+\end{longtable}
 
-\gd{holder}{Holder --- ví người dùng}
-Phần mềm phía người dùng, còn gọi là \emph{wallet}. Holder sinh và giữ
-\g{linksecret}{link secret}, nhận và lưu \g{credential}{credential}, rồi tạo
-\g{zkp}{bằng chứng không tiết lộ} mỗi khi cần chứng minh danh tính. Đây là bên duy nhất có thể
-tạo ra bằng chứng hợp lệ, vì chỉ nó biết link secret.
+\section*{Khái niệm nền tảng}
+\addcontentsline{toc}{section}{Khái niệm nền tảng}
 
-\gd{verifier}{Verifier --- bên xác minh}
-Bất kỳ tổ chức nào cần kiểm tra danh tính: ngân hàng, khách sạn, nhà tuyển dụng, hội đồng thi.
-Verifier soạn \g{presreq}{yêu cầu trình bày} dựa trên \g{schema}{schema} lấy từ
-\g{blockchain}{blockchain}, rồi kiểm bằng chứng nhận được bằng \g{pubkey}{khoá công khai} cũng
-lấy từ blockchain.
+\begin{longtable}{@{}p{4.1cm}p{10.4cm}@{}}
+\toprule
+\textbf{\sffamily Thuật ngữ} & \textbf{\sffamily Định nghĩa} \\
+\midrule
+\endhead
+\textbf{Self-sovereign identity}\label{term:ssi}\newline{\small\itshape định danh tự chủ} &
+Mô hình định danh trong đó người dùng, chứ không phải một tổ chức nào, là bên nắm giữ và kiểm soát dữ liệu định danh của chính mình. Người dùng quyết định chia sẻ gì, với ai, trong bao lâu. NX Cred được xây theo mô hình này. \\
+\addlinespace
+\textbf{AnonCreds}\label{term:anoncreds} &
+Viết tắt của \emph{Anonymous Credentials}: bộ tiêu chuẩn mô tả cách cấp và trình bày giấy tờ số sao cho \g{verifier}{Verifier} kiểm chứng được tính hợp lệ mà không đọc được dữ liệu, và không thể ghép hai lần trình bày lại với nhau. Tiêu chuẩn quy định bốn thành phần chính: \g{linksecret}{link secret}, \g{clsig}{chữ ký CL}, \g{selective}{tiết lộ chọn lọc}, và \g{unlink}{tính không liên kết được}. AnonCreds đã được vương quốc Bhutan áp dụng cho hệ thống định danh quốc gia \g{ndi}{Bhutan NDI}, phục vụ khoảng 200.000 người dân. \\
+\addlinespace
+\textbf{Zero-knowledge proof}\label{term:zkp}\newline{\small\itshape bằng chứng không tiết lộ} &
+Thuật toán mật mã cho phép chứng minh một mệnh đề là đúng mà không tiết lộ bất cứ điều gì ngoài chính tính đúng đắn đó. Một bằng chứng như vậy phải thoả ba tính chất: \emph{đầy đủ}, điều đúng thì luôn chứng minh được; \emph{chắc chắn}, điều sai thì không thể chứng minh, kể cả khi kẻ gian có năng lực tính toán lớn; và \emph{không tiết lộ}, bên kiểm kết thúc phiên mà không biết thêm gì. Đây là lõi của NX Cred. \\
+\addlinespace
+\textbf{Bhutan NDI}\label{term:ndi} &
+Hệ thống định danh số quốc gia của vương quốc Bhutan, xây trên tiêu chuẩn \g{anoncreds}{AnonCreds}. Đây là minh chứng thực tế rằng mô hình này vận hành được ở quy mô quốc gia. \\
+\bottomrule
+\end{longtable}
 
-\gd{blockchain}{Blockchain --- sổ cái công khai}
-Nơi \g{issuer}{Issuer} công bố \g{pubkey}{khoá công khai} và \g{schema}{schema}. Điểm mấu chốt là
-dữ liệu trên đó không ai sửa được, kể cả chính Issuer. Blockchain trong NX Cred không lưu dữ liệu
-cá nhân, không lưu \g{credential}{credential}, và không ghi lại các lần xác minh.
+\section*{Đại lượng mật mã}
+\addcontentsline{toc}{section}{Đại lượng mật mã}
 
-\section{Khái niệm nền tảng}
+\begin{longtable}{@{}p{4.1cm}p{10.4cm}@{}}
+\toprule
+\textbf{\sffamily Thuật ngữ} & \textbf{\sffamily Định nghĩa} \\
+\midrule
+\endhead
+\textbf{Big integer}\label{term:bigint}\newline{\small\itshape số nguyên lớn} &
+Số nguyên có độ dài hàng trăm đến hàng nghìn chữ số nhị phân, lớn hơn rất nhiều so với kiểu số thông thường của máy tính vốn chỉ 64 bit. Toàn bộ phép toán trong NX Cred làm việc trên những số như vậy: \g{modulus}{modulus} dài khoảng 2048 bit, tức xấp xỉ 617 chữ số thập phân. Độ lớn này là thứ khiến việc phá giải bằng cách thử mọi khả năng trở nên bất khả thi. \\
+\addlinespace
+\textbf{Link secret}\label{term:linksecret} &
+Một \g{bigint}{số nguyên lớn} ngẫu nhiên dài 256 bit, được sinh ra ngay sau khi người dùng tạo ví, và không bao giờ rời khỏi thiết bị, kể cả \g{issuer}{Issuer} cũng không nhìn thấy. \g{credential}{Credential} được ký sao cho chỉ dùng được cùng với con số này. Hệ quả: kẻ nào chép trộm được file credential mà không có link secret thì cũng không tạo được bằng chứng hợp lệ. Mỗi tài khoản tương ứng với đúng một link secret duy nhất. \\
+\addlinespace
+\textbf{Blinding factor}\label{term:blinding}\newline{\small\itshape hệ số làm mù} &
+Một \g{bigint}{số nguyên lớn} ngẫu nhiên do ví sinh ra để che giấu giá trị thật trong một \g{commitment}{cam kết}. Vì mỗi giá trị bí mật giả định đều tương thích với đúng một blinding factor, cam kết gửi đi không mang thông tin nào về giá trị thật. Ví giữ blinding factor lại để về sau \g{unblind}{gỡ mù} chữ ký. \\
+\addlinespace
+\textbf{Commitment}\label{term:commitment}\newline{\small\itshape cam kết} &
+Một số được tính từ giá trị bí mật cộng với \g{blinding}{blinding factor}, đóng vai như chiếc phong bì dán kín: người khác ký được lên phong bì mà không đọc được nội dung bên trong, và người gửi về sau không thể tráo đổi nội dung đó. \\
+\addlinespace
+\textbf{Nonce}\label{term:nonce}\newline{\small\itshape số dùng một lần} &
+Số ngẫu nhiên do bên kiểm phát ra, chỉ dùng đúng một lần rồi huỷ. Nonce tham gia vào phép tính \g{challenge}{thách thức}, nên một bằng chứng cũ gắn với nonce cũ không thể được phát lại cho phiên mới. Đây là cơ chế chống tấn công phát lại. \\
+\addlinespace
+\textbf{Thách thức và biến đổi Fiat--Shamir}\label{term:challenge} &
+Trong một giao thức chứng minh, bên kiểm gửi một câu hỏi ngẫu nhiên và bên chứng minh phải trả lời. Biến đổi \emph{Fiat--Shamir} thay câu hỏi đó bằng một giá trị băm của chính dữ liệu bên chứng minh vừa tạo ra. Vì không đoán trước được giá trị băm, bên chứng minh không thể dựng sẵn câu trả lời giả, nhờ vậy giao thức từ hai chiều trở thành một chiều, gửi một lần là xong. \\
+\addlinespace
+\textbf{Sigma protocol}\label{term:sigma}\newline{\small\itshape giao thức sigma} &
+Dạng giao thức ba bước gồm cam kết, thách thức và đáp số, dùng để chứng minh \emph{biết} một bí mật mà không nói ra bí mật đó. NX Cred dùng giao thức sigma ở bước xin cấp \g{credential}{credential}, để ví chứng minh mình thật sự nắm \g{linksecret}{link secret} và \g{blinding}{blinding factor} nằm bên trong \g{commitment}{cam kết} vừa gửi. \\
+\addlinespace
+\textbf{CL signature}\label{term:clsig}\newline{\small\itshape chữ ký Camenisch--Lysyanskaya} &
+Lược đồ chữ ký số cho phép ký lên nhiều thuộc tính cùng lúc, ký lên cả phần bị che, và cho phép người giữ chữ ký về sau \g{rerand}{ngẫu nhiên hoá} lại nó mà vẫn giữ tính hợp lệ. Hai tính chất cuối là thứ khiến chữ ký CL phù hợp cho định danh ẩn danh, điều mà chữ ký RSA hay ECDSA thông thường không làm được. \\
+\addlinespace
+\textbf{Blind signing}\label{term:blindsign}\newline{\small\itshape ký mù} &
+Cách ký trong đó bên ký không nhìn thấy một phần nội dung mình đang ký, nhưng chữ ký vẫn ràng buộc chặt vào phần bị che đó. Trong NX Cred, \g{issuer}{Issuer} ký lên \g{commitment}{cam kết} chứa \g{linksecret}{link secret} mà không hề biết link secret là gì. \\
+\addlinespace
+\textbf{Unblinding}\label{term:unblind}\newline{\small\itshape gỡ mù} &
+Thao tác ví thực hiện sau khi nhận chữ ký từ \g{issuer}{Issuer}: dùng \g{blinding}{blinding factor} đã giữ lại để biến chữ ký trên \g{commitment}{cam kết} thành chữ ký hoàn chỉnh trên dữ liệu thật. \\
+\addlinespace
+\textbf{Credential}\label{term:credential}\newline{\small\itshape thẻ định danh} &
+Kết quả cuối cùng của quá trình cấp: bộ ba số $(A, e, v)$ tạo thành chữ ký của \g{issuer}{Issuer} lên toàn bộ thuộc tính cộng với \g{linksecret}{link secret}. Đây là thứ ví lưu lại và dùng để tạo bằng chứng về sau. \\
+\addlinespace
+\textbf{Schema}\label{term:schema}\newline{\small\itshape khuôn mẫu giấy tờ} &
+Danh sách các trường mà một loại giấy tờ có. Ví dụ với thẻ sinh viên: mã số sinh viên, họ và tên, mã lớp, ngày hết hạn. Schema được \g{issuer}{Issuer} công bố lên \g{blockchain}{blockchain}, và nó là ranh giới cứng: Issuer không ký gì ngoài các trường trong schema, \g{verifier}{Verifier} cũng không hỏi được gì ngoài các trường đó. \\
+\addlinespace
+\textbf{Khoá công khai}\label{term:pubkey}\newline{\small\itshape credential definition} &
+Bộ số \g{issuer}{Issuer} công bố để người khác kiểm chữ ký của mình. Trong NX Cred gồm: \g{modulus}{modulus} $n$, ba cơ số $S, R, Z$, và một cơ số riêng $R_i$ cho mỗi trường trong \g{schema}{schema}. Chi tiết ở mục~\ref{sec:setup}. \\
+\addlinespace
+\textbf{Modulus}\label{term:modulus} &
+Số $n = p \cdot q$ với $p, q$ là hai \g{safeprime}{safe prime} bí mật. Mọi phép nhân và luỹ thừa trong hệ thống đều thực hiện modulo $n$. Biết $n$ nhưng không biết $p, q$ thì không ký được, đó là nền tảng an toàn của lược đồ. \\
+\addlinespace
+\textbf{Safe prime}\label{term:safeprime} &
+Số nguyên tố dạng $p = 2p' + 1$ trong đó $p'$ cũng là số nguyên tố. Dùng safe prime khiến nhóm tính toán có bậc chứa thừa số nguyên tố lớn, chặn được các thuật toán tấn công khai thác nhóm có bậc phân tích được thành nhiều thừa số nhỏ. \\
+\addlinespace
+\textbf{Randomization}\label{term:rerand}\newline{\small\itshape ngẫu nhiên hoá chữ ký} &
+Thao tác ví thực hiện trước mỗi lần trình bày: biến chữ ký $A$ thành $A' = A \cdot S^{r}$ với $r$ ngẫu nhiên mới. Chữ ký gửi đi vì thế mỗi lần một khác, tạo ra \g{unlink}{tính không liên kết được}. \\
+\bottomrule
+\end{longtable}
 
-\gd{ssi}{Self-sovereign identity --- định danh tự chủ}
-Mô hình định danh trong đó người dùng, chứ không phải một tổ chức nào, là bên nắm giữ và kiểm
-soát dữ liệu định danh của chính mình. Người dùng quyết định chia sẻ gì, với ai, trong bao lâu.
-NX Cred được xây theo mô hình này.
+\section*{Tính chất và cơ chế}
+\addcontentsline{toc}{section}{Tính chất và cơ chế}
 
-\gd{anoncreds}{AnonCreds}
-Viết tắt của \emph{Anonymous Credentials}: bộ tiêu chuẩn mô tả cách cấp và trình bày giấy tờ số
-sao cho \g{verifier}{Verifier} kiểm chứng được tính hợp lệ mà không đọc được dữ liệu, và không
-thể ghép hai lần trình bày lại với nhau. Tiêu chuẩn quy định bốn thành phần chính:
-\g{linksecret}{link secret}, \g{clsig}{chữ ký CL}, \g{selective}{tiết lộ chọn lọc}, và
-\g{unlink}{tính không liên kết được}. AnonCreds đã được vương quốc Bhutan áp dụng cho hệ thống
-định danh quốc gia \g{ndi}{Bhutan NDI}, phục vụ khoảng 200.000 người dân.
+\begin{longtable}{@{}p{4.1cm}p{10.4cm}@{}}
+\toprule
+\textbf{\sffamily Thuật ngữ} & \textbf{\sffamily Định nghĩa} \\
+\midrule
+\endhead
+\textbf{Selective disclosure}\label{term:selective}\newline{\small\itshape tiết lộ chọn lọc} &
+Khả năng mở đúng những trường được hỏi trên một tấm thẻ và giữ kín phần còn lại, trong khi \g{verifier}{Verifier} vẫn kiểm chứng được tấm thẻ là trọn vẹn và hợp lệ. Các trường không mở vẫn tham gia vào phép tính dưới dạng đã che. \\
+\addlinespace
+\textbf{Unlinkability}\label{term:unlink}\newline{\small\itshape tính không liên kết được} &
+Tính chất khiến hai lần trình bày cùng một \g{credential}{credential} không thể bị ghép lại với nhau. Đạt được nhờ \g{rerand}{ngẫu nhiên hoá} chữ ký trước mỗi lần gửi: không có mã số cố định nào đi theo người dùng, nên hai \g{verifier}{Verifier} gộp dữ liệu cũng không tìm ra điểm chung. \\
+\addlinespace
+\textbf{Presentation request}\label{term:presreq}\newline{\small\itshape yêu cầu trình bày} &
+Bản yêu cầu \g{verifier}{Verifier} gửi cho ví, gồm: những trường cần được tiết lộ, những mệnh đề cần được chứng minh mà không tiết lộ, và một \g{nonce}{nonce}. \\
+\addlinespace
+\textbf{Predicate proof}\label{term:predicate}\newline{\small\itshape bằng chứng vị từ} &
+Dạng bằng chứng chứng minh một quan hệ so sánh trên thuộc tính số mà không lộ giá trị, ví dụ ``năm sinh $\le$ 2007'' để chứng minh đủ 18 tuổi. NX Cred hiện chưa hiện thực phần này; xem mục~\ref{sec:limits}. \\
+\addlinespace
+\textbf{eKYC}\label{term:ekyc} &
+Viết tắt của \emph{electronic Know Your Customer}: bước đối chiếu danh tính điện tử, trong đó người dùng quét giấy tờ và \g{issuer}{Issuer} so với hồ sơ mình đang giữ. Trong NX Cred, đây là bước duy nhất dữ liệu định danh được đối chiếu trực tiếp, và nó chỉ diễn ra một lần trong đời một tài khoản. \\
+\addlinespace
+\textbf{Passkey}\label{term:passkey} &
+Khoá sinh trắc học theo chuẩn WebAuthn, vân tay, khuôn mặt, mã PIN thiết bị, dùng để mở kho lưu trữ của ví. Passkey là lớp bảo vệ quyền truy cập vào thiết bị, không phải cơ chế mật mã tạo nên bằng chứng; đây là hai lớp độc lập nhau. \\
+\addlinespace
+\textbf{Revocation}\label{term:revocation}\newline{\small\itshape thu hồi} &
+Cơ chế cho phép \g{issuer}{Issuer} vô hiệu hoá một \g{credential}{credential} đã cấp. NX Cred hiện chưa có phần này; xem mục~\ref{sec:limits}. % ======================= INTRODUCTION ================================= \\
+\bottomrule
+\end{longtable}
 
-\gd{zkp}{Zero-knowledge proof --- bằng chứng không tiết lộ}
-Thuật toán mật mã cho phép chứng minh một mệnh đề là đúng mà không tiết lộ bất cứ điều gì ngoài
-chính tính đúng đắn đó. Một bằng chứng như vậy phải thoả ba tính chất: \emph{đầy đủ} --- điều
-đúng thì luôn chứng minh được; \emph{chắc chắn} --- điều sai thì không thể chứng minh, kể cả khi
-kẻ gian có năng lực tính toán lớn; và \emph{không tiết lộ} --- bên kiểm kết thúc phiên mà không
-biết thêm gì. Đây là lõi của NX Cred.
-
-\gd{ndi}{Bhutan NDI}
-Hệ thống định danh số quốc gia của vương quốc Bhutan, xây trên tiêu chuẩn
-\g{anoncreds}{AnonCreds}. Đây là minh chứng thực tế rằng mô hình này vận hành được ở quy mô quốc
-gia.
-
-\section{Đại lượng mật mã}
-
-\gd{bigint}{Big integer --- số nguyên lớn}
-Số nguyên có độ dài hàng trăm đến hàng nghìn chữ số nhị phân, lớn hơn rất nhiều so với kiểu số
-thông thường của máy tính vốn chỉ 64 bit. Toàn bộ phép toán trong NX Cred làm việc trên những số
-như vậy: \g{modulus}{modulus} dài khoảng 2048 bit, tức xấp xỉ 617 chữ số thập phân. Độ lớn này là
-thứ khiến việc phá giải bằng cách thử mọi khả năng trở nên bất khả thi.
-
-\gd{linksecret}{Link secret}
-Một \g{bigint}{số nguyên lớn} ngẫu nhiên dài 256 bit, được sinh ra ngay sau khi người dùng tạo
-ví, và không bao giờ rời khỏi thiết bị --- kể cả \g{issuer}{Issuer} cũng không nhìn thấy.
-\g{credential}{Credential} được ký sao cho chỉ dùng được cùng với con số này. Hệ quả: kẻ nào chép
-trộm được file credential mà không có link secret thì cũng không tạo được bằng chứng hợp lệ. Mỗi
-tài khoản tương ứng với đúng một link secret duy nhất.
-
-\gd{blinding}{Blinding factor --- hệ số làm mù}
-Một \g{bigint}{số nguyên lớn} ngẫu nhiên do ví sinh ra để che giấu giá trị thật trong một
-\g{commitment}{cam kết}. Vì mỗi giá trị bí mật giả định đều tương thích với đúng một blinding
-factor, cam kết gửi đi không mang thông tin nào về giá trị thật. Ví giữ blinding factor lại để về
-sau \g{unblind}{gỡ mù} chữ ký.
-
-\gd{commitment}{Commitment --- cam kết}
-Một số được tính từ giá trị bí mật cộng với \g{blinding}{blinding factor}, đóng vai như chiếc
-phong bì dán kín: người khác ký được lên phong bì mà không đọc được nội dung bên trong, và người
-gửi về sau không thể tráo đổi nội dung đó.
-
-\gd{nonce}{Nonce --- số dùng một lần}
-Số ngẫu nhiên do bên kiểm phát ra, chỉ dùng đúng một lần rồi huỷ. Nonce tham gia vào phép tính
-\g{challenge}{thách thức}, nên một bằng chứng cũ gắn với nonce cũ không thể được phát lại cho
-phiên mới. Đây là cơ chế chống tấn công phát lại.
-
-\gd{challenge}{Thách thức và biến đổi Fiat--Shamir}
-Trong một giao thức chứng minh, bên kiểm gửi một câu hỏi ngẫu nhiên và bên chứng minh phải trả
-lời. Biến đổi \emph{Fiat--Shamir} thay câu hỏi đó bằng một giá trị băm của chính dữ liệu bên
-chứng minh vừa tạo ra. Vì không đoán trước được giá trị băm, bên chứng minh không thể dựng sẵn
-câu trả lời giả, nhờ vậy giao thức từ hai chiều trở thành một chiều, gửi một lần là xong.
-
-\gd{sigma}{Sigma protocol --- giao thức sigma}
-Dạng giao thức ba bước gồm cam kết, thách thức và đáp số, dùng để chứng minh \emph{biết} một bí
-mật mà không nói ra bí mật đó. NX Cred dùng giao thức sigma ở bước xin cấp
-\g{credential}{credential}, để ví chứng minh mình thật sự nắm \g{linksecret}{link secret} và
-\g{blinding}{blinding factor} nằm bên trong \g{commitment}{cam kết} vừa gửi.
-
-\gd{clsig}{CL signature --- chữ ký Camenisch--Lysyanskaya}
-Lược đồ chữ ký số cho phép ký lên nhiều thuộc tính cùng lúc, ký lên cả phần bị che, và cho phép
-người giữ chữ ký về sau \g{rerand}{ngẫu nhiên hoá} lại nó mà vẫn giữ tính hợp lệ. Hai tính chất
-cuối là thứ khiến chữ ký CL phù hợp cho định danh ẩn danh, điều mà chữ ký RSA hay ECDSA thông
-thường không làm được.
-
-\gd{blindsign}{Blind signing --- ký mù}
-Cách ký trong đó bên ký không nhìn thấy một phần nội dung mình đang ký, nhưng chữ ký vẫn ràng
-buộc chặt vào phần bị che đó. Trong NX Cred, \g{issuer}{Issuer} ký lên \g{commitment}{cam kết}
-chứa \g{linksecret}{link secret} mà không hề biết link secret là gì.
-
-\gd{unblind}{Unblinding --- gỡ mù}
-Thao tác ví thực hiện sau khi nhận chữ ký từ \g{issuer}{Issuer}: dùng
-\g{blinding}{blinding factor} đã giữ lại để biến chữ ký trên \g{commitment}{cam kết} thành chữ ký
-hoàn chỉnh trên dữ liệu thật.
-
-\gd{credential}{Credential --- thẻ định danh}
-Kết quả cuối cùng của quá trình cấp: bộ ba số $(A, e, v)$ tạo thành chữ ký của
-\g{issuer}{Issuer} lên toàn bộ thuộc tính cộng với \g{linksecret}{link secret}. Đây là thứ ví lưu
-lại và dùng để tạo bằng chứng về sau.
-
-\gd{schema}{Schema --- khuôn mẫu giấy tờ}
-Danh sách các trường mà một loại giấy tờ có. Ví dụ với thẻ sinh viên: mã số sinh viên, họ và tên,
-mã lớp, ngày hết hạn. Schema được \g{issuer}{Issuer} công bố lên \g{blockchain}{blockchain}, và
-nó là ranh giới cứng: Issuer không ký gì ngoài các trường trong schema, \g{verifier}{Verifier}
-cũng không hỏi được gì ngoài các trường đó.
-
-\gd{pubkey}{Khoá công khai --- credential definition}
-Bộ số \g{issuer}{Issuer} công bố để người khác kiểm chữ ký của mình. Trong NX Cred gồm:
-\g{modulus}{modulus} $n$, ba cơ số $S, R, Z$, và một cơ số riêng $R_i$ cho mỗi trường trong
-\g{schema}{schema}. Chi tiết ở mục~\ref{sec:setup}.
-
-\gd{modulus}{Modulus}
-Số $n = p \cdot q$ với $p, q$ là hai \g{safeprime}{safe prime} bí mật. Mọi phép nhân và luỹ thừa
-trong hệ thống đều thực hiện modulo $n$. Biết $n$ nhưng không biết $p, q$ thì không ký được ---
-đó là nền tảng an toàn của lược đồ.
-
-\gd{safeprime}{Safe prime}
-Số nguyên tố dạng $p = 2p' + 1$ trong đó $p'$ cũng là số nguyên tố. Dùng safe prime khiến nhóm
-tính toán có bậc chứa thừa số nguyên tố lớn, chặn được các thuật toán tấn công khai thác nhóm có
-bậc phân tích được thành nhiều thừa số nhỏ.
-
-\gd{rerand}{Randomization --- ngẫu nhiên hoá chữ ký}
-Thao tác ví thực hiện trước mỗi lần trình bày: biến chữ ký $A$ thành $A' = A \cdot S^{r}$ với $r$
-ngẫu nhiên mới. Chữ ký gửi đi vì thế mỗi lần một khác, tạo ra
-\g{unlink}{tính không liên kết được}.
-
-\section{Tính chất và cơ chế}
-
-\gd{selective}{Selective disclosure --- tiết lộ chọn lọc}
-Khả năng mở đúng những trường được hỏi trên một tấm thẻ và giữ kín phần còn lại, trong khi
-\g{verifier}{Verifier} vẫn kiểm chứng được tấm thẻ là trọn vẹn và hợp lệ. Các trường không mở vẫn
-tham gia vào phép tính dưới dạng đã che.
-
-\gd{unlink}{Unlinkability --- tính không liên kết được}
-Tính chất khiến hai lần trình bày cùng một \g{credential}{credential} không thể bị ghép lại với
-nhau. Đạt được nhờ \g{rerand}{ngẫu nhiên hoá} chữ ký trước mỗi lần gửi: không có mã số cố định
-nào đi theo người dùng, nên hai \g{verifier}{Verifier} gộp dữ liệu cũng không tìm ra điểm chung.
-
-\gd{presreq}{Presentation request --- yêu cầu trình bày}
-Bản yêu cầu \g{verifier}{Verifier} gửi cho ví, gồm: những trường cần được tiết lộ, những mệnh đề
-cần được chứng minh mà không tiết lộ, và một \g{nonce}{nonce}.
-
-\gd{predicate}{Predicate proof --- bằng chứng vị từ}
-Dạng bằng chứng chứng minh một quan hệ so sánh trên thuộc tính số mà không lộ giá trị, ví dụ
-``năm sinh $\le$ 2007'' để chứng minh đủ 18 tuổi. NX Cred hiện chưa hiện thực phần này; xem
-mục~\ref{sec:limits}.
-
-\gd{ekyc}{eKYC}
-Viết tắt của \emph{electronic Know Your Customer}: bước đối chiếu danh tính điện tử, trong đó
-người dùng quét giấy tờ và \g{issuer}{Issuer} so với hồ sơ mình đang giữ. Trong NX Cred, đây là
-bước duy nhất dữ liệu định danh được đối chiếu trực tiếp, và nó chỉ diễn ra một lần trong đời một
-tài khoản.
-
-\gd{passkey}{Passkey}
-Khoá sinh trắc học theo chuẩn WebAuthn --- vân tay, khuôn mặt, mã PIN thiết bị --- dùng để mở kho
-lưu trữ của ví. Passkey là lớp bảo vệ quyền truy cập vào thiết bị, không phải cơ chế mật mã tạo
-nên bằng chứng; đây là hai lớp độc lập nhau.
-
-\gd{revocation}{Revocation --- thu hồi}
-Cơ chế cho phép \g{issuer}{Issuer} vô hiệu hoá một \g{credential}{credential} đã cấp. NX Cred
-hiện chưa có phần này; xem mục~\ref{sec:limits}.
-
-% ======================= INTRODUCTION =================================
 \chapter{Introduction}
 
 \section{AnonCreds là tiêu chuẩn gì}
@@ -375,8 +326,8 @@ Nếu bạn thật sự biết mật khẩu, bạn luôn ra đúng nhánh. Nếu
 mắn đã chọn sẵn nhánh đó, xác suất 50\%. Lặp lại 20 lần, xác suất ăn may là $2^{-20}$, tức khoảng
 một phần triệu. Người kiểm buộc phải tin bạn biết mật khẩu, dù chưa từng nghe mật khẩu.
 
-Ví dụ này chứa đủ ba tính chất: \emph{đầy đủ} --- người biết mật khẩu luôn qua được;
-\emph{chắc chắn} --- người không biết gần như chắc chắn bị phát hiện; và \emph{không tiết lộ} ---
+Ví dụ này chứa đủ ba tính chất: \emph{đầy đủ}, người biết mật khẩu luôn qua được;
+\emph{chắc chắn}, người không biết gần như chắc chắn bị phát hiện; và \emph{không tiết lộ} , 
 người kiểm không học được gì về mật khẩu. Điểm mấu chốt là bên chứng minh phải phản ứng với một
 \g{challenge}{thách thức} ngẫu nhiên mà họ không đoán trước được. Trong hệ thống thật, thách thức
 đó là một giá trị băm, và việc lặp lại 20 lần được thay bằng một con số đủ lớn, 256 bit, để xác
@@ -393,7 +344,7 @@ trường, đăng ký thi chứng chỉ ngoại ngữ, nhận phòng khách sạ
 thoại, đăng ký ví điện tử, và nộp hồ sơ xin việc.
 
 Mỗi lần như vậy, Minh đưa căn cước ra. Bên kia chụp lại hoặc photo. Sau sáu tháng, dữ liệu định
-danh đầy đủ của Minh --- số căn cước, ngày sinh, quê quán, địa chỉ thường trú --- nằm trong tám
+danh đầy đủ của Minh, số căn cước, ngày sinh, quê quán, địa chỉ thường trú, nằm trong tám
 cơ sở dữ liệu mà Minh không kiểm soát, không biết được bảo vệ ra sao, và không thể yêu cầu xoá.
 
 \begin{center}
@@ -480,8 +431,8 @@ NX Cred gồm bốn thành phần: ba bên tham gia và một sổ cái công kh
 
   \draw[step] (issuer) -- node[left,xshift=-1mm,lbl]{công bố\\một lần} (chain);
   \draw[step] (chain) -- node[right,xshift=1mm,lbl]{đọc\\khi cần} (verifier);
-  \draw[step] (issuer) -- node[below,sloped,lbl]{cấp thẻ --- một lần} (holder);
-  \draw[step] (holder) -- node[below,sloped,lbl]{trình bằng chứng --- mỗi lần} (verifier);
+  \draw[step] (issuer) -- node[below,sloped,lbl]{cấp thẻ, một lần} (holder);
+  \draw[step] (holder) -- node[below,sloped,lbl]{trình bằng chứng, mỗi lần} (verifier);
   \draw[dashx] (issuer) to[out=-42,in=222] node[below,lbl,yshift=-1mm]{không có kênh trực tiếp} (verifier);
 \end{tikzpicture}
 \end{center}
@@ -512,8 +463,8 @@ lần, \emph{xác minh} diễn ra mỗi khi cần.
   \draw[step] (s6) -- (s7);
   \draw[step] (s8) -- (s7);
 
-  \node[lbl,above=3mm of s1] {GIAI ĐOẠN 1 --- CẤP THẺ (một lần)};
-  \node[lbl,above=3mm of s5] {GIAI ĐOẠN 2 --- XÁC MINH (mỗi lần)};
+  \node[lbl,above=3mm of s1] {GIAI ĐOẠN 1, CẤP THẺ (một lần)};
+  \node[lbl,above=3mm of s5] {GIAI ĐOẠN 2, XÁC MINH (mỗi lần)};
 \end{tikzpicture}
 \end{center}
 
@@ -528,7 +479,7 @@ thẻ kết thúc và không lặp lại.
 
 Khi cần xác minh, \g{verifier}{Verifier} tạo mã QR chứa \g{presreq}{yêu cầu trình bày} kèm một
 nonce mới. Ví ngẫu nhiên hoá chữ ký, làm mù các thuộc tính không chia sẻ, rồi tạo
-bằng chứng --- mỗi lần yêu cầu là một lần làm mù lại và tạo lại từ đầu. Verifier nhận bằng chứng,
+bằng chứng, mỗi lần yêu cầu là một lần làm mù lại và tạo lại từ đầu. Verifier nhận bằng chứng,
 khôi phục lại giá trị cần so sánh và đối chiếu, dùng khoá công khai đọc từ
 blockchain.
 
@@ -560,7 +511,7 @@ blockchain.
 
 Bước 4 dễ bị bỏ qua nhưng không thể thiếu. Nếu ví chỉ gửi cam kết $u$ mà không
 kèm bằng chứng, một kẻ gian có thể chặn bắt cam kết của người khác rồi nộp như của mình. Hắn sẽ
-nhận về một credential gắn với link secret mà hắn không biết ---
+nhận về một credential gắn với link secret mà hắn không biết , 
 vô dụng với hắn, nhưng gây rối loạn sổ sách và tiêu mất suất cấp thẻ của nạn nhân.
 \g{sigma}{Giao thức sigma} ở bước này buộc người nộp phải thật sự biết cặp số nằm bên trong cam
 kết.
@@ -662,7 +613,7 @@ từ chain: khi cần xác minh, Verifier đọc schema để biết loại gi�
 
 Điểm cốt lõi về mặt an ninh: Verifier không bao giờ nhận khoá công khai từ bên đang trình bằng
 chứng. Nếu nhận, kẻ gian chỉ việc tự sinh cặp khoá của mình, tự ký một tấm thẻ giả, rồi nộp kèm
-khoá công khai của chính hắn --- mọi phép kiểm sẽ đều qua. Lấy khoá từ một nguồn độc lập và không
+khoá công khai của chính hắn, mọi phép kiểm sẽ đều qua. Lấy khoá từ một nguồn độc lập và không
 sửa được là thứ duy nhất chặn đường tấn công này.
 
 % ======================= LÕI MẬT MÃ ===================================
@@ -760,7 +711,7 @@ Chia hai đẳng thức kiểm cho nhau được
 $S^{\hat v_1 - \hat v_2} R^{\widehat{\mathit{ls}}_1 - \widehat{\mathit{ls}}_2} = u^{c_1 - c_2}$.
 Đặt $\Delta c = c_1 - c_2 \neq 0$, ta rút ra
 $\mathit{ls} = (\widehat{\mathit{ls}}_1 - \widehat{\mathit{ls}}_2)/\Delta c$ và
-$v' = (\hat v_1 - \hat v_2)/\Delta c$ --- một mở cam kết hợp lệ của $u$.
+$v' = (\hat v_1 - \hat v_2)/\Delta c$, một mở cam kết hợp lệ của $u$.
 \end{proof}
 
 \subsection{Ký mù và gỡ mù}
@@ -791,7 +742,7 @@ A^{e} S^{v} R^{\mathit{ls}} \prod_i R_i^{m_i}
 \end{proof}
 
 Đây là bất biến trung tâm của toàn hệ thống: sai một thuộc tính, sai
-link secret, hay chữ ký giả --- đều không cho ra $Z$.
+link secret, hay chữ ký giả, đều không cho ra $Z$.
 
 \section{Công thức và tính toán giữa Wallet và Verifier}
 
@@ -915,7 +866,7 @@ dùng trung thực có thể là một công cụ dò tìm cho kẻ tấn công,
 
 \section{Bảo vệ bằng passkey ngay trên thiết bị}
 
-Kho lưu trữ của ví được khoá bằng \g{passkey}{passkey} theo chuẩn WebAuthn --- vân tay, khuôn
+Kho lưu trữ của ví được khoá bằng \g{passkey}{passkey} theo chuẩn WebAuthn, vân tay, khuôn
 mặt, hoặc mã PIN của chính thiết bị. Khoá riêng của passkey nằm trong phần cứng bảo mật của máy
 và không trích xuất ra được.
 
@@ -981,7 +932,7 @@ schema, không gì khác.
 \subsection{Khoá công khai gồm những gì}
 
 Chi tiết đầy đủ ở mục~\ref{sec:setup}. Nói cho dễ hiểu: đó là một bộ số cho phép bất kỳ ai
-\emph{kiểm} được chữ ký của Issuer, nhưng không cho phép ai \emph{tạo} ra chữ ký đó --- giống một
+\emph{kiểm} được chữ ký của Issuer, nhưng không cho phép ai \emph{tạo} ra chữ ký đó, giống một
 con dấu mà ai cũng nhận ra được nhưng không ai khắc lại được.
 
 \subsection{Schema là gì}
@@ -1011,7 +962,7 @@ từ đó soạn được yêu cầu trình bày hợp lệ. Với thẻ sinh vi
 hỏi: người này có mã số sinh viên do trường cấp không; thẻ sinh viên còn hạn không; mã lớp có
 đúng là lớp đang thi không.
 
-Verifier chỉ cần lấy schema từ chain về là đủ để làm việc --- không phải liên hệ, không phải ký
+Verifier chỉ cần lấy schema từ chain về là đủ để làm việc, không phải liên hệ, không phải ký
 hợp đồng, không phải chờ ai cấp quyền.
 
 \section{Vì sao phải là blockchain}
@@ -1024,7 +975,7 @@ khai không thể tẩy xoá, không phải một cơ sở dữ liệu.
 % ======================= USE CASE =====================================
 \chapter{Các use case}
 
-\section{Bhutan NDI --- đã triển khai thực tế}
+\section{Bhutan NDI, đã triển khai thực tế}
 
 Bhutan NDI là hệ thống định danh số quốc gia của vương quốc Bhutan, xây trên tiêu chuẩn
 AnonCreds và đã phục vụ khoảng 200.000 người dân.
@@ -1038,7 +989,7 @@ những trường họ chọn.
 
 \section{Chống thi hộ tại các trường đại học Việt Nam}
 
-Tình trạng gian lận danh tính trong thi cử --- thi hộ, mượn thẻ sinh viên --- diễn ra khá phổ
+Tình trạng gian lận danh tính trong thi cử, thi hộ, mượn thẻ sinh viên, diễn ra khá phổ
 biến. Các biện pháp hiện nay đều có điểm yếu: kiểm thẻ giấy thì dễ làm giả, đối chiếu ảnh thì tốn
 thời gian và sai sót, còn thu thập sinh trắc học thì lại tạo ra một kho dữ liệu nhạy cảm mới.
 
@@ -1065,7 +1016,7 @@ giây.
 
 Điểm then chốt nằm ở link secret. Muốn nhờ người khác thi hộ, sinh viên phải giao
 cả ví lẫn link secret cho người đó. Nhưng link secret không phải một mã số dùng riêng cho kỳ thi
---- nó là thứ mở khoá toàn bộ credential trong ví: thẻ ngân hàng, giấy tờ tuỳ
+,  nó là thứ mở khoá toàn bộ credential trong ví: thẻ ngân hàng, giấy tờ tuỳ
 thân, mọi giấy tờ số khác.
 
 Nói cách khác, cái giá của việc nhờ thi hộ là trao toàn bộ danh tính số của mình cho người khác.
@@ -1117,8 +1068,8 @@ trong trình duyệt, để link secret không bao giờ rời khỏi thiết b�
 
 \begin{enumerate}[leftmargin=1.6em,itemsep=8pt]
   \item \textbf{Một nút bấm giúp người dùng dễ thêm bằng chứng.}
-    Mục tiêu là Verifier chỉ cần chọn từ danh sách mệnh đề dựng sẵn --- ``đủ 18
-    tuổi'', ``còn hiệu lực'', ``thuộc lớp X'' --- và hệ thống tự sinh
+    Mục tiêu là Verifier chỉ cần chọn từ danh sách mệnh đề dựng sẵn, ``đủ 18
+    tuổi'', ``còn hiệu lực'', ``thuộc lớp X'', và hệ thống tự sinh
     yêu cầu trình bày tương ứng, thay vì phải hiểu cấu trúc schema và tự
     soạn.
 
@@ -1141,14 +1092,14 @@ trong trình duyệt, để link secret không bao giờ rời khỏi thiết b�
 \addcontentsline{toc}{chapter}{Tham khảo}
 
 \begin{enumerate}[leftmargin=1.6em,itemsep=5pt]
-  \item AnonCreds Specification --- \url{https://hyperledger.github.io/anoncreds-spec/}
+  \item AnonCreds Specification, \url{https://hyperledger.github.io/anoncreds-spec/}
   \item J. Camenisch, A. Lysyanskaya. \emph{A Signature Scheme with Efficient Protocols}, 2002.
-  \item W3C. \emph{Verifiable Credentials Data Model} ---
+  \item W3C. \emph{Verifiable Credentials Data Model} , 
         \url{https://www.w3.org/TR/vc-data-model-2.0/}
-  \item W3C. \emph{Web Authentication (WebAuthn) Level 3} ---
+  \item W3C. \emph{Web Authentication (WebAuthn) Level 3} , 
         \url{https://www.w3.org/TR/webauthn-3/}
-  \item Bhutan National Digital Identity --- \url{https://www.bhutanndi.com/}
-  \item Hyperledger Indy --- \url{https://hyperledger-indy.readthedocs.io/}
+  \item Bhutan National Digital Identity, \url{https://www.bhutanndi.com/}
+  \item Hyperledger Indy, \url{https://hyperledger-indy.readthedocs.io/}
   \item A. Fiat, A. Shamir. \emph{How to Prove Yourself: Practical Solutions to Identification and
         Signature Problems}, 1986.
 \end{enumerate}
@@ -1158,7 +1109,7 @@ trong trình duyệt, để link secret không bao giờ rời khỏi thiết b�
 
 \chapter{Các thư viện sử dụng trong ứng dụng}
 
-\section{Phía máy chủ --- Python}
+\section{Phía máy chủ, Python}
 
 \begin{longtable}{@{}p{2.8cm}p{6.4cm}p{4.6cm}@{}}
 \toprule
@@ -1183,7 +1134,7 @@ websockets & Kênh thời gian thực giữa máy tính và điện thoại khi 
 \bottomrule
 \end{longtable}
 
-\section{Phía trình duyệt --- TypeScript}
+\section{Phía trình duyệt, TypeScript}
 
 \begin{longtable}{@{}p{2.8cm}p{6.4cm}p{4.6cm}@{}}
 \toprule
