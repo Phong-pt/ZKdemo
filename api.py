@@ -141,6 +141,16 @@ def chain_status() -> dict:
     return chain.status()
 
 
+@app.get("/api/registry/schemas")
+def registry_schemas() -> dict:
+    try:
+        return chain.list_registered_schemas()
+    except chain.ChainNotConfigured as error:
+        raise HTTPException(503, str(error)) from error
+    except Exception:
+        raise HTTPException(502, "Không thể đọc danh sách schema từ registry blockchain")
+
+
 @app.get("/api/cred-def")
 def get_cred_def() -> dict:
     return issuer.get_public_cred_def()

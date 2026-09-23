@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import time
@@ -110,6 +111,57 @@ def get_schema() -> dict:
 
 def get_cred_def() -> dict:
     return _cached("cred_def", _read_cred_def)
+
+
+def schema_fingerprint(name: str, version: str, attributes: list[str], issuer_address: str) -> str:
+    canonical = json.dumps(
+        {"issuer": issuer_address.lower(), "name": name, "version": version,
+         "attributes": list(attributes)},
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(canonical).hexdigest()
+
+
+def list_registered_schemas() -> dict:
+    """Enumerate every issuer/schema and public credential definition in the shared registry."""
+    from web3 import Web3
+
+    contract, config = _contract()
+    schemas: list[dict] = []
+    cred_defs: dict[str, list[dict]] = {}
+    for index in range(contract.functions.credentialDefinitionCount().call()):
+        cred_id = contract.functions.credentialDefinitionIds(index).call()
+        record = contract.functions.getCredentialDefinition(cred_id).call()
+        schema_id = Web3.to_hex(record[0])
+        cred_defs.setdefault(schema_id.lower(), []).append({
+            "id": Web3.to_hex(cred_id),
+            "issuer": record[7],
+            "registered_at": record[8],
+            "attributes": list(record[5]),
+        })
+
+    for index in range(contract.functions.schemaCount().call()):
+        schema_id = contract.functions.schemaIds(index).call()
+        name, version, attributes, issuer_address, registered_at = contract.functions.getSchema(schema_id).call()
+        schema_key = Web3.to_hex(schema_id)
+        schemas.append({
+            "id": schema_key,
+            "name": name,
+            "version": version,
+            "attributes": list(attributes),
+            "issuer": issuer_address,
+            "registered_at": registered_at,
+            "fingerprint": schema_fingerprint(name, version, list(attributes), issuer_address),
+            "credential_definitions": cred_defs.get(schema_key.lower(), []),
+        })
+
+    return {
+        "chain": "Ethereum Sepolia",
+        "chain_id": config["chain_id"],
+        "registry_address": config["address"],
+        "schemas": schemas,
+    }
 
 
 def resolve_cred_def() -> tuple[dict, str]:

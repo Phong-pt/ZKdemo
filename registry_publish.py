@@ -28,8 +28,13 @@ def save(data):
 
 def status():
     data = read()
+    fingerprint = data.get("schema_fingerprint")
+    if not fingerprint and data.get("issuer_address"):
+        fingerprint = chain.schema_fingerprint(
+            "nationalIdentity", "1.0", issuer.ATTRIBUTE_NAMES, data["issuer_address"]
+        )
     return {**data, "busy": _lock.locked(), "configured": bool(os.environ.get("SEPOLIA_RPC_URL") and os.environ.get("ISSUER_PRIVATE_KEY")),
-            "chain": "Ethereum Sepolia", "chain_id": 11155111,
+            "chain": "Ethereum Sepolia", "chain_id": 11155111, "schema_fingerprint": fingerprint,
             "schema_name": "nationalIdentity", "schema_version": "1.0", "attributes": issuer.ATTRIBUTE_NAMES}
 
 
@@ -141,7 +146,11 @@ def publish():
             raise PublicationError("Khóa công khai trên chain khác khóa issuer đang dùng; không thể ghi đè khóa cũ")
         deployment = {"chain": "Ethereum Sepolia", "chain_id": 11155111, "address": address,
                       "issuer_address": account.address, "schema_id": Web3.to_hex(sid),
-                      "cred_def_id": Web3.to_hex(cid), "explorer": "https://sepolia.etherscan.io"}
+                      "cred_def_id": Web3.to_hex(cid),
+                      "schema_fingerprint": chain.schema_fingerprint(
+                          "nationalIdentity", "1.0", attrs, account.address
+                      ),
+                      "explorer": "https://sepolia.etherscan.io"}
         temp = chain.REGISTRY_FILE.with_suffix(".tmp")
         temp.write_text(json.dumps(deployment, indent=2))
         temp.replace(chain.REGISTRY_FILE)

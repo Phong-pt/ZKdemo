@@ -108,6 +108,17 @@ class RegistryOnChainTests(unittest.TestCase):
         self.assertEqual(schema["attributes"], ATTRIBUTES)
         self.assertEqual(schema["issuer"], self.issuer_address)
 
+    def test_verifier_can_discover_schemas_from_multiple_issuers(self):
+        self.contract.functions.registerSchema("drivingLicence", "1.0", ["licence_number"]).transact(
+            {"from": self.outsider}
+        )
+        catalog = chain.list_registered_schemas()
+        discovered = next(schema for schema in catalog["schemas"] if schema["name"] == "drivingLicence")
+        self.assertEqual(discovered["issuer"], self.outsider)
+        self.assertEqual(discovered["attributes"], ["licence_number"])
+        self.assertTrue(discovered["fingerprint"].startswith("sha256:"))
+        self.assertEqual(discovered["credential_definitions"], [])
+
     def test_public_key_survives_the_round_trip(self):
         cred_def = chain.get_cred_def()
         self.assertEqual(cred_def["n"], CRED_DEF["n"])

@@ -62,6 +62,8 @@ class PublicationTests(unittest.TestCase):
             self.assertEqual(self.w3.eth.get_transaction_receipt(tx['hash'])['status'], 1)
         self.assertEqual(chain.get_schema()['attributes'], issuer.ATTRIBUTE_NAMES)
         self.assertEqual(chain.get_cred_def()['n'], CRED_DEF['n'])
+        catalog = chain.list_registered_schemas()
+        self.assertEqual(catalog['schemas'][0]['fingerprint'], result['schema_fingerprint'])
         before = self.w3.eth.block_number
         # Once published, re-checking from a signing flow must not require RPC credentials
         # or create a new registry transaction.

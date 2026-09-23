@@ -24,8 +24,7 @@ COPY wallet ./wallet
 COPY verifier ./verifier
 COPY --from=frontend /app/dist ./static
 
-# Sinh sẵn cred-def lúc build: sinh 2 safe prime 1024-bit mất hàng chục giây, làm lúc runtime sẽ
-# khiến request /api/issue đầu tiên trên instance free của Render treo rất lâu.
-RUN python -c "from issuer import issuer; issuer.setup()"
+# Issuer key material is generated on first startup. ISSUER_CL_KEY_SEED keeps it reproducible
+# across image rebuilds without baking a private key into the container image.
 
 CMD ["sh", "-c", "python -m uvicorn api:app --host 0.0.0.0 --port ${PORT:-8000}"]

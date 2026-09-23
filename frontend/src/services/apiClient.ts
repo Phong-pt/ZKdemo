@@ -78,6 +78,29 @@ export interface ConfigResponse {
   verifier_domains: string[]
 }
 
+export interface RegisteredSchema {
+  id: string
+  name: string
+  version: string
+  attributes: string[]
+  issuer: string
+  registered_at: number
+  fingerprint: string
+  credential_definitions: Array<{
+    id: string
+    issuer: string
+    registered_at: number
+    attributes: string[]
+  }>
+}
+
+export interface RegistrySchemasResponse {
+  chain: string
+  chain_id: number
+  registry_address: string
+  schemas: RegisteredSchema[]
+}
+
 // Token của phiên đang đăng nhập; mọi endpoint xác định ví theo token này chứ không theo cookie.
 let authToken: string | null = null
 let walletUnlock: string | null = null
@@ -121,6 +144,7 @@ export const apiClient = {
   declineRequest: (id: string) =>
     apiFetch<VerificationSession>(`/requests/${encodeURIComponent(id)}/decline`, { method: 'POST' }),
   config: () => apiFetch<ConfigResponse>('/config'),
+  registrySchemas: () => apiFetch<RegistrySchemasResponse>('/registry/schemas'),
   // Hai trường mã QR trên thẻ không chứa, lấy từ hồ sơ issuer theo số CCCD vừa quét được.
   ekycLookup: (cccd: string) =>
     apiFetch<{ origin: string; expiry: string }>(`/ekyc/lookup?cccd=${encodeURIComponent(cccd)}`),

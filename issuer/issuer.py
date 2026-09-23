@@ -1,4 +1,5 @@
 import json
+import hashlib
 import os
 import secrets
 from pathlib import Path
@@ -208,7 +209,13 @@ def find_verifier_org(email: str) -> str | None:
     return TRUSTED_VERIFIER_DOMAINS.get(domain)
 
 SMALL_PRIMES = [p for p in range(3, 5000) if gmpy2.is_prime(p)]
-_RANDOM_STATE = gmpy2.random_state(secrets.randbits(256))
+_issuer_key_seed = os.environ.get("ISSUER_CL_KEY_SEED")
+_issuer_key_seed_int = (
+    int.from_bytes(hashlib.sha256(_issuer_key_seed.encode("utf-8")).digest(), "big")
+    if _issuer_key_seed
+    else secrets.randbits(256)
+)
+_RANDOM_STATE = gmpy2.random_state(_issuer_key_seed_int)
 
 
 def generate_nonce() -> str:

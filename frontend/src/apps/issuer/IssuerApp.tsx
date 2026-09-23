@@ -37,6 +37,7 @@ type Registry = {
   issuer_address?: string
   schema_id?: string
   cred_def_id?: string
+  schema_fingerprint?: string
   attributes: string[]
   transactions: Record<string, { hash: string; state: string; block?: number; gas?: number }>
 }
@@ -214,6 +215,7 @@ function Blockchain({
             Schema ID: {registry.schema_id}
             <br />
             Credential definition: {registry.cred_def_id}
+            {registry.schema_fingerprint && <><br />Schema fingerprint: {registry.schema_fingerprint}</>}
           </div>
         )}
       </div>

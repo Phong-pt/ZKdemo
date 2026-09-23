@@ -31,6 +31,9 @@ services:
         sync: false
       - key: ISSUER_PRIVATE_KEY
         sync: false
+      # Secret seed for the CL signing key. Render generates it once; keep it stable across deploys.
+      - key: ISSUER_CL_KEY_SEED
+        generateValue: true
       # Auto deploy the registry and publish the schema/key on backend startup when Sepolia
       # credentials above are configured. Set these three values after the first deployment
       # so the free Render instance can reuse the same registry after a restart.
