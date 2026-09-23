@@ -1,4 +1,5 @@
 """Deploy/register the shared public schema, with a persisted transaction journal."""
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -24,6 +25,17 @@ def save(data):
     temp = JOURNAL.with_suffix(".tmp")
     temp.write_text(json.dumps(data, indent=2))
     temp.replace(JOURNAL)
+
+
+def key_digest(public):
+    """Dấu vết của khoá công khai đã công bố. Giữ trong nhật ký để nhận ra khoá issuer bị đổi mà
+    không cần gọi RPC — credential ký bằng khoá mới sẽ không kiểm được bằng khoá cũ trên chain."""
+    canonical = json.dumps(
+        {"n": str(public["n"]), "S": str(public["S"]), "R": str(public["R"]), "Z": str(public["Z"]),
+         "R_attrs": {name: str(value) for name, value in sorted(public["R_attrs"].items())}},
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(canonical).hexdigest()
 
 
 def status():
@@ -68,6 +80,16 @@ def publish():
     try:
         data = read()
         if data.get("state") == "published":
+            # Đã công bố thì không gửi thêm giao dịch nào, nhưng vẫn phải soi lại khoá: nếu khoá
+            # issuer đổi (seed mất, file khoá bị sinh lại) thì bản trên chain không còn kiểm được
+            # credential mới, và im lặng ở đây nghĩa là mọi proof sau đó đều fail không rõ lý do.
+            published = data.get("key_digest")
+            if published and published != key_digest(issuer.get_public_cred_def()):
+                data.update(state="error", error=(
+                    "Khóa công khai của issuer khác bản đã công bố trên chain; credential ký bằng "
+                    "khóa mới sẽ không kiểm được. Phục hồi ISSUER_CL_KEY_SEED cũ, hoặc công bố một "
+                    "credential definition mới."))
+                save(data)
             return
         from web3 import Web3
         from web3.exceptions import ContractLogicError
@@ -155,7 +177,7 @@ def publish():
         temp.write_text(json.dumps(deployment, indent=2))
         temp.replace(chain.REGISTRY_FILE)
         chain.clear_cache()
-        data.update(deployment, state="published", error=None)
+        data.update(deployment, state="published", error=None, key_digest=key_digest(public))
         save(data)
     except Exception as exc:
         # Provider exceptions may contain an RPC URL/API key: never send them to the portal.
