@@ -209,7 +209,10 @@ def approve(request_id: str, tasks: BackgroundTasks):
         item["signature"] = issuer.sign_blindly(item["attributes"], item["proof"])
         item["status"] = "signed"
         persist()
-        tasks.add_task(registry_publish.publish)
+        # Publish the shared schema/key once. Re-check the persisted publication state before
+        # scheduling; subsequent blind signatures only reuse the already registered schema.
+        if registry_publish.needs_publish():
+            tasks.add_task(registry_publish.publish)
         return view(item, True)
 
 

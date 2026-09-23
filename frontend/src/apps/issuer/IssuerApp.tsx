@@ -609,13 +609,6 @@ export function IssuerApp() {
                         </div>
                       ))}
                     </div>
-                    {item.checks && (
-                      <p className="text-xs text-ink-4 mt-3">
-                        Kết quả kiểm tra lúc{' '}
-                        {new Date(item.checks.checked_at * 1000).toLocaleTimeString('vi-VN')}. Khi
-                        ký, backend kiểm tra lại toàn bộ và tiêu thụ nonce.
-                      </p>
-                    )}
                     {item.status === 'pending' ? (
                       <>
                         <div className="flex flex-wrap gap-3 mt-5">

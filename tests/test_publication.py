@@ -63,7 +63,10 @@ class PublicationTests(unittest.TestCase):
         self.assertEqual(chain.get_schema()['attributes'], issuer.ATTRIBUTE_NAMES)
         self.assertEqual(chain.get_cred_def()['n'], CRED_DEF['n'])
         before = self.w3.eth.block_number
-        registry_publish.publish()
+        # Once published, re-checking from a signing flow must not require RPC credentials
+        # or create a new registry transaction.
+        with patch.dict(os.environ, {'SEPOLIA_RPC_URL': ''}):
+            registry_publish.publish()
         self.assertEqual(registry_publish.status()['state'], 'published')
         self.assertEqual(self.w3.eth.block_number, before)
 

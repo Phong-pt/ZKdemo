@@ -244,6 +244,14 @@ class IssuerApprovalTests(ThreePartyFlowTests):
     def approve(self, request_id):
         return self.client.post(f'/api/issuer/requests/{request_id}/approve', headers=self.operator_headers)
 
+    def test_approval_reuses_already_published_schema_without_starting_publish_task(self):
+        rid = self.pending()
+        with patch.object(registry_publish, "needs_publish", return_value=False), \
+             patch.object(registry_publish, "publish") as publish:
+            response = self.approve(rid)
+        self.assertEqual(response.status_code, 200, response.text)
+        publish.assert_not_called()
+
     def test_wallet_waits_for_issuer_and_unblinds_only_after_approval(self):
         rid = self.pending()
         self.assertEqual(issuance.requests[rid]['status'], 'pending')

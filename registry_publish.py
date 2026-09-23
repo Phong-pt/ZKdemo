@@ -33,6 +33,13 @@ def status():
             "schema_name": "nationalIdentity", "schema_version": "1.0", "attributes": issuer.ATTRIBUTE_NAMES}
 
 
+def needs_publish():
+    try:
+        return read().get("state") not in ("published", "publishing")
+    except (OSError, ValueError):
+        return True
+
+
 def artifact():
     if chain.ARTIFACT_FILE.exists():
         return json.loads(chain.ARTIFACT_FILE.read_text())
@@ -54,6 +61,8 @@ def publish():
     data = {"state": "not_published", "transactions": {}}
     try:
         data = read()
+        if data.get("state") == "published":
+            return
         from web3 import Web3
         from web3.exceptions import ContractLogicError
         rpc, key = os.environ.get("SEPOLIA_RPC_URL"), os.environ.get("ISSUER_PRIVATE_KEY")
