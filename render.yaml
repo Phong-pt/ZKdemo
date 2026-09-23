@@ -23,9 +23,9 @@ services:
       - key: ISSUER_PORTAL_TOKEN
         generateValue: true
       - key: WEBAUTHN_RP_ID
-        value: zkp-demo.onrender.com
+        value: zkp-demo-53g9.onrender.com
       - key: WEBAUTHN_ORIGIN
-        value: https://zkp-demo.onrender.com
+        value: https://zkp-demo-53g9.onrender.com
       # Cấu hình khi muốn công bố schema/khóa issuer lên Sepolia.
       - key: SEPOLIA_RPC_URL
         sync: false
