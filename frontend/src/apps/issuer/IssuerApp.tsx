@@ -83,6 +83,17 @@ const button =
 const secondary =
   'rounded-xl border border-line bg-white px-4 py-3 text-sm cursor-pointer disabled:opacity-40'
 
+// Registry đọc được từ chain nghĩa là đã công bố, kể cả khi nhật ký trên ổ đĩa của backend này
+// không còn. Hai chỗ hiển thị badge phải dùng cùng một phép suy này để khỏi lệch nhau.
+function registryLive(registry: Registry | null): boolean {
+  return !!registry?.onchain?.configured && registry.onchain?.reachable !== false
+}
+
+function registryState(registry: Registry | null): string {
+  if (!registry) return 'not_published'
+  return registryLive(registry) ? 'published' : registry.state
+}
+
 function Badge({ status }: { status: string }) {
   return (
     <span
@@ -120,8 +131,8 @@ function Blockchain({
   if (!registry) return <div className={section}>Đang đọc trạng thái registry…</div>
   // Registry có sống trên chain hay không: đọc được từ contract là sống, bất kể nhật ký công bố
   // của backend này còn hay mất.
-  const live = !!registry.onchain.configured && registry.onchain.reachable !== false
-  const shownState = live ? 'published' : registry.state
+  const live = registryLive(registry)
+  const shownState = registryState(registry)
   const address = registry.address || registry.onchain.address
   const schemaId = registry.schema_id || registry.onchain.schema_id
   const credDefId = registry.cred_def_id || registry.onchain.cred_def_id
@@ -476,7 +487,7 @@ export function IssuerApp() {
             }}
             className="shrink-0"
           >
-            <Badge status={registry?.state || 'not_published'} />
+            <Badge status={registryState(registry)} />
           </a>
         </div>
         {error && (
