@@ -31,7 +31,20 @@ type Request = {
 type Registry = {
   state: string
   busy: boolean
-  configured: boolean
+  can_publish: boolean
+  // Trạng thái đọc chain, độc lập với nhật ký công bố: một backend chỉ đọc vẫn thấy registry sống.
+  onchain: {
+    configured: boolean
+    reachable?: boolean
+    matches_local_key?: boolean
+    address?: string
+    schema_id?: string
+    cred_def_id?: string
+    schema_name?: string
+    issuer_address?: string
+    explorer_url?: string
+    error?: string
+  }
   error?: string
   address?: string
   issuer_address?: string
@@ -104,6 +117,13 @@ function Blockchain({
   busy: boolean
 }) {
   if (!registry) return <div className={section}>Đang đọc trạng thái registry…</div>
+  // Registry có sống trên chain hay không: đọc được từ contract là sống, bất kể nhật ký công bố
+  // của backend này còn hay mất.
+  const live = !!registry.onchain.configured && registry.onchain.reachable !== false
+  const shownState = live ? 'published' : registry.state
+  const address = registry.address || registry.onchain.address
+  const schemaId = registry.schema_id || registry.onchain.schema_id
+  const credDefId = registry.cred_def_id || registry.onchain.cred_def_id
   return (
     <div className="space-y-5">
       <div className={section}>
@@ -114,7 +134,7 @@ function Blockchain({
             </div>
             <h2 className="text-xl mt-2 font-medium">Schema căn cước công dân</h2>
           </div>
-          <Badge status={registry.state} />
+          <Badge status={shownState} />
         </div>
         <p className="text-sm text-ink-3 mt-3 leading-relaxed">
           Công bố khuôn mẫu CCCD và khóa công khai của issuer. Các credential cùng schema dùng chung
@@ -139,10 +159,44 @@ function Blockchain({
           Chỉ tên thuộc tính và khóa công khai được đưa lên chain. Số CCCD, hồ sơ eKYC và link
           secret không nằm trong giao dịch.
         </div>
-        {!registry.configured && (
+        {/* Registry sống trên chain là một chuyện, backend này có quyền ghi lên đó hay không là
+            chuyện khác. Nhật ký công bố nằm trên ổ đĩa, nên một bản deploy không có ổ đĩa bền sẽ
+            mãi báo "chưa công bố" dù schema đã nằm trên chain từ lâu. */}
+        {live && (
+          <div
+            className="mt-4 rounded-xl p-4 text-sm"
+            style={{ border: '1px solid #D9E6DF', background: '#F4FAF7', color: '#17795E' }}
+          >
+            Registry đang đọc được trên Ethereum Sepolia.
+            {registry.onchain.matches_local_key === false && (
+              <div className="mt-2 text-red-700">
+                Nhưng khóa công khai trên chain KHÁC khóa issuer đang ký. Mọi proof sẽ bị từ chối —
+                đặt lại ISSUER_CL_KEY_SEED đúng giá trị đã dùng lúc công bố.
+              </div>
+            )}
+            {registry.onchain.matches_local_key === true && (
+              <div className="mt-1 text-[12.5px]" style={{ color: '#5E7A6E' }}>
+                Khóa issuer đang ký khớp khóa đã công bố ✓
+              </div>
+            )}
+            {!registry.can_publish && (
+              <div className="mt-2 text-[12.5px]" style={{ color: '#5E7A6E' }}>
+                Backend này chỉ đọc chain: không có khóa ký giao dịch, nên cấp credential không bao
+                giờ tạo giao dịch mới. Việc công bố đã làm một lần từ nơi khác.
+              </div>
+            )}
+          </div>
+        )}
+        {!live && !registry.can_publish && (
           <div className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
-            Chưa cấu hình Sepolia cho backend. Cần SEPOLIA_RPC_URL và ISSUER_PRIVATE_KEY của ví
-            testnet trong .env.
+            Chưa cấu hình Sepolia cho backend. Cần SEPOLIA_RPC_URL, và ISSUER_PRIVATE_KEY nếu muốn
+            công bố từ chính backend này. Đã công bố ở nơi khác thì chỉ cần SEPOLIA_RPC_URL,
+            CREDENTIAL_REGISTRY_ADDRESS, SCHEMA_ID, CREDENTIAL_DEFINITION_ID.
+          </div>
+        )}
+        {live && registry.onchain.reachable === false && registry.onchain.error && (
+          <div role="alert" className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
+            Đã cấu hình địa chỉ registry nhưng không đọc được từ chain. Kiểm tra SEPOLIA_RPC_URL.
           </div>
         )}
         {registry.error && (
@@ -150,17 +204,19 @@ function Blockchain({
             {registry.error}
           </div>
         )}
-        <button
-          onClick={publish}
-          disabled={busy || registry.busy || !registry.configured}
-          className={`${button} mt-5`}
-        >
-          {registry.busy
-            ? 'Đang chờ mạng xác nhận…'
-            : registry.state === 'published'
-              ? 'Kiểm tra lại bản đăng ký'
-              : 'Công bố schema & khóa công khai'}
-        </button>
+        {registry.can_publish && (
+          <button
+            onClick={publish}
+            disabled={busy || registry.busy}
+            className={`${button} mt-5`}
+          >
+            {registry.busy
+              ? 'Đang chờ mạng xác nhận…'
+              : registry.state === 'published'
+                ? 'Kiểm tra lại bản đăng ký'
+                : 'Công bố schema & khóa công khai'}
+          </button>
+        )}
       </div>
       <div className={section}>
         <h3 className="font-medium">Bằng chứng trên blockchain</h3>
@@ -168,18 +224,22 @@ function Blockchain({
           Mỗi liên kết mở dữ liệu giao dịch thực trên Etherscan. Schema đã tồn tại sẽ được đọc và
           đối chiếu, không tạo giao dịch trùng.
         </p>
-        {registry.address && (
+        {address && (
           <a
             target="_blank"
             rel="noreferrer"
             className="block text-blue font-mono text-xs break-all my-4"
-            href={`https://sepolia.etherscan.io/address/${registry.address}`}
+            href={`https://sepolia.etherscan.io/address/${address}`}
           >
-            Contract: {registry.address} ↗
+            Contract: {address} ↗
           </a>
         )}
         {Object.entries(registry.transactions).length === 0 && (
-          <div className="py-6 text-sm text-ink-4">Chưa gửi giao dịch nào từ cổng issuer.</div>
+          <div className="py-6 text-sm text-ink-4">
+            {live
+              ? 'Backend này không gửi giao dịch nào: registry đã được công bố từ nơi khác, ở đây chỉ đọc.'
+              : 'Chưa gửi giao dịch nào từ cổng issuer.'}
+          </div>
         )}
         {Object.entries(registry.transactions).map(([key, tx]) => (
           <div key={key} className="py-4 border-t border-line">
@@ -210,11 +270,11 @@ function Blockchain({
             )}
           </div>
         ))}
-        {registry.schema_id && (
+        {schemaId && (
           <div className="text-xs text-ink-3 break-all font-mono mt-4">
-            Schema ID: {registry.schema_id}
+            Schema ID: {schemaId}
             <br />
-            Credential definition: {registry.cred_def_id}
+            Credential definition: {credDefId}
             {registry.schema_fingerprint && <><br />Schema fingerprint: {registry.schema_fingerprint}</>}
           </div>
         )}

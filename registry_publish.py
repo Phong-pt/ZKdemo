@@ -45,7 +45,13 @@ def status():
         fingerprint = chain.schema_fingerprint(
             "nationalIdentity", "1.0", issuer.ATTRIBUTE_NAMES, data["issuer_address"]
         )
-    return {**data, "busy": _lock.locked(), "configured": bool(os.environ.get("SEPOLIA_RPC_URL") and os.environ.get("ISSUER_PRIVATE_KEY")),
+    return {**data, "busy": _lock.locked(),
+            # Đủ điều kiện GỬI giao dịch công bố: cần cả RPC và khoá ký. Một backend chỉ đọc chain
+            # (cố tình không có ISSUER_PRIVATE_KEY) là cấu hình hợp lệ, không phải thiếu cấu hình —
+            # nhật ký ở đây sẽ mãi là "not_published" dù registry đã công bố từ máy khác, nên phải
+            # nhìn `onchain` mới biết chain có sống hay không.
+            "can_publish": bool(os.environ.get("SEPOLIA_RPC_URL") and os.environ.get("ISSUER_PRIVATE_KEY")),
+            "onchain": chain.status(),
             "chain": "Ethereum Sepolia", "chain_id": 11155111, "schema_fingerprint": fingerprint,
             "schema_name": "nationalIdentity", "schema_version": "1.0", "attributes": issuer.ATTRIBUTE_NAMES}
 

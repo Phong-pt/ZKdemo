@@ -67,7 +67,6 @@ export function CreateWizard({
         {state.wizard === 2 && (
           <Step2Claims
             claims={claimsOf(state)}
-            schema={state.schema}
             schemaError={state.schemaError}
             reveal={state.reveal}
             onToggle={onToggleReveal}
