@@ -6,3 +6,7 @@ frontend/node_modules
 frontend/dist
 issuer/*.json
 wallet/*.json
+wallet/wallets
+.env
+contracts/deployment.json
+contracts/issuer-publication.json

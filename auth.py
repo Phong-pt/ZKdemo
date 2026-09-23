@@ -1,7 +1,7 @@
 import hashlib
 import os
 
-from fastapi import Header, HTTPException
+from fastapi import Depends, Header, HTTPException
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 
@@ -67,6 +67,16 @@ def account_from_token(token: str) -> Account:
 
 def current_account(authorization: str | None = Header(default=None)) -> Account:
     return account_from_token(_bearer(authorization))
+
+
+def wallet_account(account: Account = Depends(current_account),
+                   x_wallet_unlock: str = Header(default="")) -> Account:
+    import passkey
+    from wallet import wallet
+    stored = wallet.get_passkey(account.wallet_id)
+    if stored and stored["passkey"] and not passkey.is_unlocked(account.wallet_id, x_wallet_unlock):
+        raise HTTPException(403, "Ví đang khóa; hãy xác thực passkey để tiếp tục")
+    return account
 
 
 def verifier_account(authorization: str | None = Header(default=None)) -> tuple[Account, str]:

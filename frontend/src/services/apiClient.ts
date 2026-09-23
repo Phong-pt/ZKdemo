@@ -14,6 +14,13 @@ export interface IssueResponse {
   identity: Record<string, string>
 }
 
+export interface IssuanceRequest {
+  id: string
+  status: 'pending' | 'signed' | 'issued' | 'rejected' | 'expired'
+  identity: Record<string, string> | null
+  reason?: string | null
+}
+
 export interface VerifyResponse {
   verified: boolean
   revealed: Record<string, string>
@@ -48,6 +55,7 @@ export interface MeResponse {
   // máy nào đăng nhập cũng thấy, không phụ thuộc vào trình duyệt đang dùng.
   wallet_ready: boolean
   has_passkey: boolean
+  wallet_locked: boolean
 }
 
 // Options WebAuthn do máy chủ phát: các trường nhị phân được mã hoá base64url để đi qua JSON,
@@ -72,8 +80,12 @@ export interface ConfigResponse {
 
 // Token của phiên đang đăng nhập; mọi endpoint xác định ví theo token này chứ không theo cookie.
 let authToken: string | null = null
+let walletUnlock: string | null = null
+
+export function setWalletUnlock(token: string | null) { walletUnlock = token }
 
 export function setAuthToken(token: string | null) {
+  if (token !== authToken) walletUnlock = null
   authToken = token
 }
 
@@ -87,6 +99,7 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     headers: {
       'Content-Type': 'application/json',
       ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      ...(walletUnlock ? { 'X-Wallet-Unlock': walletUnlock } : {}),
       ...options?.headers,
     },
   })
@@ -111,8 +124,13 @@ export const apiClient = {
   // Hai trường mã QR trên thẻ không chứa, lấy từ hồ sơ issuer theo số CCCD vừa quét được.
   ekycLookup: (cccd: string) =>
     apiFetch<{ origin: string; expiry: string }>(`/ekyc/lookup?cccd=${encodeURIComponent(cccd)}`),
-  issueCredential: (identity: IdentityAttributes) =>
-    apiFetch<IssueResponse>('/issue', { method: 'POST', body: JSON.stringify(identity) }),
+  submitIssuance: (identity: IdentityAttributes) =>
+    apiFetch<IssuanceRequest>('/issuance/requests', { method: 'POST', body: JSON.stringify(identity) }),
+  currentIssuance: () => apiFetch<(IssuanceRequest & { attributes: IdentityAttributes }) | null>('/issuance/current'),
+  cancelIssuance: (id: string) => apiFetch<IssuanceRequest>(`/issuance/requests/${encodeURIComponent(id)}/cancel`, { method: 'POST' }),
+  pollIssuance: (id: string) => apiFetch<IssuanceRequest>(`/issuance/requests/${encodeURIComponent(id)}`),
+  completeIssuance: (id: string) =>
+    apiFetch<IssuanceRequest>(`/issuance/requests/${encodeURIComponent(id)}/complete`, { method: 'POST' }),
   verifyPresentation: (revealedAttrs: string[]) =>
     apiFetch<VerifyResponse>('/verify', {
       method: 'POST',
@@ -124,14 +142,14 @@ export const apiClient = {
   passkeyRegisterOptions: () =>
     apiFetch<PasskeyCreationOptions>('/passkey/register/options', { method: 'POST' }),
   passkeyRegisterVerify: (credential: unknown) =>
-    apiFetch<{ verified: boolean }>('/passkey/register/verify', {
+    apiFetch<{ verified: boolean; unlock_token: string }>('/passkey/register/verify', {
       method: 'POST',
       body: JSON.stringify(credential),
     }),
   passkeyLoginOptions: () =>
     apiFetch<PasskeyRequestOptions>('/passkey/login/options', { method: 'POST' }),
   passkeyLoginVerify: (credential: unknown) =>
-    apiFetch<{ verified: boolean }>('/passkey/login/verify', {
+    apiFetch<{ verified: boolean; unlock_token: string }>('/passkey/login/verify', {
       method: 'POST',
       body: JSON.stringify(credential),
     }),

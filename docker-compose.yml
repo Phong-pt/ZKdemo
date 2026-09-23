@@ -10,9 +10,16 @@ services:
     environment:
       GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
       VERIFIER_TRUSTED_DOMAINS_JSON: "${VERIFIER_TRUSTED_DOMAINS_JSON:-}"
+      ISSUER_PORTAL_TOKEN: "${ISSUER_PORTAL_TOKEN:-issuer-demo-local}"
+      WEBAUTHN_RP_ID: "${WEBAUTHN_RP_ID:-localhost}"
+      WEBAUTHN_ORIGIN: "${WEBAUTHN_ORIGIN:-http://localhost:8080,https://localhost:8443}"
+      SEPOLIA_RPC_URL: "${SEPOLIA_RPC_URL:-}"
+      ISSUER_PRIVATE_KEY: "${ISSUER_PRIVATE_KEY:-}"
+      CREDENTIAL_REGISTRY_ADDRESS: "${CREDENTIAL_REGISTRY_ADDRESS:-}"
     volumes:
       - ./issuer:/app/issuer
       - ./wallet:/app/wallet
+      - ./contracts:/app/contracts
     ports:
       - "8000:8000"
 

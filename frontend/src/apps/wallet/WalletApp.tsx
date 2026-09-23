@@ -67,6 +67,7 @@ export function WalletApp() {
   stateRef.current = state
 
   const requestId = useRef(0)
+  const issuanceAbort = useRef<AbortController | null>(null)
   const timers = useRef<number[]>([])
 
   const after = useCallback((ms: number, fn: () => void) => {
@@ -79,7 +80,7 @@ export function WalletApp() {
     timers.current = []
   }, [])
 
-  useEffect(() => clearTimers, [clearTimers])
+  useEffect(() => () => { clearTimers(); issuanceAbort.current?.abort() }, [clearTimers])
 
   // Tab còn mở thì phiên còn sống; TTL chỉ bắt đầu đếm từ lúc đóng tab.
   useEffect(() => {
@@ -92,11 +93,12 @@ export function WalletApp() {
   }, [state.account])
 
   const restart = useCallback(() => {
+    issuanceAbort.current?.abort()
     requestId.current += 1
     clearTimers()
     saveSession(null)
+    setAuthToken(null)
     setState(createInitialWalletState())
-    apiClient.reset().catch(() => {})
   }, [clearTimers])
 
   const startGoogle = useCallback(() => {
@@ -105,6 +107,9 @@ export function WalletApp() {
 
   const onAccount = useCallback(
     (account: GoogleAccount) => {
+      const id = ++requestId.current
+      issuanceAbort.current?.abort()
+      clearTimers()
       setAuthToken(account.token)
       saveSession(account)
       setState((s) => ({ ...s, step: 'signedin', account }))
@@ -114,6 +119,7 @@ export function WalletApp() {
       apiClient
         .me()
         .then((me) => {
+          if (requestId.current !== id) return
           const identity = me.has_credential ? me.identity : null
           const next = !me.wallet_ready ? 'install' : me.has_passkey ? 'unlock' : 'wallet'
           after(1600, () =>
@@ -135,11 +141,12 @@ export function WalletApp() {
         // Hỏi máy chủ hỏng thì dừng lại chứ tuyệt đối không mặc định cho cài ví mới: đúng lúc đó
         // là lúc ta không biết tài khoản đã có ví hay chưa, cho qua là mở toang cửa.
         .catch((err: unknown) => {
+          if (requestId.current !== id) return
           const message = err instanceof Error ? err.message : 'Không kết nối được máy chủ'
           setState((s) => ({ ...s, loadError: message }))
         })
     },
-    [after],
+    [after, clearTimers],
   )
 
   // Mở lại trang thì lấy phiên cũ ra dùng tiếp thay vì bắt đăng nhập lại từ đầu.
@@ -153,6 +160,7 @@ export function WalletApp() {
   // Đăng xuất chỉ rời phiên; credential của tài khoản đó vẫn nằm nguyên trong ví phía máy chủ,
   // đăng nhập lại là thấy lại thẻ. Muốn xoá sạch mọi ví thì dùng "Restart demo".
   const signOut = useCallback(() => {
+    issuanceAbort.current?.abort()
     requestId.current += 1
     clearTimers()
     authService.signOut()
@@ -230,16 +238,32 @@ export function WalletApp() {
     passkeyAbort.current?.abort()
   }, [])
 
-  const finishPasskey = useCallback(() => {
-    setState((s) => ({ ...s, step: 'wallet', passkey: 'idle' }))
+  const finishPasskey = useCallback(async () => {
+    const id = requestId.current
+    try {
+      const me = await apiClient.me()
+      if (requestId.current !== id) return
+      setState(s => ({...s, step: 'wallet', passkey: 'idle', loadError: null,
+        verifiedIdentity: me.identity ? { name: me.identity.name, dob: me.identity.dob,
+          nationality: me.identity.nationality, document: 'National ID (CCCD)' } : null }))
+    } catch (err) {
+      if (requestId.current === id) setState(s => ({...s, passkey: 'idle', passkeyError: err instanceof Error ? err.message : 'Không đọc được ví'}))
+    }
   }, [])
 
   // Máy không có thiết bị xác thực thì vẫn coi là đã cài ví, chỉ không có passkey để mở khoá —
   // lần đăng nhập sau vào thẳng ví thay vì bắt cài lại từ đầu.
-  const skipPasskey = useCallback(() => {
+  const skipPasskey = useCallback(async () => {
     passkeyAbort.current?.abort()
-    apiClient.passkeySkip().catch(() => {})
-    setState((s) => ({ ...s, step: 'wallet', passkey: 'idle', passkeyError: null }))
+    const id = requestId.current
+    try {
+      await apiClient.passkeySkip()
+      if (requestId.current !== id) return
+      setState((s) => ({ ...s, step: 'wallet', passkey: 'idle', passkeyError: null }))
+    } catch (err) {
+      if (requestId.current !== id) return
+      setState(s => ({...s, passkeyError: err instanceof Error ? err.message : 'Không thể tiếp tục'}))
+    }
   }, [])
 
   const startKyc = useCallback(() => setState((s) => ({ ...s, step: 'kycdoc' })), [])
@@ -266,9 +290,10 @@ export function WalletApp() {
         if (scanned.cccd) {
           apiClient
             .ekycLookup(scanned.cccd)
-            .then((extra) =>
-              setState((s) => ({ ...s, identityForm: { ...s.identityForm, ...extra } })),
-            )
+            .then((extra) => {
+              if (stateRef.current.handoffSessionId !== state.handoffSessionId || stateRef.current.identityForm.cccd !== scanned.cccd) return
+              setState((s) => ({ ...s, identityForm: { ...s.identityForm, ...extra } }))
+            })
             .catch(() => {})
         }
       } else if (event.type === 'back-captured') {
@@ -287,15 +312,18 @@ export function WalletApp() {
     setState((s) => ({ ...s, identityForm: { ...s.identityForm, [field]: value } }))
   }, [])
 
-  const startProcessing = useCallback(() => {
+  const startProcessing = useCallback((resumeIdentity?: IdentityAttributes) => {
+    issuanceAbort.current?.abort()
+    const controller = new AbortController()
+    issuanceAbort.current = controller
     const id = ++requestId.current
-    const identity: IdentityAttributes = { ...stateRef.current.identityForm }
+    const identity: IdentityAttributes = resumeIdentity || { ...stateRef.current.identityForm }
     setState((s) => ({ ...s, step: 'processing', proc: 0, processingError: null }))
     kycService
       .runProcessing(identity, (step) => {
         if (requestId.current !== id) return
         setState((s) => ({ ...s, proc: step }))
-      })
+      }, controller.signal)
       .then((verifiedIdentity) => {
         if (requestId.current !== id) return
         setState((s) => ({ ...s, step: 'verified', verifiedIdentity }))
@@ -305,6 +333,31 @@ export function WalletApp() {
         const message = err instanceof Error ? err.message : 'Không thể kết nối tới backend'
         setState((s) => ({ ...s, proc: 0, processingError: message }))
       })
+  }, [])
+
+  useEffect(() => {
+    if (state.step !== 'wallet' || !state.account || state.verifiedIdentity) return
+    let active = true
+    apiClient.currentIssuance().then(request => {
+      if (!active || !request) return
+      setState(s => ({...s, identityForm: request.attributes}))
+      startProcessing(request.attributes)
+    }).catch(err => {
+      if (active) setState(s => ({...s, loadError: err instanceof Error ? err.message : 'Không đọc được yêu cầu đang chờ'}))
+    })
+    return () => { active = false }
+  }, [state.step, state.account, state.verifiedIdentity, startProcessing])
+
+  const editIssuance = useCallback(async () => {
+    issuanceAbort.current?.abort()
+    requestId.current += 1
+    try {
+      const request = await apiClient.currentIssuance()
+      if (request) await apiClient.cancelIssuance(request.id)
+      setState(s => ({...s, step: 'kycreview', processingError: null}))
+    } catch (err) {
+      setState(s => ({...s, processingError: err instanceof Error ? err.message : 'Không thể hủy yêu cầu'}))
+    }
   }, [])
 
   const toWallet = useCallback(() => setState((s) => ({ ...s, step: 'wallet' })), [])
@@ -382,9 +435,9 @@ export function WalletApp() {
       {(state.step === 'passkey' || state.step === 'unlock') && state.passkeyError && (
         <div className="text-sm text-center -mt-2 flex flex-col items-center gap-2">
           <span style={{ color: '#B4763A' }}>{state.passkeyError}</span>
-          <button type="button" onClick={skipPasskey} className="text-ink-3 underline cursor-pointer">
+          {state.step === 'passkey' && <button type="button" onClick={skipPasskey} className="text-ink-3 underline cursor-pointer">
             Máy này không có thiết bị xác thực — tiếp tục không dùng passkey (demo)
-          </button>
+          </button>}
         </div>
       )}
 
@@ -396,6 +449,7 @@ export function WalletApp() {
           onOpenCard={openCard}
         />
       )}
+      {state.step === 'wallet' && state.loadError && <p role="alert" className="text-sm text-red-700">{state.loadError}. Hãy đăng nhập lại để tiếp tục.</p>}
       {state.step === 'wallet' && state.cardOpen && state.account && state.verifiedIdentity && (
         <IdentityCardModal account={state.account} identity={state.verifiedIdentity} onClose={closeCard} />
       )}
@@ -407,11 +461,11 @@ export function WalletApp() {
           form={state.identityForm}
           onChange={onIdentityFieldChange}
           onRetake={rescan}
-          onSubmit={startProcessing}
+          onSubmit={() => startProcessing()}
         />
       )}
       {state.step === 'processing' && (
-        <Processing proc={state.proc} error={state.processingError} onRetry={rescan} />
+        <Processing proc={state.proc} error={state.processingError} onRetry={() => startProcessing()} onEdit={editIssuance} />
       )}
       {state.step === 'verified' && <Verified onOpenWallet={toWallet} />}
     </div>

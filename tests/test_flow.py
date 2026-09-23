@@ -11,6 +11,9 @@ from fastapi.testclient import TestClient
 
 import api
 import auth
+import issuance
+import registry_publish
+import passkey
 from issuer import issuer
 from wallet import wallet
 from verifier import verifier
@@ -46,9 +49,13 @@ class ThreePartyFlowTests(unittest.TestCase):
         item = patch.dict(issuer.TRUSTED_VERIFIER_DOMAINS, {"demo.local": "Demo Verifier"})
         item.start()
         cls.patches.append(item)
-        item = patch.dict(os.environ, {"GOOGLE_CLIENT_ID": ""})
+        item = patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "", "ISSUER_PORTAL_TOKEN": "test-operator"})
         item.start()
         cls.patches.append(item)
+        for item in [patch.object(issuance, "STATE_FILE", Path(cls.temp.name) / "requests.json"),
+                     patch.object(registry_publish, "publish")]:
+            item.start()
+            cls.patches.append(item)
         # Small test-only keys keep integration tests fast; production setup is unchanged.
         issuer.setup(bits=128)
         cls.client = TestClient(api.app)
@@ -62,6 +69,9 @@ class ThreePartyFlowTests(unittest.TestCase):
 
     def setUp(self):
         api._verification_requests.clear()
+        issuance.requests.clear()
+        passkey._unlocks.clear()
+        passkey._challenges.clear()
         issuer._pending_nonces.clear()
         verifier._pending_sessions.clear()
         issuer.EKYC_DB[:] = [{**wallet.EKYC_DATA, "credential_issued": False}]
@@ -71,7 +81,14 @@ class ThreePartyFlowTests(unittest.TestCase):
     def issue(self, account=HOLDER_A, attributes=None):
         response = self.client.post("/api/issue", json=attributes or wallet.EKYC_DATA, headers=headers(account))
         self.assertEqual(response.status_code, 200, response.text)
-        return response.json()
+        data = response.json()
+        if data["status"] == "pending":
+            approved = self.client.post(f"/api/issuer/requests/{data['id']}/approve", headers={"X-Issuer-Token": "test-operator"})
+            self.assertEqual(approved.status_code, 200, approved.text)
+            response = self.client.post(f"/api/issuance/requests/{data['id']}/complete", headers=headers(account))
+            self.assertEqual(response.status_code, 200, response.text)
+            data = response.json()
+        return data
 
     def request(self, attrs=None):
         response = self.client.post("/api/requests", json={
@@ -153,13 +170,15 @@ class MultiAccountTests(ThreePartyFlowTests):
     def test_second_account_cannot_reuse_the_same_cccd(self):
         self.issue(HOLDER_A)
         response = self.client.post("/api/issue", json=wallet.EKYC_DATA, headers=headers(HOLDER_B))
-        self.assertEqual(response.status_code, 400)
-        self.assertIn("đã được cấp credential", response.json()["detail"])
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post(f"/api/issuer/requests/{response.json()['id']}/approve", headers={"X-Issuer-Token": "test-operator"})
+        self.assertEqual(response.status_code, 409)
         self.assertIsNone(wallet.get_credential(wallet_id(HOLDER_B)))
 
     def test_each_account_keeps_its_own_link_secret(self):
         self.issue(HOLDER_A)
         other = {**wallet.EKYC_DATA, "cccd": "099999999999", "name": "Người thứ hai"}
+        issuer.EKYC_DB.append({**other, "credential_issued": False})
         self.issue(HOLDER_B, other)
         self.assertNotEqual(
             wallet.get_link_secret(wallet_id(HOLDER_A)), wallet.get_link_secret(wallet_id(HOLDER_B))
@@ -170,18 +189,12 @@ class MultiAccountTests(ThreePartyFlowTests):
         response = self.client.post(
             "/api/issue", json={**wallet.EKYC_DATA, "name": "Kẻ mạo danh"}, headers=headers(HOLDER_A)
         )
+        self.assertEqual(response.status_code, 200)
+        request_id = response.json()['id']
+        response = self.client.post(f"/api/issuer/requests/{request_id}/approve", headers={"X-Issuer-Token": "test-operator"})
         self.assertEqual(response.status_code, 409)
+        self.assertFalse(issuance.requests[request_id]['checks']['database'])
         self.assertIsNone(wallet.get_credential(wallet_id(HOLDER_A)))
-
-    def test_mismatch_message_does_not_name_the_wrong_field(self):
-        """Nói đích danh trường nào lệch là biến thông báo lỗi thành công cụ dò: kẻ tấn công
-        thử lần lượt từng trường là dựng lại được cả hồ sơ mà không cần xâm nhập gì."""
-        response = self.client.post(
-            "/api/issue", json={**wallet.EKYC_DATA, "name": "Kẻ mạo danh"}, headers=headers(HOLDER_A)
-        )
-        detail = response.json()["detail"]
-        for leak in ["name", "Họ và tên", wallet.EKYC_DATA["name"]]:
-            self.assertNotIn(leak, detail)
 
     def test_issued_flag_survives_a_restart(self):
         self.issue(HOLDER_A)
@@ -189,7 +202,9 @@ class MultiAccountTests(ThreePartyFlowTests):
         issuer.load_ekyc_db()
         self.assertTrue(issuer.find_by_cccd(wallet.EKYC_DATA["cccd"])["credential_issued"])
         response = self.client.post("/api/issue", json=wallet.EKYC_DATA, headers=headers(HOLDER_B))
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post(f"/api/issuer/requests/{response.json()['id']}/approve", headers={"X-Issuer-Token": "test-operator"})
+        self.assertEqual(response.status_code, 409)
 
     def test_document_outside_the_registered_schema_is_refused(self):
         response = self.client.post(
@@ -215,6 +230,147 @@ class MultiAccountTests(ThreePartyFlowTests):
         with patch.dict(issuer.TRUSTED_VERIFIER_DOMAINS, {}, clear=True):
             response = self.client.post("/api/requests", json={"name": "T"}, headers=headers(VERIFIER))
             self.assertEqual(response.status_code, 403)
+
+
+class IssuerApprovalTests(ThreePartyFlowTests):
+    operator_headers = {"X-Issuer-Token": "test-operator"}
+
+    def pending(self, attributes=None):
+        response = self.client.post('/api/issuance/requests', json=attributes or wallet.EKYC_DATA,
+                                    headers=headers(HOLDER_A))
+        self.assertEqual(response.status_code, 200, response.text)
+        return response.json()['id']
+
+    def approve(self, request_id):
+        return self.client.post(f'/api/issuer/requests/{request_id}/approve', headers=self.operator_headers)
+
+    def test_wallet_waits_for_issuer_and_unblinds_only_after_approval(self):
+        rid = self.pending()
+        self.assertEqual(issuance.requests[rid]['status'], 'pending')
+        self.assertIsNone(wallet.get_credential(wallet_id(HOLDER_A)))
+        self.assertEqual(self.client.post(f'/api/issuance/requests/{rid}/complete', headers=headers(HOLDER_A)).status_code, 409)
+        signed = self.approve(rid)
+        self.assertEqual(signed.status_code, 200, signed.text)
+        self.assertEqual(signed.json()['status'], 'signed')
+        self.assertNotIn(issuance.requests[rid]['nonce'], issuer._pending_nonces)
+        self.assertIsNone(wallet.get_credential(wallet_id(HOLDER_A)))
+        self.assertEqual(self.approve(rid).status_code, 409)
+        result = self.client.post(f'/api/issuance/requests/{rid}/complete', headers=headers(HOLDER_A))
+        self.assertEqual(result.json()['status'], 'issued')
+        self.assertTrue(wallet.verify_credential(wallet.get_credential(wallet_id(HOLDER_A)), wallet.EKYC_DATA,
+                       issuer.get_public_cred_def(), wallet.get_link_secret(wallet_id(HOLDER_A))))
+        self.assertEqual(self.client.post(f'/api/issuance/requests/{rid}/complete', headers=headers(HOLDER_A)).json(), result.json())
+
+    def test_issuer_sees_public_proof_but_not_wallet_secrets(self):
+        rid = self.pending()
+        response = self.client.get('/api/issuer/requests', headers=self.operator_headers)
+        self.assertEqual(response.status_code, 200)
+        public = response.json()[0]
+        self.assertEqual(set(public['proof']), {'nonce', 'u', 'c', 'v_hat', 'ls_hat'})
+        self.assertTrue(all(isinstance(value, str) for value in public['proof'].values()))
+        secret_v, secret_ls = wallet.load_pending_request(issuance.requests[rid]['nonce'], wallet_id(HOLDER_A))
+        self.assertNotIn(str(secret_v), response.text)
+        self.assertNotIn(str(secret_ls), response.text)
+        self.assertEqual(self.client.get('/api/issuer/requests', headers=headers(HOLDER_A)).status_code, 401)
+        self.assertEqual(self.client.get(f'/api/issuance/requests/{rid}', headers=headers(HOLDER_B)).status_code, 403)
+        self.assertEqual(self.client.post(f'/api/issuance/requests/{rid}/complete', headers=headers(HOLDER_B)).status_code, 403)
+
+    def test_tampered_nonce_or_proof_cannot_be_signed(self):
+        rid = self.pending()
+        request = issuance.requests[rid]
+        valid_proof = dict(request['proof'])
+        for field in ('nonce', 'c', 'u', 'v_hat', 'ls_hat'):
+            request['proof'] = dict(valid_proof)
+            request['proof'][field] = 'another-nonce' if field == 'nonce' else request['proof'][field] + 1
+            self.assertEqual(self.approve(rid).status_code, 409, field)
+            self.assertFalse(issuer.find_by_cccd(wallet.EKYC_DATA['cccd'])['credential_issued'])
+        request['proof'] = valid_proof
+        self.assertEqual(self.approve(rid).status_code, 200)
+
+    def test_unknown_database_record_is_not_auto_created(self):
+        rid = self.pending({**wallet.EKYC_DATA, 'cccd': '000000000000'})
+        self.assertEqual(self.approve(rid).status_code, 409)
+        self.assertIsNone(issuer.find_by_cccd('000000000000'))
+
+    def test_reject_and_expire_invalidate_nonce_and_allow_retry(self):
+        rid = self.pending()
+        nonce = issuance.requests[rid]['nonce']
+        result = self.client.post(f'/api/issuer/requests/{rid}/reject', json={'reason': 'Sai hồ sơ'}, headers=self.operator_headers)
+        self.assertEqual(result.json()['status'], 'rejected')
+        self.assertNotIn(nonce, issuer._pending_nonces)
+        fresh = self.pending()
+        self.assertNotEqual(fresh, rid)
+        issuance.requests[fresh]['expires_at'] = time.time() - 1
+        self.assertEqual(self.approve(fresh).status_code, 409)
+        self.assertNotIn(issuance.requests[fresh]['nonce'], issuer._pending_nonces)
+
+    def test_duplicate_submission_preserves_nonce_and_blinding_state(self):
+        rid = self.pending()
+        pending_file = wallet.pending_request_file(wallet_id(HOLDER_A)).read_text()
+        self.assertEqual(self.pending(), rid)
+        self.assertEqual(wallet.pending_request_file(wallet_id(HOLDER_A)).read_text(), pending_file)
+
+    def test_resume_and_cancel_are_scoped_to_wallet(self):
+        rid = self.pending()
+        mine = self.client.get('/api/issuance/current', headers=headers(HOLDER_A)).json()
+        self.assertEqual(mine['id'], rid)
+        self.assertEqual(mine['attributes'], wallet.EKYC_DATA)
+        self.assertIsNone(self.client.get('/api/issuance/current', headers=headers(HOLDER_B)).json())
+        self.assertEqual(self.client.post(f'/api/issuance/requests/{rid}/cancel', headers=headers(HOLDER_B)).status_code, 403)
+        self.assertEqual(self.client.post(f'/api/issuance/requests/{rid}/cancel', headers=headers(HOLDER_A)).status_code, 200)
+        self.assertNotIn(issuance.requests[rid]['nonce'], issuer._pending_nonces)
+        self.assertEqual(self.approve(rid).status_code, 409)
+        self.assertNotEqual(self.pending(), rid)
+
+    def test_completion_recovers_after_unblinding_before_state_save(self):
+        rid = self.pending()
+        self.assertEqual(self.approve(rid).status_code, 200)
+        item = issuance.requests[rid]
+        sig = item['signature']
+        wallet.unblind_signature(sig['a'], sig['e'], sig['v_prime_prime'], item['nonce'],
+                                 item['attributes'], item['public_key'], wallet_id(HOLDER_A))
+        self.assertFalse(wallet.pending_request_file(wallet_id(HOLDER_A)).exists())
+        result = self.client.post(f'/api/issuance/requests/{rid}/complete', headers=headers(HOLDER_A))
+        self.assertEqual(result.status_code, 200, result.text)
+        self.assertEqual(result.json()['status'], 'issued')
+        self.assertEqual(wallet.get_identity(wallet_id(HOLDER_A)), wallet.EKYC_DATA)
+
+    def test_passkey_cannot_be_skipped_or_replaced_and_guards_wallet_api(self):
+        owner = wallet_id(HOLDER_A)
+        wallet.save_passkey({'credential_id': 'test', 'public_key': 'test', 'sign_count': 0}, owner)
+        self.assertEqual(self.client.post('/api/passkey/skip', headers=headers(HOLDER_A)).status_code, 409)
+        self.assertEqual(self.client.post('/api/passkey/register/options', headers=headers(HOLDER_A)).status_code, 409)
+        self.assertEqual(self.client.post('/api/issue', json=wallet.EKYC_DATA, headers=headers(HOLDER_A)).status_code, 403)
+        token = passkey.grant(wallet_id(HOLDER_B))
+        bad = {**headers(HOLDER_A), 'X-Wallet-Unlock': token}
+        self.assertEqual(self.client.post('/api/issue', json=wallet.EKYC_DATA, headers=bad).status_code, 403)
+        token = passkey.grant(owner)
+        good = {**headers(HOLDER_A), 'X-Wallet-Unlock': token}
+        self.assertEqual(self.client.post('/api/issue', json=wallet.EKYC_DATA, headers=good).status_code, 200)
+        passkey._unlocks[token] = (owner, time.monotonic() - 1)
+        self.assertEqual(self.client.get('/api/issuance/current', headers=good).status_code, 403)
+
+    def test_reset_requires_issuer_and_preserves_public_key(self):
+        self.assertEqual(self.client.post('/api/reset').status_code, 401)
+        key = issuer.get_public_cred_def()
+        self.pending()
+        self.assertEqual(self.client.post('/api/reset', headers=self.operator_headers).status_code, 200)
+        self.assertEqual(issuance.requests, {})
+        self.assertEqual(issuer.get_public_cred_def(), key)
+
+    def test_approval_rechecks_database_after_inspection(self):
+        rid = self.pending()
+        result = self.client.post(f'/api/issuer/requests/{rid}/check', headers=self.operator_headers)
+        self.assertTrue(result.json()['checks']['database'])
+        issuer.find_by_cccd(wallet.EKYC_DATA['cccd'])['name'] = 'Updated record'
+        self.assertEqual(self.approve(rid).status_code, 409)
+
+    def test_wallet_does_not_receive_issuer_database_fields(self):
+        rid = self.pending({**wallet.EKYC_DATA, 'name': 'Wrong name'})
+        self.assertEqual(self.approve(rid).status_code, 409)
+        result = self.client.get(f'/api/issuance/requests/{rid}', headers=headers(HOLDER_A))
+        self.assertNotIn(wallet.EKYC_DATA['name'], result.text)
+        self.assertNotIn('stored', result.text)
 
 
 if __name__ == "__main__":

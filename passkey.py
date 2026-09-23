@@ -1,6 +1,8 @@
 import base64
 import json
 import os
+import time
+import secrets
 
 import webauthn
 from fastapi import HTTPException
@@ -26,7 +28,29 @@ ORIGINS = [
 
 # Challenge do máy chủ phát, mỗi cái chỉ dùng được một lần. Đây là thứ khiến chữ ký không phát lại
 # được: không có nó thì kẻ bắt được một lần xác thực cũ có thể gửi lại y nguyên để vào ví.
-_challenges: dict[str, bytes] = {}
+_challenges: dict[str, tuple[bytes, str, float]] = {}
+_unlocks: dict[str, tuple[str, float]] = {}
+
+
+def grant(wallet_id: str) -> str:
+    for token, (_, expiry) in list(_unlocks.items()):
+        if expiry <= time.monotonic():
+            del _unlocks[token]
+    token = secrets.token_urlsafe(32)
+    _unlocks[token] = (wallet_id, time.monotonic() + 1800)
+    return token
+
+
+def is_unlocked(wallet_id: str, token: str) -> bool:
+    value = _unlocks.get(token)
+    return bool(value and value[0] == wallet_id and value[1] > time.monotonic())
+
+
+def _challenge(wallet_id: str, purpose: str) -> bytes:
+    value = _challenges.pop(wallet_id, None)
+    if not value or value[1] != purpose or time.monotonic() >= value[2]:
+        raise HTTPException(400, "Challenge đã hết hạn, sai thao tác hoặc đã dùng; thử lại")
+    return value[0]
 
 
 def _b64(data: bytes) -> str:
@@ -39,6 +63,8 @@ def _stored(wallet_id: str) -> dict | None:
 
 
 def registration_options(wallet_id: str, user_name: str) -> dict:
+    if _stored(wallet_id):
+        raise HTTPException(409, "Ví đã có passkey; hãy mở khóa bằng passkey đã đăng ký")
     options = webauthn.generate_registration_options(
         rp_id=RP_ID,
         rp_name=RP_NAME,
@@ -50,14 +76,14 @@ def registration_options(wallet_id: str, user_name: str) -> dict:
             user_verification=UserVerificationRequirement.PREFERRED,
         ),
     )
-    _challenges[wallet_id] = options.challenge
+    _challenges[wallet_id] = (options.challenge, "registration", time.monotonic() + 300)
     return json.loads(webauthn.options_to_json(options))
 
 
 def verify_registration(wallet_id: str, credential: dict) -> None:
-    challenge = _challenges.pop(wallet_id, None)
-    if challenge is None:
-        raise HTTPException(400, "Challenge đã hết hạn hoặc đã dùng rồi — thử tạo lại passkey")
+    if _stored(wallet_id):
+        raise HTTPException(409, "Không thể ghi đè passkey đã đăng ký")
+    challenge = _challenge(wallet_id, "registration")
     try:
         verified = webauthn.verify_registration_response(
             credential=credential,
@@ -89,14 +115,12 @@ def authentication_options(wallet_id: str) -> dict:
         ],
         user_verification=UserVerificationRequirement.PREFERRED,
     )
-    _challenges[wallet_id] = options.challenge
+    _challenges[wallet_id] = (options.challenge, "authentication", time.monotonic() + 300)
     return json.loads(webauthn.options_to_json(options))
 
 
 def verify_authentication(wallet_id: str, credential: dict) -> None:
-    challenge = _challenges.pop(wallet_id, None)
-    if challenge is None:
-        raise HTTPException(400, "Challenge đã hết hạn hoặc đã dùng rồi — thử mở khoá lại")
+    challenge = _challenge(wallet_id, "authentication")
     record = _stored(wallet_id)
     if not record:
         raise HTTPException(400, "Tài khoản này chưa đăng ký passkey nào")

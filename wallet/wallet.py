@@ -17,7 +17,9 @@ def wallet_dir(wallet_id: str) -> Path:
 # hỏi xem tài khoản đã có ví chưa — đều đẻ ra một thư mục rỗng, làm việc đếm ví thành vô nghĩa.
 def write_wallet_file(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    temp = path.with_suffix(".tmp")
+    temp.write_text(text, encoding="utf-8")
+    temp.replace(path)
 
 
 def link_secret_file(wallet_id: str) -> Path:

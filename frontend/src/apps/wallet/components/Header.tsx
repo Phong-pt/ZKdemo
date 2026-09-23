@@ -21,6 +21,7 @@ export function Header({ productName, stageLabel, accountEmail, onRestart, onSig
         <MonoLabel tone="ink-4" tracking="0.04em">
           {stageLabel}
         </MonoLabel>
+        <a href="/issuer" target="_blank" rel="noreferrer" className="text-xs text-ink-3 hover:text-ink">Issuer ↗</a>
         {accountEmail && <div className="text-[12px] text-ink-3 max-w-[220px] truncate">{accountEmail}</div>}
         {accountEmail && onSignOut && (
           <Button variant="secondary" size="sm" pill onClick={onSignOut}>
@@ -28,7 +29,7 @@ export function Header({ productName, stageLabel, accountEmail, onRestart, onSig
           </Button>
         )}
         <Button variant="secondary" size="sm" pill onClick={onRestart}>
-          Restart demo
+          Về màn đăng nhập
         </Button>
       </div>
     </div>

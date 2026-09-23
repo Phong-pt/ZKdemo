@@ -4,8 +4,13 @@ __pycache__/
 issuer/cred_def_public.json
 issuer/issuer_private_key.json
 issuer/ekyc_db.json
+issuer/issuance_requests.json
+issuer/issuance_requests.tmp
 wallet/wallets/
 
 .env
 
 contracts/deployment.json
+contracts/issuer-publication.json
+contracts/issuer-publication.tmp
+contracts/CredentialRegistry.json

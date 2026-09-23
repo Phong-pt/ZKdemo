@@ -1,5 +1,6 @@
 import {
   apiClient,
+  setWalletUnlock,
   type PasskeyCreationOptions,
   type PasskeyRequestOptions,
 } from './apiClient'
@@ -141,7 +142,8 @@ export const walletService = {
     if (!credential) {
       throw new Error('Không tạo được passkey.')
     }
-    await apiClient.passkeyRegisterVerify(encodeAttestation(credential as PublicKeyCredential))
+    const result = await apiClient.passkeyRegisterVerify(encodeAttestation(credential as PublicKeyCredential))
+    setWalletUnlock(result.unlock_token)
   },
 
   async unlockWithPasskey(signal?: AbortSignal): Promise<void> {
@@ -156,6 +158,7 @@ export const walletService = {
     if (!assertion) {
       throw new Error('Không mở được ví bằng passkey.')
     }
-    await apiClient.passkeyLoginVerify(encodeAssertion(assertion as PublicKeyCredential))
+    const result = await apiClient.passkeyLoginVerify(encodeAssertion(assertion as PublicKeyCredential))
+    setWalletUnlock(result.unlock_token)
   },
 }

@@ -4,6 +4,7 @@ export interface ProcessingProps {
   proc: number
   error?: string | null
   onRetry?: () => void
+  onEdit?: () => void
 }
 
 function mark(index: number, current: number): [string, string] {
@@ -13,13 +14,13 @@ function mark(index: number, current: number): [string, string] {
 }
 
 const STEPS = [
-  'Extracting document data',
-  'Matching face to document',
-  'Encrypting credential',
-  'Binding credential to wallet',
+  'Tạo commitment và ZK proof gắn với nonce',
+  'Chờ issuer đối chiếu hồ sơ và duyệt ký mù',
+  'Nhận chữ ký, giải mù và kiểm tra credential',
+  'Lưu credential vào tài khoản ví',
 ]
 
-export function Processing({ proc, error, onRetry }: ProcessingProps) {
+export function Processing({ proc, error, onRetry, onEdit }: ProcessingProps) {
   return (
     <Card
       elevated
@@ -50,14 +51,15 @@ export function Processing({ proc, error, onRetry }: ProcessingProps) {
           </div>
           {onRetry && (
             <Button variant="secondary" className="mt-6" onClick={onRetry}>
-              Quét lại giấy tờ
+              Thử lại
             </Button>
           )}
         </>
       ) : (
         <>
-          <div className="text-[25px] font-medium tracking-[-0.025em]">Securing your identity</div>
-          <div className="text-sm text-ink-3 mt-2.5">We're securely processing your identity information.</div>
+          <div className="text-[25px] font-medium tracking-[-0.025em]">{proc === 2 ? 'Đang chờ issuer duyệt' : 'Đang cấp credential'}</div>
+          <div className="text-sm text-ink-3 mt-2.5">Ví chỉ nhận credential sau khi issuer xác minh và ký yêu cầu.</div>
+          <a className="inline-block mt-4 text-sm text-blue underline" href="/issuer" target="_blank" rel="noreferrer">Mở cổng issuer ở tab mới ↗</a>
           <div className="mt-7 flex flex-col gap-2.5 text-left">
             {STEPS.map((label, i) => {
               const [icon, color] = mark(i + 1, proc)
@@ -70,6 +72,7 @@ export function Processing({ proc, error, onRetry }: ProcessingProps) {
           </div>
         </>
       )}
+      {onEdit && (error || proc === 2) && <button onClick={onEdit} className="mt-5 text-sm underline text-ink-3 cursor-pointer">Hủy yêu cầu và sửa hồ sơ</button>}
     </Card>
   )
 }

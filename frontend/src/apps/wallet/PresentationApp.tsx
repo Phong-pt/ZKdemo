@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { WalletPhone } from '@/apps/verifier/components/WalletPhone'
 import { CLAIMS, CLAIM_TO_BACKEND_ATTR, type PhoneState } from '@/apps/verifier/types'
 import { apiClient, setAuthToken, type VerificationSession } from '@/services/apiClient'
+import { walletService } from '@/services/walletService'
 import { authService, demoAccount, type GoogleAccount } from '@/services/authService'
 
 const DEMO_LABELS = ['nguoi-dung-a', 'nguoi-dung-b']
@@ -165,6 +166,9 @@ function PresentationSession({ sessionId }: { sessionId: string }) {
     setGstep(0)
     setPhone(approve ? 'generating' : 'sent')
     try {
+      if (approve && (await apiClient.me()).wallet_locked) {
+        await walletService.unlockWithPasskey()
+      }
       const attrs = session.revealed_attrs.filter((key) => selected[key])
       const result = approve
         ? await apiClient.approveRequest(sessionId, attrs)

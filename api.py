@@ -2,10 +2,9 @@ import os
 import secrets
 import shutil
 import time
-from threading import RLock
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, Header, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -13,6 +12,7 @@ from pydantic import BaseModel, Field
 import auth
 import chain
 import passkey
+import issuance
 from auth import Account
 from issuer import issuer
 from wallet import wallet
@@ -37,7 +37,8 @@ app.add_middleware(
 )
 
 _session_connections: dict[str, list[WebSocket]] = {}
-_flow_lock = RLock()
+_flow_lock = issuance.lock
+app.include_router(issuance.router)
 _verification_requests: dict[str, dict] = {}
 
 
@@ -78,11 +79,6 @@ class IssueRequest(BaseModel):
     origin: str
     residence: str
     expiry: str
-
-
-class IssueResponse(BaseModel):
-    issued: bool
-    identity: dict[str, str]
 
 
 class VerifyRequest(BaseModel):
@@ -142,78 +138,16 @@ def ekyc_lookup(cccd: str, account: Account = Depends(auth.current_account)) -> 
     return {"origin": record["origin"], "expiry": record["expiry"]}
 
 
-@app.post("/api/issue", response_model=IssueResponse)
-def issue_credential(body: IssueRequest, account: Account = Depends(auth.current_account)) -> IssueResponse:
-    with _flow_lock:
-        return _issue_credential(body, account.wallet_id)
-
-
-def _issue_credential(body: IssueRequest, wallet_id: str) -> IssueResponse:
-    credential = wallet.get_credential(wallet_id)
-    if credential is not None:
-        identity = wallet.get_identity(wallet_id)
-        if identity is None:
-            raise HTTPException(409, "Ví này đang có dữ liệu cũ không hợp lệ. Dùng Restart demo rồi thử lại.")
-        if identity != body.model_dump(exclude={"document_type"}):
-            raise HTTPException(409, "Ví này đã có thẻ định danh của người khác.")
-        return IssueResponse(issued=True, identity=identity)
-
-    attributes = body.model_dump(exclude={"document_type"})
-    if any(not value.strip() for value in attributes.values()):
-        raise HTTPException(400, "Thiếu thông tin — tất cả các trường đều bắt buộc")
-    _check_against_schema(body.document_type, attributes)
-
-    cred_def = issuer.get_public_cred_def()
-    try:
-        nonce = issuer.issue_challenge(attributes)
-    except issuer.EkycMismatchError as mismatch:
-        raise HTTPException(409, str(mismatch)) from mismatch
-    if nonce is None:
-        raise HTTPException(400, "Số căn cước này đã được cấp cho một ví khác.")
-
-    ls = wallet.get_link_secret(wallet_id)
-    v_prime = wallet.generate_blinding_factor()
-    u = wallet.compute_commitment(cred_def["S"], cred_def["R"], cred_def["n"], v_prime, ls)
-    wallet.save_pending_request(nonce, v_prime, ls, wallet_id)
-
-    v_tilde, ls_tilde = wallet.generate_random_exponents()
-    u_prime = wallet.compute_commitment_prime(cred_def["S"], cred_def["R"], cred_def["n"], v_tilde, ls_tilde)
-    c = wallet.compute_challenge(u, u_prime, nonce)
-    v_hat, ls_hat = wallet.compute_responses(c, v_tilde, ls_tilde, v_prime, ls)
-
-    proof = {"nonce": nonce, "u": u, "c": c, "v_hat": v_hat, "ls_hat": ls_hat}
-    signed = issuer.sign_blindly(attributes, proof)
-    wallet.unblind_signature(
-        signed["a"], signed["e"], signed["v_prime_prime"], nonce, attributes, cred_def, wallet_id
-    )
-    wallet.save_identity(attributes, wallet_id)
-
-    return IssueResponse(issued=True, identity=attributes)
+@app.post("/api/issue")
+def issue_credential(body: IssueRequest, account: Account = Depends(auth.wallet_account)) -> dict:
+    # Compatibility URL now enters the same approval queue; it cannot bypass the issuer.
+    return issuance.submit(issuance.Submission(**body.model_dump()), account)
 
 
 @app.post("/api/verify", response_model=VerifyResponse)
-def verify(body: VerifyRequest, account: Account = Depends(auth.current_account)) -> VerifyResponse:
+def verify(body: VerifyRequest, account: Account = Depends(auth.wallet_account)) -> VerifyResponse:
     with _flow_lock:
         return _verify(body, account.wallet_id)
-
-
-def _check_against_schema(document_type: str, attributes: dict) -> None:
-    """Issuer chỉ ký được thứ nó đã đăng ký khuôn mẫu trên chain. Quét bằng lái hay hộ chiếu ra một
-    bộ thuộc tính khác thì dừng ở đây, không có khoá nào để ký nó."""
-    allowed, source = chain.resolve_attributes()
-    schema_name = chain.get_schema()["name"] if source == "chain" else "nationalIdentity"
-    if document_type != schema_name:
-        raise HTTPException(
-            400,
-            f"Chưa hỗ trợ loại giấy tờ này — hiện chỉ cấp cho {schema_name}.",
-        )
-    if set(attributes) != set(allowed):
-        missing = sorted(set(allowed) - set(attributes))
-        extra = sorted(set(attributes) - set(allowed))
-        raise HTTPException(
-            400,
-            f"Bộ thuộc tính không khớp schema '{schema_name}' trên chain — thiếu {missing}, thừa {extra}.",
-        )
 
 
 def _verify(body: VerifyRequest, wallet_id: str) -> VerifyResponse:
@@ -290,7 +224,7 @@ def get_request(session_id: str) -> dict:
 
 @app.post("/api/requests/{session_id}/approve")
 def approve_request(
-    session_id: str, body: PresentationApproval, account: Account = Depends(auth.current_account)
+    session_id: str, body: PresentationApproval, account: Account = Depends(auth.wallet_account)
 ) -> dict:
     with _flow_lock:
         session = _request(session_id)
@@ -324,40 +258,49 @@ def verifier_login(account: Account = Depends(auth.current_account)) -> Verifier
 
 @app.post("/api/passkey/register/options")
 def passkey_register_options(account: Account = Depends(auth.current_account)) -> dict:
-    return passkey.registration_options(account.wallet_id, account.name or account.email)
+    with _flow_lock:
+        return passkey.registration_options(account.wallet_id, account.name or account.email)
 
 
 @app.post("/api/passkey/register/verify")
 def passkey_register_verify(
     body: dict, account: Account = Depends(auth.current_account)
-) -> dict[str, bool]:
-    passkey.verify_registration(account.wallet_id, body)
-    return {"verified": True}
+) -> dict:
+    with _flow_lock:
+        passkey.verify_registration(account.wallet_id, body)
+        return {"verified": True, "unlock_token": passkey.grant(account.wallet_id)}
 
 
 @app.post("/api/passkey/login/options")
 def passkey_login_options(account: Account = Depends(auth.current_account)) -> dict:
-    return passkey.authentication_options(account.wallet_id)
+    with _flow_lock:
+        return passkey.authentication_options(account.wallet_id)
 
 
 @app.post("/api/passkey/login/verify")
 def passkey_login_verify(
     body: dict, account: Account = Depends(auth.current_account)
-) -> dict[str, bool]:
-    passkey.verify_authentication(account.wallet_id, body)
-    return {"verified": True}
+) -> dict:
+    with _flow_lock:
+        passkey.verify_authentication(account.wallet_id, body)
+        return {"verified": True, "unlock_token": passkey.grant(account.wallet_id)}
 
 
 @app.post("/api/passkey/skip")
 def passkey_skip(account: Account = Depends(auth.current_account)) -> dict[str, bool]:
-    """Máy không có thiết bị xác thực: ghi nhận ví đã cài nhưng không có passkey nào bảo vệ."""
-    wallet.save_passkey(None, account.wallet_id)
-    return {"saved": True}
+    with _flow_lock:
+        """Máy không có thiết bị xác thực: ghi nhận ví đã cài nhưng không có passkey nào bảo vệ."""
+        stored = wallet.get_passkey(account.wallet_id)
+        if stored and stored["passkey"]:
+            raise HTTPException(409, "Ví đã có passkey; cần xác thực bằng passkey đã đăng ký")
+        wallet.save_passkey(None, account.wallet_id)
+        return {"saved": True}
 
 
 @app.get("/api/me")
-def me(account: Account = Depends(auth.current_account)) -> dict:
+def me(account: Account = Depends(auth.current_account), x_wallet_unlock: str = Header(default="")) -> dict:
     stored = wallet.get_passkey(account.wallet_id)
+    locked = bool(stored and stored["passkey"] and not passkey.is_unlocked(account.wallet_id, x_wallet_unlock))
     _recent_logins.append({
         "at": round(time.time() - SERVER_STARTED_AT),
         "wallet": account.wallet_id[:8],
@@ -370,20 +313,22 @@ def me(account: Account = Depends(auth.current_account)) -> dict:
         "name": account.name,
         "wallet_id": account.wallet_id,
         "has_credential": wallet.get_credential(account.wallet_id) is not None,
-        "identity": wallet.get_identity(account.wallet_id),
+        "identity": None if locked else wallet.get_identity(account.wallet_id),
+        "wallet_locked": locked,
         "wallet_ready": stored is not None,
         "has_passkey": bool(stored and stored["passkey"]),
     }
 
 
-@app.post("/api/reset")
+@app.post("/api/reset", dependencies=[Depends(issuance.operator)])
 def reset() -> dict[str, bool]:
     with _flow_lock:
         return _reset()
 
 
 def _reset() -> dict[str, bool]:
-    for state_file in [issuer.PUBLIC_CREDDEF_FILE, issuer.PRIVATE_KEY_FILE, issuer.EKYC_DB_FILE]:
+    # Keep issuer keys stable: published credential definitions are immutable.
+    for state_file in [issuer.EKYC_DB_FILE]:
         if state_file.exists():
             state_file.unlink()
     if wallet.WALLETS_DIR.exists():
@@ -391,6 +336,10 @@ def _reset() -> dict[str, bool]:
     issuer._pending_nonces.clear()
     verifier._pending_sessions.clear()
     _verification_requests.clear()
+    issuance.requests.clear()
+    issuance.persist()
+    passkey._challenges.clear()
+    passkey._unlocks.clear()
     issuer.EKYC_DB[:] = [dict(record) for record in issuer.SEED_EKYC_DB]
     return {"reset": True}
 

@@ -2,12 +2,14 @@ import json
 import os
 import secrets
 from pathlib import Path
+from threading import RLock
 
 import gmpy2
 
 from common import encode_attribute, hash_three
 
 ISSUER_DIR = Path(__file__).resolve().parent
+_key_lock = RLock()
 PUBLIC_CREDDEF_FILE = ISSUER_DIR / "cred_def_public.json"
 PRIVATE_KEY_FILE = ISSUER_DIR / "issuer_private_key.json"
 EKYC_DB_FILE = ISSUER_DIR / "ekyc_db.json"
@@ -258,15 +260,21 @@ def setup(bits: int = 1024) -> dict:
 
 
 def get_public_cred_def(bits: int = 1024) -> dict:
-    if not PUBLIC_CREDDEF_FILE.exists():
-        setup(bits)
-    return json.loads(PUBLIC_CREDDEF_FILE.read_text(encoding="utf-8"))
+    with _key_lock:
+        if not PUBLIC_CREDDEF_FILE.exists():
+            if PRIVATE_KEY_FILE.exists():
+                raise RuntimeError("Thiếu khóa công khai; cần khôi phục cặp khóa issuer")
+            setup(bits)
+        return json.loads(PUBLIC_CREDDEF_FILE.read_text(encoding="utf-8"))
 
 
 def get_private_key() -> dict:
-    if not PRIVATE_KEY_FILE.exists():
-        setup()
-    return json.loads(PRIVATE_KEY_FILE.read_text(encoding="utf-8"))
+    with _key_lock:
+        if not PRIVATE_KEY_FILE.exists():
+            if PUBLIC_CREDDEF_FILE.exists():
+                raise RuntimeError("Thiếu khóa riêng; không thể ký với khóa issuer đã công bố")
+            setup()
+        return json.loads(PRIVATE_KEY_FILE.read_text(encoding="utf-8"))
 
 
 def find_ekyc_record(**attributes) -> dict | None:

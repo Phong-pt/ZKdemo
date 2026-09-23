@@ -18,10 +18,10 @@ class ChainNotConfigured(RuntimeError):
 def _deployment() -> dict:
     stored = json.loads(REGISTRY_FILE.read_text(encoding="utf-8")) if REGISTRY_FILE.exists() else {}
     return {
-        "rpc_url": os.environ.get("SEPOLIA_RPC_URL", stored.get("rpc_url", "")),
-        "address": os.environ.get("CREDENTIAL_REGISTRY_ADDRESS", stored.get("address", "")),
-        "schema_id": os.environ.get("SCHEMA_ID", stored.get("schema_id", "")),
-        "cred_def_id": os.environ.get("CREDENTIAL_DEFINITION_ID", stored.get("cred_def_id", "")),
+        "rpc_url": os.environ.get("SEPOLIA_RPC_URL") or stored.get("rpc_url", ""),
+        "address": os.environ.get("CREDENTIAL_REGISTRY_ADDRESS") or stored.get("address", ""),
+        "schema_id": os.environ.get("SCHEMA_ID") or stored.get("schema_id", ""),
+        "cred_def_id": os.environ.get("CREDENTIAL_DEFINITION_ID") or stored.get("cred_def_id", ""),
         "chain_id": stored.get("chain_id", 11155111),
         "explorer": stored.get("explorer", "https://sepolia.etherscan.io"),
     }
@@ -154,7 +154,9 @@ def status() -> dict:
 
         from issuer import issuer
 
-        info["matches_local_key"] = get_cred_def()["n"] == issuer.get_public_cred_def()["n"]
+        published = get_cred_def()
+        local = issuer.get_public_cred_def()
+        info["matches_local_key"] = all(published[k] == local[k] for k in ("n", "S", "R", "Z", "R_attrs"))
     except Exception as error:
         info["reachable"] = False
         info["error"] = str(error)
