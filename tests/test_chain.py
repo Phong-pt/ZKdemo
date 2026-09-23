@@ -113,7 +113,12 @@ class RegistryOnChainTests(unittest.TestCase):
             {"from": self.outsider}
         )
         catalog = chain.list_registered_schemas()
-        discovered = next(schema for schema in catalog["schemas"] if schema["name"] == "drivingLicence")
+        # Lọc theo cả issuer: một test khác cũng đăng ký tên drivingLicence từ ví issuer, và việc
+        # hai ví dùng chung một tên schema mà không đụng nhau chính là điều cần kiểm ở đây.
+        discovered = next(
+            schema for schema in catalog["schemas"]
+            if schema["name"] == "drivingLicence" and schema["issuer"] == self.outsider
+        )
         self.assertEqual(discovered["issuer"], self.outsider)
         self.assertEqual(discovered["attributes"], ["licence_number"])
         self.assertTrue(discovered["fingerprint"].startswith("sha256:"))
