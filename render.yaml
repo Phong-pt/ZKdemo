@@ -26,22 +26,35 @@ services:
         value: zkp-demo-53g9.onrender.com
       - key: WEBAUTHN_ORIGIN
         value: https://zkp-demo-53g9.onrender.com
-      # Cấu hình khi muốn công bố schema/khóa issuer lên Sepolia.
-      - key: SEPOLIA_RPC_URL
-        sync: false
-      - key: ISSUER_PRIVATE_KEY
-        sync: false
-      # Secret seed for the CL signing key. Render generates it once; keep it stable across deploys.
+      # Seed sinh khoá CL của issuer. Render sinh một lần rồi giữ nguyên qua các lần deploy, nên
+      # khoá ký credential tái tạo được dù gói free không có ổ đĩa bền.
+      # QUAN TRỌNG nếu bật phần chain bên dưới: khoá công khai trên chain là BẤT BIẾN, nên seed ở
+      # đây phải đúng seed đã dùng lúc công bố credential definition. Seed khác nghĩa là issuer ký
+      # bằng một khoá khác khoá trên chain, và mọi proof sẽ bị từ chối. Kiểm bằng
+      # GET /api/chain — trường matches_local_key phải là true.
       - key: ISSUER_CL_KEY_SEED
         generateValue: true
-      # Auto deploy the registry and publish the schema/key on backend startup when Sepolia
-      # credentials above are configured. Set these three values after the first deployment
-      # so the free Render instance can reuse the same registry after a restart.
-      - key: AUTO_PUBLISH_REGISTRY
-        value: "true"
+
+      # --- Chain (tuỳ chọn; để trống thì demo chạy hoàn toàn off-chain) ---
+      # Không đặt bốn biến dưới đây thì chain tắt: verifier đọc schema và khoá công khai từ file
+      # cục bộ của issuer, ba vai vẫn chạy đủ. Đây là mặc định an toàn cho Render.
+      #
+      # Muốn bật, đặt CẢ BỐN cùng lúc, và chỉ sau khi registry đã được công bố từ một máy có ổ đĩa
+      # bền (xem README). Lấy ba giá trị id trong contracts/deployment.json của máy đó.
+      - key: SEPOLIA_RPC_URL
+        sync: false
       - key: CREDENTIAL_REGISTRY_ADDRESS
         sync: false
       - key: SCHEMA_ID
         sync: false
       - key: CREDENTIAL_DEFINITION_ID
         sync: false
+
+      # Phải là "false" trên Render. Gói free không có ổ đĩa bền, nên nhật ký công bố
+      # (contracts/issuer-publication.json) mất sau mỗi lần deploy hoặc service ngủ dậy. Để "true"
+      # cùng với ISSUER_PRIVATE_KEY thì mỗi lần khởi động lại nó lại thấy "chưa công bố" và
+      # DEPLOY MỘT CONTRACT MỚI. Việc công bố phải làm một lần, ở nơi giữ được nhật ký.
+      - key: AUTO_PUBLISH_REGISTRY
+        value: "false"
+      # ISSUER_PRIVATE_KEY có chủ ý không nằm ở đây: không có khoá ký giao dịch thì backend này
+      # không thể ghi lên chain, dù holder eKYC bao nhiêu lần. Nó chỉ đọc.
