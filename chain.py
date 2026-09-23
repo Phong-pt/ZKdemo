@@ -34,7 +34,14 @@ def is_configured() -> bool:
 
 
 def abi() -> list:
-    return json.loads(ARTIFACT_FILE.read_text(encoding="utf-8"))["abi"]
+    if ARTIFACT_FILE.exists():
+        return json.loads(ARTIFACT_FILE.read_text(encoding="utf-8"))["abi"]
+    # Bản biên dịch không nằm trong repo và ổ đĩa của Render không bền, nên nó có thể vắng mặt
+    # ngay cả khi registry đã được công bố từ lâu. Compile lại từ .sol thay vì để mọi thao tác đọc
+    # chain chết vì thiếu một file build.
+    import registry_publish
+
+    return registry_publish.artifact()["abi"]
 
 
 def _contract():
