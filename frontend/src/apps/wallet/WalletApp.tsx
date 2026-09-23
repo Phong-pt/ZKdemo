@@ -275,8 +275,34 @@ export function WalletApp() {
       step: 'handoff',
       handoffSessionId: crypto.randomUUID(),
       marks: 0,
+      simulatingHandoff: false,
+      handoffError: null,
     }))
   }, [])
+
+  // Mô phỏng đúng chuỗi sự kiện điện thoại đẩy về: nối máy, quét mặt trước kèm dữ liệu thẻ, mặt
+  // sau, khuôn mặt, xong. Dữ liệu là một hồ sơ thật trong cơ sở dữ liệu căn cước của issuer, nên
+  // bước duyệt ở cổng issuer vẫn đối chiếu từng trường như với thẻ quét thật.
+  const simulateHandoff = useCallback(() => {
+    const id = ++requestId.current
+    setState((s) => ({ ...s, simulatingHandoff: true, handoffError: null }))
+    apiClient
+      .ekycDemoRecord()
+      .then((record) => {
+        if (requestId.current !== id) return
+        setState((s) => ({ ...s, marks: 1 }))
+        after(450, () => setState((s) => ({ ...s, marks: 2, identityForm: { ...record } })))
+        after(900, () => setState((s) => ({ ...s, marks: 3 })))
+        after(1350, () => setState((s) => ({ ...s, marks: 4 })))
+        after(1800, () => setState((s) => ({ ...s, marks: 5 })))
+        after(2500, () => setState((s) => ({ ...s, step: 'kycreview', simulatingHandoff: false })))
+      })
+      .catch((err: unknown) => {
+        if (requestId.current !== id) return
+        const message = err instanceof Error ? err.message : 'Không lấy được hồ sơ căn cước mẫu'
+        setState((s) => ({ ...s, simulatingHandoff: false, handoffError: message }))
+      })
+  }, [after])
 
   useEffect(() => {
     if (state.step !== 'handoff') return
@@ -455,7 +481,15 @@ export function WalletApp() {
       )}
 
       {state.step === 'kycdoc' && <KycDocPicker onPickDocument={pickDocument} />}
-      {state.step === 'handoff' && <Handoff sessionId={state.handoffSessionId} marks={state.marks} />}
+      {state.step === 'handoff' && (
+        <Handoff
+          sessionId={state.handoffSessionId}
+          marks={state.marks}
+          simulating={state.simulatingHandoff}
+          error={state.handoffError}
+          onSimulate={simulateHandoff}
+        />
+      )}
       {state.step === 'kycreview' && (
         <KycReview
           form={state.identityForm}

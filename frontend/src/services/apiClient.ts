@@ -160,6 +160,8 @@ export const apiClient = {
   // Hai trường mã QR trên thẻ không chứa, lấy từ hồ sơ issuer theo số CCCD vừa quét được.
   ekycLookup: (cccd: string) =>
     apiFetch<{ origin: string; expiry: string }>(`/ekyc/lookup?cccd=${encodeURIComponent(cccd)}`),
+  // Một hồ sơ căn cước mẫu chưa được cấp, dùng cho nút mô phỏng quét thẻ ở màn QR.
+  ekycDemoRecord: () => apiFetch<IdentityAttributes>('/ekyc/demo-record'),
   submitIssuance: (identity: IdentityAttributes) =>
     apiFetch<IssuanceRequest>('/issuance/requests', { method: 'POST', body: JSON.stringify(identity) }),
   currentIssuance: () => apiFetch<(IssuanceRequest & { attributes: IdentityAttributes }) | null>('/issuance/current'),

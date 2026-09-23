@@ -46,6 +46,9 @@ export interface WalletState {
   cardOpen: boolean
   handoffSessionId: string
   marks: number
+  // Nút mô phỏng ở màn QR: đang chạy, và lỗi nếu không lấy được hồ sơ mẫu từ issuer.
+  simulatingHandoff: boolean
+  handoffError: string | null
   identityForm: IdentityForm
   proc: number
   processingError: string | null
@@ -93,6 +96,8 @@ export function createInitialWalletState(): WalletState {
     cardOpen: false,
     handoffSessionId: crypto.randomUUID(),
     marks: 0,
+    simulatingHandoff: false,
+    handoffError: null,
     identityForm: { ...EMPTY_IDENTITY_FORM },
     proc: 0,
     processingError: null,

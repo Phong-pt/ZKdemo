@@ -6,6 +6,9 @@ import { mobileCaptureUrl } from '../handoffProtocol'
 export interface HandoffProps {
   sessionId: string
   marks: number
+  simulating: boolean
+  error: string | null
+  onSimulate: () => void
 }
 
 function mark(index: number, current: number): [string, string] {
@@ -22,7 +25,7 @@ const CHECKLIST_LABELS = [
   'Secure verification',
 ]
 
-export function Handoff({ sessionId, marks }: HandoffProps) {
+export function Handoff({ sessionId, marks, simulating, error, onSimulate }: HandoffProps) {
   const url = mobileCaptureUrl(sessionId)
   const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname)
   const syncWidth = 50 + marks * 10
@@ -72,11 +75,26 @@ export function Handoff({ sessionId, marks }: HandoffProps) {
             </div>
           </div>
         </div>
-        <div className="text-xs text-ink-5 mt-7">
-          {isLocalhost
-            ? 'Bạn đang mở trang ở "localhost" nên điện thoại không mở được link này — chạy qua địa chỉ mạng nội bộ của máy, hoặc dùng bản deploy công khai.'
-            : 'Điện thoại không cần cùng mạng với máy tính này — chỉ cần có Internet là quét được.'}
-        </div>
+        <button
+          type="button"
+          onClick={onSimulate}
+          disabled={simulating || marks > 0}
+          className="w-full mt-8 py-3.5 border border-line rounded-[13px] text-sm text-ink-3 bg-bg-surface transition-[border-color,color,transform] duration-150 ease-out hover:border-ink hover:text-ink hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer"
+        >
+          {simulating ? 'Đang mô phỏng…' : 'Mô phỏng đã quét bằng điện thoại'}
+        </button>
+        {error && (
+          <div role="alert" className="text-[13px] mt-3" style={{ color: '#B4763A' }}>
+            {error}
+          </div>
+        )}
+
+        {isLocalhost && (
+          <div className="text-xs text-ink-5 mt-7">
+            Bạn đang mở trang ở "localhost" nên điện thoại không mở được link này — chạy qua địa chỉ
+            mạng nội bộ của máy, hoặc dùng bản deploy công khai.
+          </div>
+        )}
       </div>
     </Card>
   )

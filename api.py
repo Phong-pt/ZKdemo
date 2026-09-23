@@ -187,6 +187,18 @@ def ekyc_lookup(cccd: str, account: Account = Depends(auth.current_account)) -> 
     return {"origin": record["origin"], "expiry": record["expiry"]}
 
 
+@app.get("/api/ekyc/demo-record")
+def ekyc_demo_record(account: Account = Depends(auth.current_account)) -> dict[str, str]:
+    """Một hồ sơ căn cước bất kỳ chưa được cấp credential, để mô phỏng bước quét thẻ bằng điện
+    thoại khi thử demo trên một máy. Cơ sở dữ liệu này là dữ liệu giả lập và đã công khai trong
+    danh-sach-cccd-demo.txt, nên ở đây không có dữ liệu thật nào bị lộ."""
+    available = [record for record in issuer.EKYC_DB if not record["credential_issued"]]
+    if not available:
+        raise HTTPException(409, "Mọi hồ sơ căn cước mẫu đều đã được cấp credential; hãy reset demo")
+    record = secrets.choice(available)
+    return {name: record[name] for name in issuer.ATTRIBUTE_NAMES}
+
+
 @app.post("/api/issue")
 def issue_credential(body: IssueRequest, account: Account = Depends(auth.wallet_account)) -> dict:
     # Compatibility URL now enters the same approval queue; it cannot bypass the issuer.
