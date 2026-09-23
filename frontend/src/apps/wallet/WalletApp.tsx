@@ -267,31 +267,15 @@ export function WalletApp() {
   }, [])
 
   const startKyc = useCallback(() => setState((s) => ({ ...s, step: 'kycdoc' })), [])
-  const pickDocument = useCallback(
-    () => setState((s) => ({ ...s, step: 'handoff', kycMode: 'scan' })),
-    [],
-  )
-
-  // Đường demo: không có điện thoại và không có ảnh chụp, người dùng tự nhập một hồ sơ có trong
-  // cơ sở dữ liệu căn cước của issuer. Từ bước xác nhận trở đi thì y như luồng quét.
-  const startDemoKyc = useCallback(
-    () =>
-      setState((s) => ({
-        ...s,
-        step: 'kycreview',
-        kycMode: 'demo',
-        marks: 0,
-        identityForm: { ...EMPTY_IDENTITY_FORM },
-      })),
-    [],
-  )
+  const pickDocument = useCallback(() => setState((s) => ({ ...s, step: 'handoff' })), [])
 
   const rescan = useCallback(() => {
-    setState((s) =>
-      s.kycMode === 'demo'
-        ? { ...s, step: 'kycdoc' }
-        : { ...s, step: 'handoff', handoffSessionId: crypto.randomUUID(), marks: 0 },
-    )
+    setState((s) => ({
+      ...s,
+      step: 'handoff',
+      handoffSessionId: crypto.randomUUID(),
+      marks: 0,
+    }))
   }, [])
 
   useEffect(() => {
@@ -470,14 +454,11 @@ export function WalletApp() {
         <IdentityCardModal account={state.account} identity={state.verifiedIdentity} onClose={closeCard} />
       )}
 
-      {state.step === 'kycdoc' && (
-        <KycDocPicker onPickDocument={pickDocument} onDemoKyc={startDemoKyc} />
-      )}
+      {state.step === 'kycdoc' && <KycDocPicker onPickDocument={pickDocument} />}
       {state.step === 'handoff' && <Handoff sessionId={state.handoffSessionId} marks={state.marks} />}
       {state.step === 'kycreview' && (
         <KycReview
           form={state.identityForm}
-          mode={state.kycMode}
           onChange={onIdentityFieldChange}
           onRetake={rescan}
           onSubmit={() => startProcessing()}

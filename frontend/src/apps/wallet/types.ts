@@ -18,8 +18,6 @@ export type Step =
 
 export type InstallState = 'idle' | 'busy' | 'done'
 export type PasskeyState = 'idle' | 'scanning' | 'done'
-// 'scan' đi qua điện thoại và mã QR; 'demo' nhập tay ngay trên máy này.
-export type KycMode = 'scan' | 'demo'
 
 // Khớp đúng tám trường in trên mặt trước CCCD, cùng thứ tự với issuer.ATTRIBUTE_NAMES.
 export interface IdentityForm {
@@ -48,7 +46,6 @@ export interface WalletState {
   cardOpen: boolean
   handoffSessionId: string
   marks: number
-  kycMode: KycMode
   identityForm: IdentityForm
   proc: number
   processingError: string | null
@@ -96,7 +93,6 @@ export function createInitialWalletState(): WalletState {
     cardOpen: false,
     handoffSessionId: crypto.randomUUID(),
     marks: 0,
-    kycMode: 'scan',
     identityForm: { ...EMPTY_IDENTITY_FORM },
     proc: 0,
     processingError: null,

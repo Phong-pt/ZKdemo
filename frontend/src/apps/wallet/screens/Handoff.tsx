@@ -72,12 +72,11 @@ export function Handoff({ sessionId, marks }: HandoffProps) {
             </div>
           </div>
         </div>
-        {isLocalhost && (
-          <div className="text-xs text-ink-5 mt-7">
-            Bạn đang mở trang ở "localhost" nên điện thoại không mở được link này — chạy qua địa chỉ
-            mạng nội bộ của máy, hoặc dùng bản deploy công khai.
-          </div>
-        )}
+        <div className="text-xs text-ink-5 mt-7">
+          {isLocalhost
+            ? 'Bạn đang mở trang ở "localhost" nên điện thoại không mở được link này — chạy qua địa chỉ mạng nội bộ của máy, hoặc dùng bản deploy công khai.'
+            : 'Điện thoại không cần cùng mạng với máy tính này — chỉ cần có Internet là quét được.'}
+        </div>
       </div>
     </Card>
   )

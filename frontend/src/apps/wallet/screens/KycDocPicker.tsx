@@ -3,10 +3,9 @@ import { KycProgressHeader } from '../components/KycProgressHeader'
 
 export interface KycDocPickerProps {
   onPickDocument: () => void
-  onDemoKyc: () => void
 }
 
-export function KycDocPicker({ onPickDocument, onDemoKyc }: KycDocPickerProps) {
+export function KycDocPicker({ onPickDocument }: KycDocPickerProps) {
   return (
     <Card
       elevated
@@ -75,22 +74,6 @@ export function KycDocPicker({ onPickDocument, onDemoKyc }: KycDocPickerProps) {
             <div>
               <div className="text-[15px] font-medium">Passport</div>
               <div className="text-xs text-ink-4 mt-0.5">Photo page only</div>
-            </div>
-          </div>
-
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={onDemoKyc}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') onDemoKyc()
-            }}
-            className="flex items-center gap-4 p-5 border border-line rounded-2xl transition-[border-color,transform] duration-150 ease-out hover:border-ink hover:-translate-y-0.5 cursor-pointer"
-          >
-            <div className="w-[46px] h-8 rounded-md border border-dashed border-ink-4" />
-            <div>
-              <div className="text-[15px] font-medium">Demo eKYC</div>
-              <div className="text-xs text-ink-4 mt-0.5">Nhập tay, không cần điện thoại</div>
             </div>
           </div>
         </div>

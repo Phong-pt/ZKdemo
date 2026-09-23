@@ -1,10 +1,9 @@
 import { Card } from '@/components/primitives'
 import { KycProgressHeader } from '../components/KycProgressHeader'
-import type { IdentityForm, KycMode } from '../types'
+import type { IdentityForm } from '../types'
 
 export interface KycReviewProps {
   form: IdentityForm
-  mode: KycMode
   onChange: (field: keyof IdentityForm, value: string) => void
   onRetake: () => void
   onSubmit: () => void
@@ -24,9 +23,8 @@ const FIELDS: Array<[key: keyof IdentityForm, label: string, placeholder: string
 const inputClass =
   'w-full px-[15px] py-3.5 border border-line rounded-xl text-sm bg-bg-sunken transition-colors duration-150 ease-out focus:outline-none focus:border-blue'
 
-export function KycReview({ form, mode, onChange, onRetake, onSubmit }: KycReviewProps) {
+export function KycReview({ form, onChange, onRetake, onSubmit }: KycReviewProps) {
   const complete = Object.values(form).every((value) => value.trim().length > 0)
-  const scanned = mode === 'scan'
 
   return (
     <Card
@@ -42,24 +40,20 @@ export function KycReview({ form, mode, onChange, onRetake, onSubmit }: KycRevie
 
       <div className="px-8 py-9">
         <div className="text-[26px] font-medium tracking-[-0.028em]">Confirm your details</div>
-        {scanned && (
-          <div className="text-sm text-ink-3 mt-2.5">
-            We read this from your ID automatically — fix anything that isn't right before continuing.
-          </div>
-        )}
+        <div className="text-sm text-ink-3 mt-2.5">
+          We read this from your ID automatically — fix anything that isn't right before continuing.
+        </div>
 
         <div className="flex gap-4 mt-5 items-center flex-wrap">
-          {scanned && (
-            <div className="text-[13px] text-ink-4">
-              Ảnh chụp không rời khỏi điện thoại và không được lưu lại.
-            </div>
-          )}
+          <div className="text-[13px] text-ink-4">
+            Ảnh chụp không rời khỏi điện thoại và không được lưu lại.
+          </div>
           <button
             type="button"
             onClick={onRetake}
             className="text-[13px] text-ink-3 cursor-pointer self-center transition-colors duration-150 ease-out hover:text-ink"
           >
-            {scanned ? 'Scan again' : 'Chọn cách khác'}
+            Scan again
           </button>
         </div>
 
