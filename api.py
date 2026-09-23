@@ -1,3 +1,5 @@
+import asyncio
+from contextlib import asynccontextmanager
 import os
 import secrets
 import shutil
@@ -13,12 +15,30 @@ import auth
 import chain
 import passkey
 import issuance
+import registry_publish
 from auth import Account
 from issuer import issuer
 from wallet import wallet
 from verifier import verifier
 
-app = FastAPI(title="ZKP demo API")
+_registry_startup_task: asyncio.Task | None = None
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    global _registry_startup_task
+    enabled = os.environ.get("AUTO_PUBLISH_REGISTRY", "true").strip().lower() not in {
+        "0", "false", "no", "off"
+    }
+    configured = bool(os.environ.get("SEPOLIA_RPC_URL") and os.environ.get("ISSUER_PRIVATE_KEY"))
+    if enabled and configured and registry_publish.needs_publish(recover_in_progress=True):
+        # Submit the deployment in the background so Render's health check can serve while
+        # Sepolia mines the contract, schema, and issuer public-key transactions.
+        _registry_startup_task = asyncio.create_task(asyncio.to_thread(registry_publish.publish))
+    yield
+
+
+app = FastAPI(title="ZKP demo API", lifespan=lifespan)
 
 SERVER_STARTED_AT = time.time()
 

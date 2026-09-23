@@ -33,9 +33,10 @@ def status():
             "schema_name": "nationalIdentity", "schema_version": "1.0", "attributes": issuer.ATTRIBUTE_NAMES}
 
 
-def needs_publish():
+def needs_publish(recover_in_progress=False):
     try:
-        return read().get("state") not in ("published", "publishing")
+        state = read().get("state")
+        return state != "published" and (recover_in_progress or state != "publishing")
     except (OSError, ValueError):
         return True
 

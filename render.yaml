@@ -31,3 +31,14 @@ services:
         sync: false
       - key: ISSUER_PRIVATE_KEY
         sync: false
+      # Auto deploy the registry and publish the schema/key on backend startup when Sepolia
+      # credentials above are configured. Set these three values after the first deployment
+      # so the free Render instance can reuse the same registry after a restart.
+      - key: AUTO_PUBLISH_REGISTRY
+        value: "true"
+      - key: CREDENTIAL_REGISTRY_ADDRESS
+        sync: false
+      - key: SCHEMA_ID
+        sync: false
+      - key: CREDENTIAL_DEFINITION_ID
+        sync: false

@@ -70,6 +70,11 @@ class PublicationTests(unittest.TestCase):
         self.assertEqual(registry_publish.status()['state'], 'published')
         self.assertEqual(self.w3.eth.block_number, before)
 
+    def test_startup_can_resume_a_publication_interrupted_midflight(self):
+        registry_publish.save({"state": "publishing", "transactions": {}})
+        self.assertFalse(registry_publish.needs_publish())
+        self.assertTrue(registry_publish.needs_publish(recover_in_progress=True))
+
     def test_changed_key_cannot_claim_existing_registry_matches(self):
         registry_publish.publish()
         with patch.object(issuer, 'get_public_cred_def', return_value={**CRED_DEF, 'Z': 17}):
