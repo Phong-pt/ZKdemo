@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { addressUrl, readContractUrl, txUrl } from '@/lib/explorer'
 
 type Checks = {
   database: boolean
@@ -124,6 +125,7 @@ function Blockchain({
   const address = registry.address || registry.onchain.address
   const schemaId = registry.schema_id || registry.onchain.schema_id
   const credDefId = registry.cred_def_id || registry.onchain.cred_def_id
+  const issuerAddress = registry.issuer_address || registry.onchain.issuer_address
   return (
     <div className="space-y-5">
       <div className={section}>
@@ -229,7 +231,7 @@ function Blockchain({
             target="_blank"
             rel="noreferrer"
             className="block text-blue font-mono text-xs break-all my-4"
-            href={`https://sepolia.etherscan.io/address/${address}`}
+            href={addressUrl(address)}
           >
             Contract: {address} ↗
           </a>
@@ -259,7 +261,7 @@ function Blockchain({
               target="_blank"
               rel="noreferrer"
               className="block font-mono text-xs text-blue break-all mt-2"
-              href={`https://sepolia.etherscan.io/tx/${tx.hash}`}
+              href={txUrl(tx.hash)}
             >
               {tx.hash} ↗
             </a>
@@ -271,11 +273,36 @@ function Blockchain({
           </div>
         ))}
         {schemaId && (
-          <div className="text-xs text-ink-3 break-all font-mono mt-4">
-            Schema ID: {schemaId}
-            <br />
-            Credential definition: {credDefId}
-            {registry.schema_fingerprint && <><br />Schema fingerprint: {registry.schema_fingerprint}</>}
+          <div className="text-xs text-ink-3 break-all font-mono mt-4 space-y-2">
+            <div>
+              Schema ID:{' '}
+              {address ? (
+                <a className="text-blue" target="_blank" rel="noreferrer" href={readContractUrl(address)}>
+                  {schemaId} ↗
+                </a>
+              ) : (
+                schemaId
+              )}
+            </div>
+            <div>
+              Credential definition:{' '}
+              {address && credDefId ? (
+                <a className="text-blue" target="_blank" rel="noreferrer" href={readContractUrl(address)}>
+                  {credDefId} ↗
+                </a>
+              ) : (
+                credDefId
+              )}
+            </div>
+            {issuerAddress && (
+              <div>
+                Issuer:{' '}
+                <a className="text-blue" target="_blank" rel="noreferrer" href={addressUrl(issuerAddress)}>
+                  {issuerAddress} ↗
+                </a>
+              </div>
+            )}
+            {registry.schema_fingerprint && <div>Schema fingerprint: {registry.schema_fingerprint}</div>}
           </div>
         )}
       </div>

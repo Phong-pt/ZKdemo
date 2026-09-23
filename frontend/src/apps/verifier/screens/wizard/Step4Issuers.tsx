@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { addressUrl, readContractUrl } from '@/lib/explorer'
 import { apiClient, type RegistrySchemasResponse } from '@/services/apiClient'
 
 export function Step4Issuers() {
@@ -32,7 +33,15 @@ export function Step4Issuers() {
       {registry && (
         <>
           <div className="mt-5 text-xs text-ink-4">
-            {registry.chain} · chain {registry.chain_id} · registry <span className="font-mono">{registry.registry_address}</span>
+            {registry.chain} · chain {registry.chain_id} · registry{' '}
+            <a
+              className="font-mono text-blue"
+              target="_blank"
+              rel="noreferrer"
+              href={addressUrl(registry.registry_address)}
+            >
+              {registry.registry_address} ↗
+            </a>
           </div>
           {registry.schemas.length === 0 && <div className="mt-4 text-sm text-ink-4">No schema has been registered yet.</div>}
           <div className="mt-4 space-y-3">
@@ -44,14 +53,44 @@ export function Step4Issuers() {
                     {schema.credential_definitions.length ? 'Schema and issuer key registered ✓' : 'Schema registered · issuer key missing'}
                   </div>
                 </div>
-                <div className="text-xs text-ink-3 mt-2">Issuer <span className="font-mono">{schema.issuer}</span></div>
-                <div className="text-xs text-ink-3 mt-2">Schema ID <span className="font-mono break-all">{schema.id}</span></div>
+                <div className="text-xs text-ink-3 mt-2">
+                  Issuer{' '}
+                  <a
+                    className="font-mono text-blue break-all"
+                    target="_blank"
+                    rel="noreferrer"
+                    href={addressUrl(schema.issuer)}
+                  >
+                    {schema.issuer} ↗
+                  </a>
+                </div>
+                <div className="text-xs text-ink-3 mt-2">
+                  Schema ID{' '}
+                  <a
+                    className="font-mono text-blue break-all"
+                    target="_blank"
+                    rel="noreferrer"
+                    href={readContractUrl(registry.registry_address)}
+                  >
+                    {schema.id} ↗
+                  </a>
+                </div>
                 <div className="text-xs text-ink-3 mt-2">Fingerprint <span className="font-mono break-all">{schema.fingerprint}</span></div>
                 <div className="flex flex-wrap gap-1.5 mt-3">
                   {schema.attributes.map((attribute) => <span key={attribute} className="rounded-md border border-line bg-white px-2 py-1 text-xs font-mono">{attribute}</span>)}
                 </div>
                 {schema.credential_definitions.map((credDef) => (
-                  <div key={credDef.id} className="text-xs text-ink-4 mt-3">Credential definition <span className="font-mono break-all">{credDef.id}</span></div>
+                  <div key={credDef.id} className="text-xs text-ink-4 mt-3">
+                    Credential definition{' '}
+                    <a
+                      className="font-mono text-blue break-all"
+                      target="_blank"
+                      rel="noreferrer"
+                      href={readContractUrl(registry.registry_address)}
+                    >
+                      {credDef.id} ↗
+                    </a>
+                  </div>
                 ))}
               </div>
             ))}
