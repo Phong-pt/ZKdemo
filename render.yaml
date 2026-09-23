@@ -2,7 +2,7 @@ services:
   - type: web
     name: zkp-demo
     runtime: docker
-    branch: fouth
+    branch: fifth
     dockerfilePath: ./Dockerfile.render
     plan: free
     region: singapore
@@ -18,4 +18,16 @@ services:
       # Tuỳ chọn: JSON object thêm domain email công ty được chấp nhận ở Verifier Portal, ngoài
       # mặc định {"ntq-solution.com.vn": "NTQ Solution"}.
       - key: VERIFIER_TRUSTED_DOMAINS_JSON
+        sync: false
+      # Nhập mã truy cập cổng /issuer trong Render, không lưu mã vào Git.
+      - key: ISSUER_PORTAL_TOKEN
+        sync: false
+      - key: WEBAUTHN_RP_ID
+        value: zkp-demo.onrender.com
+      - key: WEBAUTHN_ORIGIN
+        value: https://zkp-demo.onrender.com
+      # Cấu hình khi muốn công bố schema/khóa issuer lên Sepolia.
+      - key: SEPOLIA_RPC_URL
+        sync: false
+      - key: ISSUER_PRIVATE_KEY
         sync: false
