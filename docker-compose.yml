@@ -16,6 +16,12 @@ services:
       SEPOLIA_RPC_URL: "${SEPOLIA_RPC_URL:-}"
       ISSUER_PRIVATE_KEY: "${ISSUER_PRIVATE_KEY:-}"
       CREDENTIAL_REGISTRY_ADDRESS: "${CREDENTIAL_REGISTRY_ADDRESS:-}"
+      SCHEMA_ID: "${SCHEMA_ID:-}"
+      CREDENTIAL_DEFINITION_ID: "${CREDENTIAL_DEFINITION_ID:-}"
+      # Khoá CL của issuer sinh tất định từ seed này. Thiếu nó thì mỗi lần tạo lại container là
+      # một khoá mới, và khoá đã công bố trên chain không còn khớp khoá đang ký.
+      ISSUER_CL_KEY_SEED: "${ISSUER_CL_KEY_SEED:-}"
+      AUTO_PUBLISH_REGISTRY: "${AUTO_PUBLISH_REGISTRY:-true}"
     volumes:
       - ./issuer:/app/issuer
       - ./wallet:/app/wallet
