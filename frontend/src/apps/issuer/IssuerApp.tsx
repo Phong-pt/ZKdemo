@@ -138,10 +138,6 @@ function Blockchain({
           </div>
           <Badge status={shownState} />
         </div>
-        <p className="text-sm text-ink-3 mt-3 leading-relaxed">
-          Công bố khuôn mẫu CCCD và khóa công khai của issuer. Các credential cùng schema dùng chung
-          bản đăng ký này. Khi duyệt ký, hệ thống tự bắt đầu công bố nếu cần.
-        </p>
         <div className="mt-5 rounded-xl bg-bg-sunken p-4">
           <div className="font-mono text-sm">
             nationalIdentity <span className="text-ink-4">/ 1.0</span>
@@ -157,48 +153,24 @@ function Blockchain({
             ))}
           </div>
         </div>
-        <div className="mt-4 border-l-2 border-green pl-3 text-sm text-ink-3">
-          Chỉ tên thuộc tính và khóa công khai được đưa lên chain. Số CCCD, hồ sơ eKYC và link
-          secret không nằm trong giao dịch.
-        </div>
         {/* Registry sống trên chain là một chuyện, backend này có quyền ghi lên đó hay không là
             chuyện khác. Nhật ký công bố nằm trên ổ đĩa, nên một bản deploy không có ổ đĩa bền sẽ
             mãi báo "chưa công bố" dù schema đã nằm trên chain từ lâu. */}
-        {live && (
-          <div
-            className="mt-4 rounded-xl p-4 text-sm"
-            style={{ border: '1px solid #D9E6DF', background: '#F4FAF7', color: '#17795E' }}
-          >
-            Registry đang đọc được trên Ethereum Sepolia.
-            {registry.onchain.matches_local_key === false && (
-              <div className="mt-2 text-red-700">
-                Nhưng khóa công khai trên chain KHÁC khóa issuer đang ký. Mọi proof sẽ bị từ chối —
-                đặt lại ISSUER_CL_KEY_SEED đúng giá trị đã dùng lúc công bố.
-              </div>
-            )}
-            {registry.onchain.matches_local_key === true && (
-              <div className="mt-1 text-[12.5px]" style={{ color: '#5E7A6E' }}>
-                Khóa issuer đang ký khớp khóa đã công bố ✓
-              </div>
-            )}
-            {!registry.can_publish && (
-              <div className="mt-2 text-[12.5px]" style={{ color: '#5E7A6E' }}>
-                Backend này chỉ đọc chain: không có khóa ký giao dịch, nên cấp credential không bao
-                giờ tạo giao dịch mới. Việc công bố đã làm một lần từ nơi khác.
-              </div>
-            )}
+        {live && registry.onchain.matches_local_key === false && (
+          <div role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">
+            Khóa công khai trên chain khác khóa issuer đang ký, mọi proof sẽ bị từ chối. Đặt
+            ISSUER_CL_KEY_SEED đúng giá trị đã dùng lúc công bố.
           </div>
         )}
         {!live && !registry.can_publish && (
           <div className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
-            Chưa cấu hình Sepolia cho backend. Cần SEPOLIA_RPC_URL, và ISSUER_PRIVATE_KEY nếu muốn
-            công bố từ chính backend này. Đã công bố ở nơi khác thì chỉ cần SEPOLIA_RPC_URL,
-            CREDENTIAL_REGISTRY_ADDRESS, SCHEMA_ID, CREDENTIAL_DEFINITION_ID.
+            Chưa cấu hình Sepolia cho backend. Cần SEPOLIA_RPC_URL, và ISSUER_PRIVATE_KEY nếu công
+            bố từ chính backend này.
           </div>
         )}
-        {live && registry.onchain.reachable === false && registry.onchain.error && (
+        {live && registry.onchain.reachable === false && (
           <div role="alert" className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
-            Đã cấu hình địa chỉ registry nhưng không đọc được từ chain. Kiểm tra SEPOLIA_RPC_URL.
+            Không đọc được registry từ chain. Kiểm tra SEPOLIA_RPC_URL.
           </div>
         )}
         {registry.error && (
@@ -237,11 +209,7 @@ function Blockchain({
           </a>
         )}
         {Object.entries(registry.transactions).length === 0 && (
-          <div className="py-6 text-sm text-ink-4">
-            {live
-              ? 'Backend này không gửi giao dịch nào: registry đã được công bố từ nơi khác, ở đây chỉ đọc.'
-              : 'Chưa gửi giao dịch nào từ cổng issuer.'}
-          </div>
+          <div className="py-6 text-sm text-ink-4">Chưa gửi giao dịch nào từ cổng issuer.</div>
         )}
         {Object.entries(registry.transactions).map(([key, tx]) => (
           <div key={key} className="py-4 border-t border-line">

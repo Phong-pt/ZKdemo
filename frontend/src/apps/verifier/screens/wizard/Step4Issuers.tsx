@@ -23,10 +23,6 @@ export function Step4Issuers() {
   return (
     <div>
       <div className="text-[26px] font-medium tracking-[-0.03em]">Schemas from blockchain</div>
-      <div className="text-sm text-ink-3 mt-2.5">
-        The verifier reads registered issuers and schema fingerprints from the shared registry. New
-        records appear automatically after the next refresh.
-      </div>
 
       {error && <div role="alert" className="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">{error}</div>}
       {!registry && !error && <div className="mt-5 text-sm text-ink-4">Reading schemas from chain…</div>}
@@ -94,9 +90,6 @@ export function Step4Issuers() {
                 ))}
               </div>
             ))}
-          </div>
-          <div className="mt-4 text-xs text-ink-4">
-            This demo currently creates proofs for the wallet's nationalIdentity credential. Other registered schemas are discoverable here; proving them requires the wallet to hold a matching credential.
           </div>
         </>
       )}
