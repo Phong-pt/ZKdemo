@@ -29,7 +29,6 @@ import { Settings } from './screens/Settings'
 import { Templates } from './screens/Templates'
 import { VerifierLogin } from './screens/VerifierLogin'
 import {
-  CLAIM_TO_BACKEND_ATTR,
   createInitialVerifierState,
   type Template,
   type View,
@@ -95,8 +94,33 @@ export function VerifierApp() {
     }
   }, [])
 
-  const login = useCallback((account: GoogleAccount) => {
-    setAuthToken(account.token)
+  // Khuôn mẫu mà verifier được phép hỏi: backend đọc từ contract CredentialRegistry, Portal chỉ
+  // dựng giao diện theo đó. Đọc lại định kỳ nên issuer đăng ký schema khác là Portal thấy ngay,
+  // không phải sửa code frontend.
+  useEffect(() => {
+    if (!state.authed) return
+    let cancelled = false
+    const load = () => {
+      apiClient
+        .activeSchema()
+        .then((schema) => {
+          if (!cancelled) setState((s) => ({ ...s, schema, schemaError: null }))
+        })
+        .catch((err: unknown) => {
+          if (cancelled) return
+          const message = err instanceof Error ? err.message : 'Không đọc được schema từ registry'
+          setState((s) => ({ ...s, schemaError: message }))
+        })
+    }
+    load()
+    const timer = window.setInterval(load, 30_000)
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+    }
+  }, [state.authed])
+
+  const login = useCallback((account: GoogleAccount) => {    setAuthToken(account.token)
     setState((s) => ({ ...s, loginBusy: true, loginError: null }))
     apiClient
       .verifierLogin()
@@ -160,7 +184,15 @@ export function VerifierApp() {
 
   const restart = useCallback(() => {
     clearTimers()
-    setState((s) => ({ ...createInitialVerifierState(), authed: s.authed, orgEmail: s.orgEmail, orgName: s.orgName }))
+    setState((s) => ({
+      ...createInitialVerifierState(),
+      authed: s.authed,
+      orgEmail: s.orgEmail,
+      orgName: s.orgName,
+      // Schema đã đọc từ chain thì giữ lại; restart là xoá phiên, không phải quên registry.
+      schema: s.schema,
+      schemaError: s.schemaError,
+    }))
     setError(null)
   }, [clearTimers])
 
@@ -210,7 +242,7 @@ export function VerifierApp() {
       const session = await apiClient.createRequest({
         name: current.name,
         purpose: current.purpose || current.desc,
-        revealed_attrs: claims.map((c) => CLAIM_TO_BACKEND_ATTR[c.key]),
+        revealed_attrs: claims.map((c) => c.key),
         conditions: [...Object.keys(current.conds).filter((k) => current.conds[k]), ...(current.ageOn ? ['age'] : [])],
       })
       clearTimers()
@@ -297,7 +329,7 @@ export function VerifierApp() {
   const runVerification = useCallback(() => {
     const current = stateRef.current
     setState((s) => ({ ...s, vstep: 3 }))
-    const attrs = sharedNowClaims(current).map((c) => CLAIM_TO_BACKEND_ATTR[c.key])
+    const attrs = sharedNowClaims(current).map((c) => c.key)
     apiClient.approveRequest(current.sessionId, attrs).catch((err: unknown) => {
       setError(err instanceof Error ? err.message : 'Xác minh thất bại')
       setState((s) => s.sessionId === current.sessionId ? { ...s, phone: 'disclosure', vstep: 2 } : s)

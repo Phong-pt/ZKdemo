@@ -156,6 +156,25 @@ def get_cred_def() -> dict:
     return issuer.get_public_cred_def()
 
 
+@app.get("/api/schema")
+def active_schema() -> dict:
+    """Khuôn mẫu thuộc tính mà verifier được phép hỏi, kèm nguồn đang dùng. Giao diện dựng danh
+    sách claim từ đây, để schema issuer đã đăng ký trên chain là nguồn duy nhất thay vì một bản
+    chép tay trong frontend."""
+    try:
+        attributes, source = chain.resolve_attributes()
+    except Exception:
+        # Chain đã cấu hình nhưng đọc không được: vẫn phải dựng được form, và nói thật là bản cục bộ.
+        attributes, source = list(issuer.ATTRIBUTE_NAMES), "local"
+    result = {"attributes": attributes, "source": source, "name": "nationalIdentity",
+              "version": "1.0", "schema_id": None, "issuer": None}
+    if source == "chain":
+        schema = chain.get_schema()  # đã nằm trong cache sau resolve_attributes()
+        result.update(name=schema["name"], version=schema["version"],
+                      schema_id=schema["id"], issuer=schema["issuer"])
+    return result
+
+
 @app.get("/api/ekyc/lookup")
 def ekyc_lookup(cccd: str, account: Account = Depends(auth.current_account)) -> dict[str, str]:
     """Mã QR in trên CCCD chỉ chứa số thẻ, họ tên, ngày sinh, giới tính và nơi thường trú — không

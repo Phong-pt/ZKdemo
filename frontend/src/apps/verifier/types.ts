@@ -1,4 +1,4 @@
-import type { VerifyResponse } from '@/services/apiClient'
+import type { ActiveSchemaResponse, VerifyResponse } from '@/services/apiClient'
 export type View = 'dashboard' | 'create' | 'templates' | 'activity' | 'settings' | 'live' | 'result'
 export type PhoneState = 'idle' | 'scan' | 'request' | 'disclosure' | 'generating' | 'sent'
 
@@ -14,29 +14,29 @@ export interface Condition {
   desc: string
 }
 
-// Every claim here maps to a real signed attribute of the credential (see CLAIM_TO_BACKEND_ATTR).
-// Anything the issuer does not sign has no place in this list: the wizard could offer it, but no
-// proof could ever back it.
-export const CLAIMS: Claim[] = [
-  { key: 'cccd', label: 'Số / No.', desc: 'Số căn cước 12 chữ số — trường định danh mạnh nhất trên thẻ.' },
-  { key: 'name', label: 'Họ và tên / Full name', desc: 'Tên đầy đủ in trên thẻ.' },
-  { key: 'dob', label: 'Ngày sinh / Date of birth', desc: 'Ngày tháng năm sinh chính xác.' },
-  { key: 'sex', label: 'Giới tính / Sex', desc: 'Giới tính ghi trên thẻ.' },
-  { key: 'nationality', label: 'Quốc tịch / Nationality', desc: 'Quốc tịch ghi trên thẻ.' },
-  { key: 'origin', label: 'Quê quán / Place of origin', desc: 'Quê quán ghi trên thẻ.' },
-  { key: 'residence', label: 'Nơi thường trú / Place of residence', desc: 'Địa chỉ thường trú đầy đủ.' },
-  { key: 'expiry', label: 'Có giá trị đến / Date of expiry', desc: 'Ngày hết hạn của thẻ.' },
-]
+// Nhãn và mô tả tiếng Việt cho từng thuộc tính. Đây chỉ là từ điển HIỂN THỊ — thuộc tính nào tồn
+// tại là do schema issuer đã đăng ký trên chain quyết định, không phải do danh sách này. Xem
+// claimsFor(): thuộc tính nào chain có mà đây chưa có nhãn thì vẫn hiện được.
+export const CLAIM_META: Record<string, { label: string; desc: string }> = {
+  cccd: { label: 'Số / No.', desc: 'Số căn cước 12 chữ số — trường định danh mạnh nhất trên thẻ.' },
+  name: { label: 'Họ và tên / Full name', desc: 'Tên đầy đủ in trên thẻ.' },
+  dob: { label: 'Ngày sinh / Date of birth', desc: 'Ngày tháng năm sinh chính xác.' },
+  sex: { label: 'Giới tính / Sex', desc: 'Giới tính ghi trên thẻ.' },
+  nationality: { label: 'Quốc tịch / Nationality', desc: 'Quốc tịch ghi trên thẻ.' },
+  origin: { label: 'Quê quán / Place of origin', desc: 'Quê quán ghi trên thẻ.' },
+  residence: { label: 'Nơi thường trú / Place of residence', desc: 'Địa chỉ thường trú đầy đủ.' },
+  expiry: { label: 'Có giá trị đến / Date of expiry', desc: 'Ngày hết hạn của thẻ.' },
+}
 
-export const CLAIM_TO_BACKEND_ATTR: Record<string, string> = {
-  cccd: 'cccd',
-  name: 'name',
-  dob: 'dob',
-  sex: 'sex',
-  nationality: 'nationality',
-  origin: 'origin',
-  residence: 'residence',
-  expiry: 'expiry',
+// Dựng danh sách claim theo đúng thứ tự thuộc tính của schema. `key` chính là tên thuộc tính mà
+// backend và contract dùng, nên không cần bảng ánh xạ nào ở giữa.
+export function claimsFor(attributes: string[]): Claim[] {
+  return attributes.map((key) => {
+    const meta = CLAIM_META[key]
+    return meta
+      ? { key, ...meta }
+      : { key, label: key, desc: 'Thuộc tính do issuer đăng ký trên chain; giao diện chưa có nhãn riêng.' }
+  })
 }
 
 export const CONDS: Condition[] = [
@@ -137,6 +137,10 @@ export interface VerifierState {
   orgUser: string
   loginBusy: boolean
   loginError: string | null
+  // Khuôn mẫu đang có hiệu lực, đọc từ backend (backend đọc từ contract). Mọi danh sách thuộc
+  // tính trong Portal đều suy ra từ đây.
+  schema: ActiveSchemaResponse
+  schemaError: string | null
   view: View
   wizard: number
   name: string
@@ -161,6 +165,17 @@ export interface VerifierState {
 export const REQUEST_ID = 'VER-8F2A-19C4'
 export const EXPIRY_START_SECONDS = 598
 
+// Rỗng là có chủ ý: danh sách thuộc tính chỉ xuất hiện sau khi đọc được schema từ backend, để
+// không bao giờ có một bản chép tay trong frontend chạy song song với bản trên chain.
+export const EMPTY_SCHEMA: ActiveSchemaResponse = {
+  attributes: [],
+  source: 'local',
+  name: 'nationalIdentity',
+  version: '1.0',
+  schema_id: null,
+  issuer: null,
+}
+
 export function createInitialVerifierState(): VerifierState {
   return {
     authed: false,
@@ -169,6 +184,8 @@ export function createInitialVerifierState(): VerifierState {
     orgUser: '',
     loginBusy: false,
     loginError: null,
+    schema: EMPTY_SCHEMA,
+    schemaError: null,
     view: 'dashboard',
     wizard: 1,
     name: 'Identity verification',

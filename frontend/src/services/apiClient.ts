@@ -78,6 +78,17 @@ export interface ConfigResponse {
   verifier_domains: string[]
 }
 
+// Khuôn mẫu đang có hiệu lực. `source` là 'chain' khi đọc được từ contract CredentialRegistry,
+// 'local' khi chain chưa cấu hình hoặc không đọc được.
+export interface ActiveSchemaResponse {
+  attributes: string[]
+  source: 'chain' | 'local'
+  name: string
+  version: string
+  schema_id: string | null
+  issuer: string | null
+}
+
 export interface RegisteredSchema {
   id: string
   name: string
@@ -144,6 +155,7 @@ export const apiClient = {
   declineRequest: (id: string) =>
     apiFetch<VerificationSession>(`/requests/${encodeURIComponent(id)}/decline`, { method: 'POST' }),
   config: () => apiFetch<ConfigResponse>('/config'),
+  activeSchema: () => apiFetch<ActiveSchemaResponse>('/schema'),
   registrySchemas: () => apiFetch<RegistrySchemasResponse>('/registry/schemas'),
   // Hai trường mã QR trên thẻ không chứa, lấy từ hồ sơ issuer theo số CCCD vừa quét được.
   ekycLookup: (cccd: string) =>

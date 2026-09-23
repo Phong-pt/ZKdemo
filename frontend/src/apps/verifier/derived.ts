@@ -1,11 +1,16 @@
-import { CLAIMS, CLAIM_TO_BACKEND_ATTR, CONDS, type Claim, type LogEntry, type VerifierState } from './types'
+import { CONDS, claimsFor, type Claim, type LogEntry, type VerifierState } from './types'
+
+// Danh sách claim của yêu cầu hiện tại, suy ra từ schema đã đọc về — không phải từ hằng số.
+export function claimsOf(state: VerifierState): Claim[] {
+  return claimsFor(state.schema.attributes)
+}
 
 export function revealedClaims(state: VerifierState): Claim[] {
-  return CLAIMS.filter((c) => state.reveal[c.key])
+  return claimsOf(state).filter((c) => state.reveal[c.key])
 }
 
 export function withheldClaims(state: VerifierState): Claim[] {
-  return CLAIMS.filter((c) => !isSharedNow(state, c.key))
+  return claimsOf(state).filter((c) => !isSharedNow(state, c.key))
 }
 
 export function activeConds(state: VerifierState) {
@@ -17,7 +22,9 @@ export function proofCount(state: VerifierState): number {
 }
 
 export function disclosurePercent(state: VerifierState): number {
-  return Math.round((sharedNowClaims(state).length / CLAIMS.length) * 100)
+  const total = claimsOf(state).length
+  if (!total) return 0
+  return Math.round((sharedNowClaims(state).length / total) * 100)
 }
 
 export function minimalLabel(pct: number): string {
@@ -37,7 +44,7 @@ export function claimBoxStyle(on: boolean) {
 }
 
 export function isSharedNow(state: VerifierState, key: string): boolean {
-  return state.result ? Object.hasOwn(state.result.revealed, CLAIM_TO_BACKEND_ATTR[key]) : state.disc[key] !== false && !!state.reveal[key]
+  return state.result ? Object.hasOwn(state.result.revealed, key) : state.disc[key] !== false && !!state.reveal[key]
 }
 
 export function predicateText(state: VerifierState): string {
@@ -96,7 +103,7 @@ export interface DiscCardView {
 }
 
 export function buildDiscCards(state: VerifierState): DiscCardView[] {
-  return CLAIMS.map((c) => {
+  return claimsOf(state).map((c) => {
     const required = !!state.reveal[c.key]
     const on = state.disc[c.key] !== false && required
     return {
@@ -117,12 +124,12 @@ export function buildDiscCards(state: VerifierState): DiscCardView[] {
 }
 
 export function sharedNowClaims(state: VerifierState): Claim[] {
-  return CLAIMS.filter((c) => isSharedNow(state, c.key))
+  return claimsOf(state).filter((c) => isSharedNow(state, c.key))
 }
 
 export function buildResultRows(state: VerifierState): Array<{ label: string; value: string; color: string }> {
-  return CLAIMS.map((c) => {
-    const value = state.result?.revealed[CLAIM_TO_BACKEND_ATTR[c.key]]
+  return claimsOf(state).map((c) => {
+    const value = state.result?.revealed[c.key]
     return { label: c.label, value: value ?? 'Not disclosed', color: value === undefined ? '#8A8C94' : '#16171A' }
   })
 }

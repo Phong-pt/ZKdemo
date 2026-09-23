@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { WalletPhone } from '@/apps/verifier/components/WalletPhone'
-import { CLAIMS, CLAIM_TO_BACKEND_ATTR, type PhoneState } from '@/apps/verifier/types'
-import { apiClient, setAuthToken, type VerificationSession } from '@/services/apiClient'
+import { claimsFor, type PhoneState } from '@/apps/verifier/types'
+import { apiClient, setAuthToken, type ActiveSchemaResponse, type VerificationSession } from '@/services/apiClient'
 import { walletService } from '@/services/walletService'
 import { authService, demoAccount, type GoogleAccount } from '@/services/authService'
 
@@ -60,6 +60,7 @@ const GENERATING_TICK_MS = 420
 function PresentationSession({ sessionId }: { sessionId: string }) {
   const [account, setAccount] = useState<GoogleAccount | null>(null)
   const [session, setSession] = useState<VerificationSession | null>(null)
+  const [schema, setSchema] = useState<ActiveSchemaResponse | null>(null)
   const [phone, setPhone] = useState<Exclude<PhoneState, 'idle'>>('scan')
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [gstep, setGstep] = useState(0)
@@ -109,10 +110,34 @@ function PresentationSession({ sessionId }: { sessionId: string }) {
     setAccount(chosen)
   }, [])
 
+  // Danh sách thuộc tính hiện trên màn hình chia sẻ lấy từ schema issuer đã đăng ký, cùng một
+  // nguồn với bên verifier. Không đăng nhập được cũng đọc được vì đây là dữ liệu công khai.
+  useEffect(() => {
+    let cancelled = false
+    apiClient
+      .activeSchema()
+      .then((result) => {
+        if (!cancelled) setSchema(result)
+      })
+      .catch(() => {
+        // Đọc không được thì rơi về đúng những thuộc tính verifier đang hỏi, xem `claims` bên dưới.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const requested = useMemo(() => new Set(session?.revealed_attrs ?? []), [session])
 
-  const discCards = CLAIMS.map((claim) => {
-    const attr = CLAIM_TO_BACKEND_ATTR[claim.key]
+  // Ưu tiên schema đầy đủ để người dùng thấy cả những trường KHÔNG bị hỏi (đang được bảo vệ);
+  // chưa đọc được schema thì ít nhất vẫn hiện đúng các trường verifier yêu cầu.
+  const claims = useMemo(
+    () => claimsFor(schema?.attributes ?? session?.revealed_attrs ?? []),
+    [schema, session],
+  )
+
+  const discCards = claims.map((claim) => {
+    const attr = claim.key
     const required = requested.has(attr)
     const on = required && !!selected[attr]
     return {
@@ -137,15 +162,15 @@ function PresentationSession({ sessionId }: { sessionId: string }) {
     }
   })
 
-  const requestedAttrs = CLAIMS.filter((claim) => requested.has(CLAIM_TO_BACKEND_ATTR[claim.key])).map(
-    (claim) => ({
+  const requestedAttrs = claims
+    .filter((claim) => requested.has(claim.key))
+    .map((claim) => ({
       label: claim.label,
       value: 'Only shared with your approval',
       tag: 'REVEAL',
       tagBg: '#F5F5F1',
       tagFg: '#6E7079',
-    }),
-  )
+    }))
   const conditionAttrs = (session?.conditions ?? []).map((key) => ({
     label: key === 'credValid' ? 'Credential validity' : key,
     value: 'Proven without revealing data',
@@ -154,10 +179,8 @@ function PresentationSession({ sessionId }: { sessionId: string }) {
     tagFg: '#2F5FE0',
   }))
 
-  const sharingKeys = CLAIMS.filter(
-    (claim) => requested.has(CLAIM_TO_BACKEND_ATTR[claim.key]) && selected[CLAIM_TO_BACKEND_ATTR[claim.key]],
-  )
-  const notSharing = CLAIMS.filter((claim) => !sharingKeys.includes(claim))
+  const sharingKeys = claims.filter((claim) => requested.has(claim.key) && selected[claim.key])
+  const notSharing = claims.filter((claim) => !sharingKeys.includes(claim))
 
   const respond = async (approve: boolean) => {
     if (!session || submitting.current) return
@@ -207,7 +230,7 @@ function PresentationSession({ sessionId }: { sessionId: string }) {
         requestedAttrs={[...requestedAttrs, ...conditionAttrs]}
         zkNote="Chỉ những trường bạn đồng ý mới nằm trong bằng chứng gửi đi. Phần còn lại vẫn được chứng minh là hợp lệ mà không lộ giá trị."
         discCards={discCards}
-        sharingCount={`${sharingKeys.length} of ${CLAIMS.length} attributes`}
+        sharingCount={`${sharingKeys.length} of ${claims.length} attributes`}
         provingCount={`${session?.conditions.length ?? 0} statement(s)`}
         notSharingText={notSharing.slice(0, 4).map((claim) => claim.label).join(', ')}
         gstep={gstep}

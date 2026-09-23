@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { MonoLabel } from '@/components/primitives'
+import { claimsOf } from '../derived'
 import type { VerifierState } from '../types'
 import { Step1Basics } from './wizard/Step1Basics'
 import { Step2Claims } from './wizard/Step2Claims'
@@ -63,7 +64,15 @@ export function CreateWizard({
         {state.wizard === 1 && (
           <Step1Basics name={state.name} desc={state.desc} purpose={state.purpose} onName={onName} onDesc={onDesc} onPurpose={onPurpose} />
         )}
-        {state.wizard === 2 && <Step2Claims reveal={state.reveal} onToggle={onToggleReveal} />}
+        {state.wizard === 2 && (
+          <Step2Claims
+            claims={claimsOf(state)}
+            schema={state.schema}
+            schemaError={state.schemaError}
+            reveal={state.reveal}
+            onToggle={onToggleReveal}
+          />
+        )}
         {state.wizard === 3 && (
           <Step3Conditions
             ageOn={state.ageOn}
