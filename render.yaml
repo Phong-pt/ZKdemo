@@ -14,7 +14,7 @@ services:
       # phải ở trạng thái đã publish thì mọi tài khoản Gmail mới đăng nhập được (còn ở "Testing"
       # thì chỉ các email nằm trong danh sách test user).
       - key: GOOGLE_CLIENT_ID
-        value: 1028971535978-rp61q4e6v194j60k497ict7p626bmf5j.apps.googleusercontent.com
+        value: 1028971535978-3g72nvqu2j8j4e09atps2fsarjv8n4fv.apps.googleusercontent.com
       # Tuỳ chọn: JSON object thêm domain email công ty được chấp nhận ở Verifier Portal, ngoài
       # mặc định {"ntq-solution.com.vn": "NTQ Solution"}.
       - key: VERIFIER_TRUSTED_DOMAINS_JSON
