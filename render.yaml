@@ -19,9 +19,9 @@ services:
       # mặc định {"ntq-solution.com.vn": "NTQ Solution"}.
       - key: VERIFIER_TRUSTED_DOMAINS_JSON
         sync: false
-      # Nhập mã truy cập cổng /issuer trong Render, không lưu mã vào Git.
+      # Render tự tạo secret truy cập cổng /issuer; xem giá trị trong Dashboard.
       - key: ISSUER_PORTAL_TOKEN
-        sync: false
+        generateValue: true
       - key: WEBAUTHN_RP_ID
         value: zkp-demo.onrender.com
       - key: WEBAUTHN_ORIGIN
