@@ -1,128 +1,98 @@
-# Chạy luồng Issuer → Wallet → Verifier
+# NX Cred — prototype định danh số
 
-Luồng tích hợp hiện dùng CL signature thật trong lõi Python, phiên xác minh riêng và QR có thể quét.
+Ứng dụng gồm ví người dùng (`/`), cổng cấp chứng nhận (`/issuer`), cổng xác minh
+(`/verifier`) và API (`/api`). Frontend dùng React/TypeScript; backend dùng FastAPI/Python.
 
-1. Chạy `docker compose up --build api frontend`, mở `http://localhost:8080/` để hoàn tất onboarding/eKYC và cấp credential.
-2. Mở `/verifier`, đăng nhập email thuộc domain demo `ntq-solution.com.vn` (đây là kiểm tra domain, chưa phải xác thực email).
-3. Tạo yêu cầu **Identity verification**: chọn họ tên, ngày sinh, quốc tịch hoặc địa chỉ; điều kiện hỗ trợ là **Credential is valid**.
-4. Sao chép link hoặc quét QR để mở `/present/<session-id>` trên tab/thiết bị khác. Người dùng chọn thuộc tính muốn chia sẻ rồi Approve hoặc Decline. Có thể dùng nút mô phỏng trong Portal để thử trên một màn hình.
-5. Portal tự nhận kết quả từ backend; giá trị hiển thị lấy từ credential được xác minh, chỉ gồm các thuộc tính đã duyệt. Những thuộc tính yêu cầu là tùy chọn; bỏ chọn vẫn cho phép chứng minh sở hữu credential.
+## Chạy bằng Docker Compose
 
-Phiên hết hạn sau 5 phút và chỉ nhận một phản hồi thành công/từ chối. Khi chưa có credential, có thể cấp credential rồi thử lại cùng phiên nếu chưa hết hạn. Restart của Portal không xoá credential. Một ví demo chỉ giữ một danh tính: cấp lại cùng dữ liệu là idempotent, dữ liệu khác trả 409.
+Tạo file `.env` riêng trên máy và điền các biến trong bảng dưới đây, sau đó chạy:
 
-**Phạm vi demo:** ba vai vẫn chạy chung backend và dùng một ví phía server, không phải ví tự quản nhiều người dùng. Link phiên là bearer capability; ai có link có thể xem kết quả hoặc phản hồi bằng ví demo chung. eKYC chưa đối chiếu cơ quan thật. Chưa hỗ trợ proof tuổi/quốc tịch/cư trú, credential sinh viên/việc làm hoặc revocation; các yêu cầu đó bị chặn, không báo thành công giả. Phiên/lịch sử chưa bền vững qua restart/reload. `/api/reset` là thao tác xoá toàn bộ state demo. Khi quét QR bằng điện thoại, mở app bằng hostname/IP truy cập được từ điện thoại, thay vì localhost.
+```bash
+docker compose up --build api frontend
+```
 
-API luồng mới: `POST /api/requests`, `GET /api/requests/{id}`, `POST /api/requests/{id}/approve` (body `{"revealed_attrs":["name"]}`), `POST /api/requests/{id}/decline`. API `/api/issue` và `/api/verify` cũ được giữ để tương thích demo.
+Mở `http://localhost:8080`. Compose có thêm cổng HTTPS `8443` với chứng chỉ tự ký
+cho thử nghiệm. Khi dùng domain thật, cấu hình HTTPS bằng chứng chỉ hợp lệ.
 
-Kiểm tra: cài `requirements.txt` và `httpx`, chạy `python -m unittest discover -s tests -v`. Test dùng state tạm và khoá nhỏ riêng, không sửa credential đang dùng. Frontend: `cd frontend && npm install && npm run build && npm run lint`.
+## Deploy một container
 
----
+`Dockerfile.render` build frontend và đóng gói cùng backend; dùng được cả trên Render
+và server chạy Docker. Build từ thư mục gốc:
 
-# Handoff: Identity Wallet + Verifier Portal
+```bash
+docker build -f Dockerfile.render -t nxcred .
+docker run --env-file .env -p 127.0.0.1:8000:8000 nxcred
+```
 
-## Overview
-Hai prototype cho một nền tảng digital identity dùng AnonCreds:
+Lệnh chạy trên dùng để kiểm tra image, chưa cấu hình lưu trữ bền vững.
+Backend mặc định nghe cổng `8000` (đổi bằng `PORT`); health check là `/api/config`.
+Reverse proxy cần chuyển tiếp WebSocket dưới `/api/` và phục vụ HTTPS cho domain.
+Hiện chạy một instance, một worker vì phiên xác minh còn lưu trong bộ nhớ.
 
-- **App A — Identity Wallet (user):** onboarding từ login đến khi có identity card trong ví.
-- **App B — Verifier Portal (bên thứ ba):** tạo proof request tối thiểu hoá dữ liệu, nhận và xác minh ZK proof.
+`render.yaml` là cấu hình triển khai Render. Khi chuyển domain, cập nhật Google OAuth
+Authorized JavaScript origins và hai biến WebAuthn tương ứng.
 
-`PROMPT.md` trong thư mục này là prompt để dán vào Claude Code. Đọc nó trước.
+## Biến môi trường
 
-## Về các file design
-`reference/*.dc.html` là **design reference viết bằng HTML** — mô tả giao diện và hành vi mong muốn,
-không phải code production để copy. Nhiệm vụ là dựng lại chúng trong codebase đích
-(React + TypeScript + Tailwind + Framer Motion) theo pattern có sẵn của dự án.
-Mở trực tiếp trong trình duyệt để xem; giữ `support.js` cùng thư mục.
+Giá trị thật đặt trong cấu hình service hoặc `.env` trên server, không commit vào Git.
+File `.env` không được tự đọc khi chạy Python trực tiếp; cần nạp biến vào môi trường
+hoặc dùng Docker Compose / `docker run --env-file`.
 
-## Fidelity
-**High-fidelity.** Màu, typography, spacing, radius, animation đều là giá trị cuối. Dựng lại pixel-perfect.
+| Biến | Mục đích |
+| --- | --- |
+| `GOOGLE_CLIENT_ID` | Google Sign-In; để trống thì bật tài khoản demo |
+| `ISSUER_PORTAL_TOKEN` | Secret truy cập cổng issuer |
+| `ISSUER_CL_KEY_SEED` | Seed bí mật sinh khóa issuer; giữ ổn định qua các lần deploy |
+| `WEBAUTHN_RP_ID` | Hostname của ứng dụng, không có `https://` |
+| `WEBAUTHN_ORIGIN` | Origin đầy đủ, gồm `https://` và port nếu có |
+| `VERIFIER_TRUSTED_DOMAINS_JSON` | JSON tùy chọn bổ sung domain email của tổ chức verifier |
+| `SEPOLIA_RPC_URL` | Endpoint Ethereum Sepolia; có thể chứa API key |
+| `CREDENTIAL_REGISTRY_ADDRESS` | Địa chỉ registry đã triển khai |
+| `SCHEMA_ID` | ID schema đang dùng |
+| `CREDENTIAL_DEFINITION_ID` | ID khóa công khai đã đăng ký |
+| `AUTO_PUBLISH_REGISTRY` | Đặt `false` khi dùng registry đã công bố và chỉ đọc chain |
+| `ISSUER_PRIVATE_KEY` | Chỉ cần ở môi trường được phép gửi giao dịch Sepolia |
 
-## Design tokens
+Để đọc chain, cấu hình đủ RPC, registry address và hai ID. Khóa issuer đang ký phải
+khớp khóa đã công bố: giữ đúng seed/khóa từ môi trường công bố, kiểm tra
+`/api/chain` có `matches_local_key: true`.
 
-| Token | Giá trị | Dùng cho |
-|---|---|---|
-| bg-page | `#F2F2EF` | nền trang |
-| bg-surface | `#FFFFFF` | card |
-| bg-sunken | `#FBFBF9` | input, card đang chọn |
-| bg-muted | `#F5F5F1` | chip, placeholder card |
-| ink | `#16171A` | chữ chính, nút primary |
-| ink-2 / ink-3 | `#3B3D45` / `#6E7079` | chữ phụ |
-| ink-4 / ink-5 | `#8A8C94` / `#9A9CA3` | caption, label mono |
-| line | `#E6E6E2` | border card |
-| line-2 | `#EFEFEB`, `#F0F0EC`, `#F7F7F3` | divider |
-| blue / blue-bg | `#2F5FE0` / `#EEF2FD` | accent, trạng thái "prove" |
-| green / green-bg | `#17795E` / `#F4FAF7` (border `#D9E6DF`) | success, privacy |
-| amber | `#B4763A` | cảnh báo nhẹ |
-| dark surface | `linear-gradient(145deg,#2C2E36,#0F1013)` | identity card, panel tối |
-| avatar | `linear-gradient(145deg,#3D6BEA,#2438A8)` | avatar |
-| chip vàng | `linear-gradient(140deg,#DCCCA4,#96855E)` | chip NFC trên thẻ |
+`scripts/deploy_registry.py` triển khai registry và công bố schema/khóa trên Sepolia.
+Chạy ở môi trường riêng có ví testnet, giữ lại kết quả `contracts/deployment.json`.
+Không đưa private key, seed, RPC có API key hoặc file kết quả riêng lên repo.
 
-Typography: **Geist** 300/400/500/600 (UI), **JetBrains Mono** 400/500 (label uppercase, ID, %).
-Heading 26–30px / `-0.03em` / weight 500. Body 14–15px. Caption 12–13px.
-Label mono 10px / `0.14em` / uppercase / `ink-5`.
+## Dữ liệu cần giữ qua lần deploy
 
-Radius: 22–26px card lớn, 16–18px card phụ, 12–14px input & nút, 999px pill, 36/46px khung điện thoại.
-Shadow: `0 30px 60px -45px rgba(20,22,28,.3)` (card nổi), `0 50px 90px -45px rgba(10,11,13,.85)` (điện thoại).
-Spacing: padding card 30–40px, gap khối 20–22px, gap trong list 10–14px.
+- `wallet/wallets/`: dữ liệu ví, link secret, chứng nhận và passkey.
+- `issuer/cred_def_public.json`, `issuer/issuer_private_key.json`: khóa issuer.
+- `issuer/ekyc_db.json`, `issuer/issuance_requests.json`: hồ sơ và yêu cầu cấp.
+- `contracts/deployment.json`, `contracts/issuer-publication.json`: cấu hình và nhật ký công bố.
 
-Animation: `fadeUp` 12px/.4–.45s, `fadeIn` .3s, `popIn` scale .85→1.04→1 /.35s,
-`slideInRight` 40px/.5s, `pulseRing`, `breathe`, `shimmer`, `spin`, `sweep` (quét dọc khi tạo proof).
-Hover: `translateY(-2px)` cho nút/card click được, đổi border sang `ink`.
+Các đường dẫn trên nằm dưới `/app` trong container. Cần cấu hình lưu trữ và sao lưu
+trước khi giữ dữ liệu lâu dài. Không mount thư mục rỗng đè toàn bộ `/app/issuer` hoặc
+`/app/contracts`, vì các thư mục này còn chứa mã nguồn cần chạy. Compose hiện bind-mount
+các thư mục tương ứng từ checkout trên máy chủ.
 
-## App A — Identity Wallet
+## Phát triển frontend
 
-State machine: `landing → google → signedin → install → password → passkey → wallet → kycdoc → kycid → handoff → processing → verified → wallet`
+```bash
+cd frontend
+npm ci
+npm run dev
+```
 
-| Màn | Nội dung chính |
-|---|---|
-| Landing | Badge "Self-custodial · Verified identity", headline 46px, nút đen "Continue with Google", thẻ identity nổi (300×190, floaty 6s) |
-| Google modal | Chọn account mock, 1.2s loading, sang signed-in |
-| Signed in | Avatar + pulse ring + tick xanh, "Your wallet is being prepared…", shimmer bar, tự chuyển sau ~4s |
-| Install | 2 cột: benefit list + mockup cửa sổ trình duyệt; nút Install → progress 0–100% (label đổi Downloading→Installing) → "Wallet installed" → password |
-| Password | Step 1/2, 2 input, 4 thanh strength (`#C4544A #C4864A #4A8CC4 #17795E`), nút disabled màu `#C9C9C3` khi chưa hợp lệ (≥8 ký tự và khớp) |
-| Passkey | Step 2/2, icon Face ID vẽ bằng div, modal biometric 1.9s → "Passkey created" → Continue |
-| Wallet | Sidebar (avatar, identity status, security, balance 0.842 ETH) + main (card stack, recent activity). Chưa verify: card dashed "+ Add identity / Your wallet is empty" |
-| eKYC doc | Header progress 1/4, 3 lựa chọn; CCCD highlight sẵn (border 2px `ink`, tick tròn) |
-| eKYC ID | 2/4, hai mock CCCD (mặt trước tối, mặt sau sáng), Continue |
-| QR handoff | 3/4, QR 200px, pairing code `K7 · 4QB2` mono 28px, checklist 5 dòng, "Waiting for phone…", nút "Simulate scanning with phone" |
-| Mobile (khung 330×690) | connect → front → back → face; khung camera nền tối, scanline xanh `#5CE0B0` 2.4s, nút chụp 66px; mỗi lần chụp → màn tick "…captured" 1.2s → bước sau; đồng thời desktop checklist tick |
-| Processing | Vòng tròn xoay + lõi tối, 4 dòng checklist tick mỗi 1s |
-| Verified | Tick xanh 96px, "Open wallet" |
-| Identity card | Gradient tối, label mono "VERIFIED IDENTITY", chip vàng, tên viết hoa 21px, mini-QR 52px; hover nâng 6px; click mở modal detail (Personal / Verification / Security) |
+Vite chuyển tiếp `/api` tới backend tại `localhost:8000`.
+Kiểm tra frontend bằng `npm run build` và `npm run lint`.
 
-## App B — Verifier Portal
+## Phạm vi hiện tại
 
-Views: `dashboard | create (wizard 1–5) | live | result | templates | activity | settings`
-Sidebar 228px sticky, mục active nền `ink` chữ trắng.
+Có luồng đối chiếu hồ sơ, duyệt/từ chối, ký mù, tiết lộ chọn lọc và kiểm tra proof.
+Schema và khóa công khai có thể được đọc từ Sepolia; khi chưa cấu hình chain có
+fallback cục bộ. Endpoint dựng giao diện schema cũng có fallback khi đọc chain lỗi.
 
-- **Dashboard:** headline "Identity verification / Request only the information you need.", 4 ô stat (Active, Completed, Rejected 3, Success rate), bảng recent verifications 5 cột grid `1.1fr 1fr 1.4fr 1fr 1.3fr`.
-- **Wizard:** 1 Purpose (3 input) · 2 Claims (8 claim, 3 nhóm, mỗi claim có mô tả) · 3 Proof conditions (khối AGE có switch + stepper `≥ N`, note "Privacy preserving", 4 condition khác, tag `PROVE` xanh) · 4 Trusted credentials (issuer + schema + cred-def + revocation registry) · 5 Review (cột REVEAL / PROVE, chip NOT REQUESTED, privacy meter 10 ô, nhãn Minimal/Moderate/Broad theo % disclosure).
-- **Live:** QR 216px, countdown 9:58 đếm lùi, "Copy verification link" / "Share QR"; sau khi scan chuyển sang session panel: anonymous session + checklist 8 bước verify + progress bar.
-- **Wallet panel (330×690, sticky phải):** scan → request (danh sách attribute có tag REVEAL/PROVE, note ZK xanh) → disclosure (card toggle từng attribute, summary Sharing/Proving/Not sharing) → generating (5 bước, khối sweep) → sent.
-- **Result:** tick xanh, bảng kết quả (mỗi claim: giá trị hoặc "Not disclosed"), credential/issuer/status, panel tối "Privacy protected" hai cột nhận/không nhận + hai thanh Disclosure & Privacy preserved.
-- **Templates:** 5 preset (Age, Identity, Nationality, Employment, Student) — chọn là set state và nhảy tới bước review.
-- **Activity/Settings:** bảng lịch sử đầy đủ; settings có DID, data retention, "Raw attribute storage: Disabled ✓".
+Ví và xử lý mật mã của holder hiện chạy chung backend với issuer/verifier. Đây chưa
+phải ví tự quản trên thiết bị hoặc triển khai đã kiểm chứng tương thích AnonCreds.
+Chưa hỗ trợ thu hồi hoặc chứng minh điều kiện như đủ tuổi mà giấu ngày sinh.
+Dữ liệu eKYC là dữ liệu demo; phiên xác minh trong bộ nhớ mất khi backend khởi động lại.
 
-## State cần có
-
-App A: `step, googleBusy, install(idle|busy|done), installPct, pw, pw2, passkey, verified, cardOpen, phone(idle|connect|front|back|face|captured|done), marks(0–5), proc(0–4)`.
-
-App B: `view, wizard(1–5), name, desc, purpose, reveal{claimKey:bool}, ageOn, age, conds{key:bool}, phone(idle|scan|request|disclosure|generating|sent), vstep(0–8), gstep(0–5), disc{}, expiry, detail, log[]`.
-
-Đồng bộ hai bên: hành động ở mobile đẩy event, desktop tăng `marks`/`vstep`. Tách thành bus giống WebSocket để thay bằng realtime thật.
-
-## Services cần tách sẵn
-`authService.signInWithGoogle()`, `walletService.installExtension() / createPassword() / createPasskey()`,
-`kycService.startSession() / submitFront() / submitBack() / submitFace() / getStatus()`,
-`proofService.buildRequest() / generatePresentation()`,
-`verifierService.createRequest() / pollSession() / verifyPresentation() / listHistory()`.
-Tất cả trả Promise có delay giả lập; không có crypto thật.
-
-## Assets
-Không có ảnh bitmap. QR sinh bằng hàm hash tất định (lưới 25×25, 3 finder). Mọi hình khối vẽ bằng div/gradient.
-
-## Files
-- `reference/Identity Wallet Prototype.dc.html`
-- `reference/Verifier Portal.dc.html`
-- `reference/support.js` (runtime, chỉ để mở file HTML)
-- `PROMPT.md` — prompt dán thẳng vào Claude Code
+`demo.py` và service `zkp-demo` là demo CLI của lõi mật mã, tách khỏi luồng web.

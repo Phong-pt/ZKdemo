@@ -9,6 +9,10 @@ issuer/issuance_requests.tmp
 wallet/wallets/
 
 .env
+.env.*
+!.env.example
+*.pem
+*.key
 
 contracts/deployment.json
 contracts/issuer-publication.json

@@ -1,12 +1,14 @@
 __pycache__
 *.pyc
 .git
-reference
 frontend/node_modules
 frontend/dist
 issuer/*.json
 wallet/*.json
 wallet/wallets
 .env
+.env.*
+*.pem
+*.key
 contracts/deployment.json
 contracts/issuer-publication.json
