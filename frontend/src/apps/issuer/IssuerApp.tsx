@@ -219,9 +219,6 @@ function Blockchain({
             Contract: {address} ↗
           </a>
         )}
-        {Object.entries(registry.transactions).length === 0 && (
-          <div className="py-6 text-sm text-ink-4">Chưa gửi giao dịch nào từ cổng issuer.</div>
-        )}
         {Object.entries(registry.transactions).map(([key, tx]) => (
           <div key={key} className="py-4 border-t border-line">
             <div className="flex justify-between">
