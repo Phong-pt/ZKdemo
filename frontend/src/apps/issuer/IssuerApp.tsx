@@ -16,12 +16,8 @@ type Request = {
   created_at: number
   expires_at: number
   attributes: Record<string, string>
-  nonce: string
   checks: Checks | null
   reason: string | null
-  proof: Record<string, string>
-  public_key: Record<string, string>
-  signature: Record<string, string>
   database: {
     found: boolean
     already_issued: boolean
@@ -80,8 +76,6 @@ const fieldLabels: Record<string, string> = {
 const section = 'rounded-[22px] border border-line bg-white p-6'
 const button =
   'rounded-xl bg-ink px-4 py-3 text-sm font-medium text-white cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed'
-const secondary =
-  'rounded-xl border border-line bg-white px-4 py-3 text-sm cursor-pointer disabled:opacity-40'
 
 // Registry đọc được từ chain nghĩa là đã công bố, kể cả khi nhật ký trên ổ đĩa của backend này
 // không còn. Hai chỗ hiển thị badge phải dùng cùng một phép suy này để khỏi lệch nhau.
@@ -101,21 +95,6 @@ function Badge({ status }: { status: string }) {
     >
       {labels[status] || status}
     </span>
-  )
-}
-
-function BigNumber({ name, value, note }: { name: string; value: string; note: string }) {
-  return (
-    <div className="rounded-xl border border-line bg-bg-sunken p-4">
-      <div className="flex justify-between gap-3">
-        <strong className="text-sm font-mono">{name}</strong>
-        <span className="text-xs text-ink-4">{value.length} ký tự</span>
-      </div>
-      <div className="text-xs text-ink-3 mt-1 mb-3">{note}</div>
-      <code className="block max-h-24 overflow-y-auto break-all text-[11px] leading-relaxed text-ink-2">
-        {value}
-      </code>
-    </div>
   )
 }
 
@@ -293,7 +272,6 @@ export function IssuerApp() {
   const [registry, setRegistry] = useState<Registry | null>(null)
   const [selected, setSelected] = useState('')
   const [tab, setTab] = useState<'requests' | 'registry'>('requests')
-  const [detail, setDetail] = useState<'identity' | 'proof'>('identity')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [reason, setReason] = useState('')
@@ -388,7 +366,7 @@ export function IssuerApp() {
           </div>
           <h1 className="text-3xl font-medium tracking-tight mt-4">Cổng cấp danh tính</h1>
           <p className="text-sm text-ink-3 mt-3 mb-6">
-            Đối chiếu hồ sơ eKYC, kiểm chứng yêu cầu ký mù và quản lý schema công khai.
+            Tiếp nhận, đối chiếu hồ sơ và cấp chứng nhận danh tính.
           </p>
           <label className="text-sm">
             Mã truy cập issuer
@@ -401,7 +379,6 @@ export function IssuerApp() {
               className="block w-full rounded-xl border border-line px-4 py-3 mt-2"
             />
           </label>
-          <div className="text-xs text-ink-4 mt-2">Docker demo mặc định: issuer-demo-local</div>
           {error && (
             <p role="alert" className="text-red-700 text-sm mt-3">
               {error}
@@ -468,7 +445,7 @@ export function IssuerApp() {
               ISSUANCE WORKSPACE
             </div>
             <h1 className="text-3xl tracking-tight font-medium mt-2">
-              {tab === 'requests' ? 'Xét duyệt & ký credential' : 'Đăng ký công khai'}
+              {tab === 'requests' ? 'Xét duyệt và cấp chứng nhận' : 'Đăng ký công khai'}
             </h1>
             <p className="text-sm text-ink-3 mt-2">
               {tab === 'requests'
@@ -553,143 +530,78 @@ export function IssuerApp() {
                       </div>
                       <Badge status={item.status} />
                     </div>
-                    <div className="font-mono text-[10px] text-ink-4 break-all mt-3">
-                      REQUEST {item.id} · WALLET {item.wallet_id}
-                    </div>
-                    <div className="flex gap-6 mt-6 border-b border-line text-sm">
-                      <button
-                        className={`pb-3 cursor-pointer ${detail === 'identity' ? 'border-b-2 border-ink' : 'text-ink-4'}`}
-                        onClick={() => setDetail('identity')}
-                      >
-                        Hồ sơ & CSDL
-                      </button>
-                      <button
-                        className={`pb-3 cursor-pointer ${detail === 'proof' ? 'border-b-2 border-ink' : 'text-ink-4'}`}
-                        onClick={() => setDetail('proof')}
-                      >
-                        Commitment & ZK proof
-                      </button>
-                    </div>
-                    {detail === 'identity' ? (
-                      <div className="mt-4">
-                        <div className="text-xs text-ink-3 mb-4">
-                          CSDL demo issuer ·{' '}
-                          {item.database.found ? 'Tìm thấy hồ sơ' : 'Không tìm thấy CCCD'}
-                          {item.database.already_issued ? ' · Đã cấp credential' : ''}
-                        </div>
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-sm text-left">
-                            <thead className="text-[11px] text-ink-4">
-                              <tr>
-                                <th className="py-2">Thuộc tính</th>
-                                <th>Ví gửi</th>
-                                <th>CSDL issuer</th>
+                    <h3 className="mt-6 text-sm font-medium">Đối chiếu hồ sơ</h3>
+                    <div className="mt-4">
+                      <div className="text-xs text-ink-3 mb-4">
+                        Dữ liệu đối chiếu ·{' '}
+                        {item.database.found ? 'Tìm thấy hồ sơ' : 'Không tìm thấy CCCD'}
+                        {item.database.already_issued ? ' · Đã cấp chứng nhận' : ''}
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left">
+                          <thead className="text-[11px] text-ink-4">
+                            <tr>
+                              <th className="py-2">Thuộc tính</th>
+                              <th>Ví gửi</th>
+                              <th>CSDL issuer</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {item.database.fields.map((f) => (
+                              <tr key={f.name} className="border-t border-line">
+                                <td className="py-3 pr-3 text-ink-3">{fieldLabels[f.name]}</td>
+                                <td className="pr-3">{f.submitted}</td>
+                                <td className={f.matches ? 'text-green' : 'text-red-700'}>
+                                  {f.stored ?? 'Không có'} {f.matches ? '✓' : '≠'}
+                                </td>
                               </tr>
-                            </thead>
-                            <tbody>
-                              {item.database.fields.map((f) => (
-                                <tr key={f.name} className="border-t border-line">
-                                  <td className="py-3 pr-3 text-ink-3">{fieldLabels[f.name]}</td>
-                                  <td className="pr-3">{f.submitted}</td>
-                                  <td className={f.matches ? 'text-green' : 'text-red-700'}>
-                                    {f.stored ?? 'Không có'} {f.matches ? '✓' : '≠'}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-3 mt-5">
-                        <div className="rounded-xl bg-blue-bg p-4 text-sm text-blue leading-relaxed">
-                          Issuer nhận U = S^v′ · R^linkSecret mod n và proof chứng minh biết các bí
-                          mật tạo U. Link secret và v′ không được gửi đến cổng issuer. Các giá trị
-                          bên dưới lấy từ yêu cầu thực; số lớn giữ dạng chuỗi để không mất độ chính
-                          xác.
-                        </div>
-                        <BigNumber
-                          name="nonce"
-                          value={item.nonce}
-                          note={`Challenge từ issuer · hết hạn ${new Date(item.expires_at * 1000).toLocaleTimeString('vi-VN')} · dùng một lần`}
-                        />
-                        <BigNumber name="U" value={item.proof.u} note="Commitment đã làm mù" />
-                        <BigNumber
-                          name="c"
-                          value={item.proof.c}
-                          note="Fiat–Shamir challenge: H(U, Ũ, nonce)"
-                        />
-                        <BigNumber
-                          name="v̂"
-                          value={item.proof.v_hat}
-                          note="Response: ṽ + c · v′ (không phải v′ gốc)"
-                        />
-                        <BigNumber
-                          name="lŝ"
-                          value={item.proof.ls_hat}
-                          note="Response: lś̃ + c · linkSecret (không phải link secret gốc)"
-                        />
-                        <details className="text-sm">
-                          <summary className="cursor-pointer text-ink-3 py-2">
-                            Tham số công khai n, S, R
-                          </summary>
-                          <div className="space-y-3">
-                            {Object.entries(item.public_key).map(([k, v]) => (
-                              <BigNumber
-                                key={k}
-                                name={k}
-                                value={v}
-                                note="Tham số công khai CL signature"
-                              />
                             ))}
-                          </div>
-                        </details>
+                          </tbody>
+                        </table>
                       </div>
-                    )}
+                    </div>
                   </div>
                   <div className={section}>
-                    <h3 className="font-medium">Kiểm chứng trước khi ký</h3>
-                    <div className="grid sm:grid-cols-2 gap-3 mt-4">
-                      {(
-                        [
-                          ['database', 'Hồ sơ khớp CSDL'],
-                          ['not_issued', 'CCCD chưa được cấp'],
-                          ['nonce', 'Nonce đúng phiên, còn hạn'],
-                          ['proof', 'ZK proof hợp lệ'],
-                        ] as const
-                      ).map(([key, label]) => (
-                        <div key={key} className="rounded-xl bg-bg-sunken p-3 text-sm">
-                          <span
-                            className={
-                              item.checks
-                                ? item.checks[key]
-                                  ? 'text-green'
-                                  : 'text-red-700'
-                                : 'text-ink-4'
-                            }
-                          >
-                            {item.checks ? (item.checks[key] ? '✓' : '✕') : '○'}
-                          </span>{' '}
-                          {label}
-                        </div>
-                      ))}
-                    </div>
+                    <h3 className="font-medium">Xét duyệt hồ sơ</h3>
+                    <p className="mt-3 text-sm text-ink-3">
+                      Hệ thống tự kiểm tra hồ sơ và tính hợp lệ của yêu cầu trước khi cấp.
+                    </p>
+                    {item.checks && (
+                      <div className="grid sm:grid-cols-2 gap-3 mt-4">
+                        {(
+                          [
+                            ['database', 'Hồ sơ khớp CSDL'],
+                            ['not_issued', 'CCCD chưa được cấp'],
+                            ['nonce', 'Phiên yêu cầu hợp lệ'],
+                            ['proof', 'Bằng chứng của yêu cầu hợp lệ'],
+                          ] as const
+                        ).map(([key, label]) => (
+                          <div key={key} className="rounded-xl bg-bg-sunken p-3 text-sm">
+                            <span
+                              className={
+                                item.checks
+                                  ? item.checks[key]
+                                    ? 'text-green'
+                                    : 'text-red-700'
+                                  : 'text-ink-4'
+                              }
+                            >
+                              {item.checks ? (item.checks[key] ? '✓' : '✕') : '○'}
+                            </span>{' '}
+                            {label}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {item.status === 'pending' ? (
                       <>
                         <div className="flex flex-wrap gap-3 mt-5">
                           <button
                             disabled={busy}
-                            onClick={() => void act(`/requests/${item.id}/check`)}
-                            className={secondary}
-                          >
-                            Kiểm tra CSDL & proof
-                          </button>
-                          <button
-                            disabled={busy}
                             onClick={() => void act(`/requests/${item.id}/approve`)}
                             className={button}
                           >
-                            {busy ? 'Đang xử lý…' : 'Duyệt & ký mù'}
+                            {busy ? 'Đang xử lý…' : 'Duyệt và cấp chứng nhận'}
                           </button>
                         </div>
                         <div className="flex gap-2 mt-4">
@@ -715,28 +627,11 @@ export function IssuerApp() {
                     ) : (
                       <p className="text-sm text-ink-3 mt-4">
                         {item.status === 'issued'
-                          ? 'Ví đã giải mù, kiểm tra chữ ký và lưu credential.'
+                          ? 'Chứng nhận đã được lưu vào ví người nhận.'
                           : item.status === 'signed'
-                            ? 'Nonce đã được tiêu thụ. Đang chờ ví nhận và giải mù chữ ký.'
-                            : item.reason || 'Nonce đã hết hạn; ví cần gửi yêu cầu mới.'}
+                            ? 'Đã duyệt cấp chứng nhận. Đang chờ ví nhận.'
+                            : item.reason || 'Yêu cầu đã hết hạn. Người dùng cần gửi lại hồ sơ.'}
                       </p>
-                    )}
-                    {Object.keys(item.signature).length > 0 && (
-                      <details className="mt-4">
-                        <summary className="text-sm text-ink-3 cursor-pointer">
-                          Chữ ký mù trả về ví (A, e, v″)
-                        </summary>
-                        <div className="space-y-3 mt-3">
-                          {Object.entries(item.signature).map(([k, v]) => (
-                            <BigNumber
-                              key={k}
-                              name={k}
-                              value={v}
-                              note="Thành phần chữ ký do issuer tạo"
-                            />
-                          ))}
-                        </div>
-                      </details>
                     )}
                   </div>
                 </div>
