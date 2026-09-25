@@ -120,7 +120,7 @@ export interface LogEntry {
   id: string
   date: string
   purpose: string
-  result: 'Verified' | 'Declined'
+  result: 'Verified' | 'Declined' | 'Pending' | 'Expired' | 'Rejected'
   color: string
   disclosed: string
   request: string

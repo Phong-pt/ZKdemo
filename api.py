@@ -20,6 +20,7 @@ from auth import Account
 from issuer import issuer
 from wallet import wallet
 from verifier import verifier
+from verifier.request_store import RequestStore
 
 _registry_startup_task: asyncio.Task | None = None
 
@@ -59,7 +60,8 @@ app.add_middleware(
 _session_connections: dict[str, list[WebSocket]] = {}
 _flow_lock = issuance.lock
 app.include_router(issuance.router)
-_verification_requests: dict[str, dict] = {}
+_verification_requests = RequestStore()
+_verification_results: dict[str, dict] = {}
 
 
 @app.websocket("/api/session/{session_id}/ws")
@@ -247,9 +249,20 @@ def _request(session_id: str) -> dict:
     session = _verification_requests.get(session_id)
     if session is None:
         raise HTTPException(404, "Không tìm thấy phiên xác minh")
-    if session["status"] == "pending" and time.time() >= session["expires_at"]:
-        session["status"] = "expired"
     return session
+
+
+def _request_view(session: dict, live: bool = False) -> dict:
+    result = {key: value for key, value in session.items() if key != "owner_id"}
+    if live and session["id"] in _verification_results:
+        result["result"] = _verification_results[session["id"]]
+    return result
+
+
+@app.get("/api/requests")
+def list_requests(verifier_org: tuple[Account, str] = Depends(auth.verifier_account)) -> list[dict]:
+    with _flow_lock:
+        return [_request_view(session) for session in _verification_requests.list_for(verifier_org[0].wallet_id)]
 
 
 @app.post("/api/requests")
@@ -264,23 +277,25 @@ def create_request(
         raise HTTPException(400, "Demo chưa hỗ trợ predicate tuổi, quốc tịch, cư trú hoặc chứng minh không thu hồi")
     with _flow_lock:
         now = time.time()
-        for key, value in list(_verification_requests.items()):
-            if now > value["expires_at"] + 3600:
-                del _verification_requests[key]
+        for key in list(_verification_results):
+            previous = _verification_requests.get(key)
+            if previous is None or now > previous["expires_at"] + 3600:
+                del _verification_results[key]
         session_id = secrets.token_urlsafe(24)
         session = {
             **body.model_dump(), "id": session_id, "status": "pending",
-            "org_name": verifier_org[1],
+            "org_name": verifier_org[1], "owner_id": verifier_org[0].wallet_id,
+            "created_at": now, "disclosed_attrs": [],
             "expires_at": now + verifier.SESSION_TTL_SECONDS, "result": None,
         }
-        _verification_requests[session_id] = session
-        return session.copy()
+        _verification_requests.save(session)
+        return _request_view(session)
 
 
 @app.get("/api/requests/{session_id}")
 def get_request(session_id: str) -> dict:
     with _flow_lock:
-        return _request(session_id).copy()
+        return _request_view(_request(session_id), live=True)
 
 
 @app.post("/api/requests/{session_id}/approve")
@@ -295,8 +310,11 @@ def approve_request(
             raise HTTPException(400, "Không được chia sẻ ngoài yêu cầu")
         result = _verify(VerifyRequest(revealed_attrs=body.revealed_attrs), account.wallet_id)
         session["result"] = result.model_dump()
+        session["disclosed_attrs"] = list(result.revealed)
+        _verification_results[session_id] = result.model_dump()
         session["status"] = "verified" if result.verified else "rejected"
-        return session.copy()
+        _verification_requests.save(session)
+        return _request_view(session)
 
 
 @app.post("/api/requests/{session_id}/decline")
@@ -306,7 +324,8 @@ def decline_request(session_id: str) -> dict:
         if session["status"] != "pending":
             raise HTTPException(409, "Phiên đã kết thúc hoặc hết hạn")
         session["status"] = "declined"
-        return session.copy()
+        _verification_requests.save(session)
+        return _request_view(session)
 
 
 @app.post("/api/verifier/login", response_model=VerifierLoginResponse)
@@ -397,6 +416,7 @@ def _reset() -> dict[str, bool]:
     issuer._pending_nonces.clear()
     verifier._pending_sessions.clear()
     _verification_requests.clear()
+    _verification_results.clear()
     issuance.requests.clear()
     issuance.persist()
     passkey._challenges.clear()

@@ -12,3 +12,5 @@ wallet/wallets
 *.key
 contracts/deployment.json
 contracts/issuer-publication.json
+
+issuer/verification_requests.sqlite3*

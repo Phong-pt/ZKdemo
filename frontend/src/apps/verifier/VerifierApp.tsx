@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { publish, subscribe } from '@/lib/sessionBus'
-import { apiClient, setAuthToken } from '@/services/apiClient'
+import { apiClient, setAuthToken, type VerificationSession } from '@/services/apiClient'
 import { authService, isTokenExpired, type GoogleAccount } from '@/services/authService'
 import {
   buildDiscCards,
@@ -120,6 +120,22 @@ export function VerifierApp() {
     }
   }, [state.authed])
 
+  useEffect(() => {
+    if (!state.authed) return
+    let cancelled = false
+    const load = async () => {
+      try {
+        const sessions = await apiClient.listRequests()
+        if (!cancelled) setState((s) => ({ ...s, log: sessions.map(buildLogRecord) }))
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Không tải được lịch sử')
+      }
+    }
+    void load()
+    const timer = window.setInterval(load, 5000)
+    return () => { cancelled = true; window.clearInterval(timer) }
+  }, [state.authed, state.orgEmail, state.sessionId, state.requestPending])
+
   const login = useCallback((account: GoogleAccount) => {    setAuthToken(account.token)
     setState((s) => ({ ...s, loginBusy: true, loginError: null }))
     apiClient
@@ -189,6 +205,8 @@ export function VerifierApp() {
       authed: s.authed,
       orgEmail: s.orgEmail,
       orgName: s.orgName,
+      orgUser: s.orgUser,
+      log: s.log,
       // Schema đã đọc từ chain thì giữ lại; restart là xoá phiên, không phải quên registry.
       schema: s.schema,
       schemaError: s.schemaError,
@@ -247,7 +265,7 @@ export function VerifierApp() {
       })
       clearTimers()
       setState((s) => ({ ...s, sessionId: session.id, view: 'live', vstep: 0, phone: 'idle',
-        disc: {}, result: null, requestPending: true, expiry: Math.max(0, Math.ceil(session.expires_at - Date.now() / 1000)) }))
+        disc: {}, result: null, requestPending: true, log: [buildLogRecord(session), ...s.log], expiry: Math.max(0, Math.ceil(session.expires_at - Date.now() / 1000)) }))
       startExpiry()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không tạo được yêu cầu')
@@ -270,7 +288,7 @@ export function VerifierApp() {
           setState((s) => {
             const result = session.result ?? { verified: false, revealed: {} }
             const next = { ...s, result, requestPending: false, phone: 'idle' as const, vstep: result.verified ? 8 : 0 }
-            return { ...next, view: 'result', log: [buildLogRecord(next, session.id, result.verified), ...s.log] }
+            return { ...next, view: 'result', log: [buildLogRecord(session), ...s.log.filter((entry) => entry.id !== session.id)] }
           })
           if (session.status === 'expired') setError('Phiên xác minh đã hết hạn. Hãy tạo yêu cầu mới.')
           return
@@ -310,7 +328,32 @@ export function VerifierApp() {
     }))
   }, [clearTimers])
 
-  const openDetail = useCallback((entry: VerifierState['log'][number]) => setState((s) => ({ ...s, detail: entry })), [])
+  const openDetail = useCallback(async (entry: VerifierState['log'][number]) => {
+    if (entry.result !== 'Pending') {
+      setState((s) => ({ ...s, detail: entry }))
+      return
+    }
+    const email = stateRef.current.orgEmail
+    try {
+      const session: VerificationSession = await apiClient.getRequest(entry.id)
+      if (!stateRef.current.authed || stateRef.current.orgEmail !== email) return
+      if (session.status !== 'pending') {
+        setState((s) => ({ ...s, detail: buildLogRecord(session),
+          log: s.log.map((row) => row.id === session.id ? buildLogRecord(session) : row) }))
+        return
+      }
+      clearTimers()
+      setState((s) => ({ ...s, view: 'live', sessionId: session.id, name: session.name,
+        purpose: session.purpose, desc: '', ageOn: false,
+        reveal: Object.fromEntries(session.revealed_attrs.map((key) => [key, true])),
+        conds: Object.fromEntries(session.conditions.map((key) => [key, true])),
+        requestPending: true, result: null, disc: {}, detail: null, phone: 'idle', vstep: 0,
+        expiry: Math.max(0, Math.ceil(session.expires_at - Date.now() / 1000)) }))
+      startExpiry()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không mở được yêu cầu')
+    }
+  }, [clearTimers, startExpiry])
   const closeDetail = useCallback(() => setState((s) => ({ ...s, detail: null })), [])
 
   const toggleDisc = useCallback((key: string) => {
@@ -369,9 +412,10 @@ export function VerifierApp() {
     })
   }, [state.sessionId, after, runVerification])
 
-  const activeCount = state.requestPending ? 1 : 0
+  const activeCount = state.log.filter((r) => r.result === 'Pending').length
   const completedCount = state.log.filter((r) => r.result === 'Verified').length
-  const successRate = state.log.length ? Math.round((completedCount / state.log.length) * 100) : 0
+  const finishedCount = state.log.filter((r) => r.result !== 'Pending').length
+  const successRate = finishedCount ? Math.round((completedCount / finishedCount) * 100) : 0
 
   const shared = sharedNowClaims(state)
   const withheld = withheldClaims(state)
@@ -440,7 +484,7 @@ export function VerifierApp() {
                 ? 'A wallet has connected to your verification request.'
                 : state.vstep === 2
                   ? 'Waiting for user approval…'
-                  : 'Presentation received. No raw attributes stored.'
+                  : 'Waiting for the wallet to scan this request.'
             }
             predicateText={predicateText(state)}
             phoneIdle={state.phone === 'idle'}
@@ -449,7 +493,7 @@ export function VerifierApp() {
         )}
         {state.view === 'result' && (
           <Result
-            verified={state.log[0]?.result === 'Verified'}
+            verified={state.result?.verified === true}
             name={state.name}
             requestId={state.sessionId}
             resultRows={buildResultRows(state)}

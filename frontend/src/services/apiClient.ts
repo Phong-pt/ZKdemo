@@ -36,6 +36,8 @@ export interface VerificationSession {
   conditions: string[]
   status: 'pending' | 'verified' | 'rejected' | 'declined' | 'expired'
   expires_at: number
+  created_at: number
+  disclosed_attrs: string[]
   result: VerifyResponse | null
 }
 
@@ -147,6 +149,7 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 export const apiClient = {
   createRequest: (request: { name: string; purpose: string; revealed_attrs: string[]; conditions: string[] }) =>
     apiFetch<VerificationSession>('/requests', { method: 'POST', body: JSON.stringify(request) }),
+  listRequests: () => apiFetch<VerificationSession[]>('/requests'),
   getRequest: (id: string) => apiFetch<VerificationSession>(`/requests/${encodeURIComponent(id)}`),
   approveRequest: (id: string, attrs: string[]) =>
     apiFetch<VerificationSession>(`/requests/${encodeURIComponent(id)}/approve`, {

@@ -1,3 +1,4 @@
+import type { VerificationSession } from '@/services/apiClient'
 import { CONDS, claimsFor, type Claim, type LogEntry, type VerifierState } from './types'
 
 // Danh sách claim của yêu cầu hiện tại, suy ra từ schema đã đọc về — không phải từ hằng số.
@@ -143,21 +144,20 @@ export function buildWithheldList(state: VerifierState): string[] {
   return withheldClaims(state).map((c) => c.label)
 }
 
-export function buildLogRecord(state: VerifierState, requestId: string, verified: boolean): LogEntry {
-  const revealed = sharedNowClaims(state)
-  const withheld = withheldClaims(state)
-  const conds = activeConds(state)
-  const proven = [...(state.ageOn ? [`Age ≥ ${state.age}`] : []), ...conds.map((c) => c.label)]
+export function buildLogRecord(session: VerificationSession): LogEntry {
+  const labels = (keys: string[]) => claimsFor(keys).map((c) => c.label).join(', ') || 'None'
+  const verified = session.status === 'verified'
+  const statuses = { pending: 'Pending', verified: 'Verified', declined: 'Declined', expired: 'Expired', rejected: 'Rejected' } as const
   return {
-    id: requestId,
-    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' }),
-    purpose: state.name,
-    result: verified ? 'Verified' : 'Declined',
+    id: session.id,
+    date: new Date(session.created_at * 1000).toLocaleString(),
+    purpose: session.name,
+    result: statuses[session.status],
     color: verified ? '#17795E' : '#B4763A',
-    disclosed: verified ? `${revealed.length} attribute(s) + ${conds.length + (state.ageOn ? 1 : 0)} proof(s)` : '—',
-    request: state.ageOn ? `Age ≥ ${state.age}` : 'Credential valid',
-    revealed: verified ? revealed.map((c) => c.label).join(', ') || 'None' : 'None',
-    proven: verified ? proven.join(', ') || 'None' : 'None',
-    withheld: verified ? withheld.map((c) => c.label).join(', ') : 'All attributes',
+    disclosed: verified ? `${session.disclosed_attrs.length} attribute(s)` : '—',
+    request: `${session.purpose} · Requested: ${labels(session.revealed_attrs)}`,
+    revealed: labels(session.disclosed_attrs),
+    proven: verified ? 'Credential signature valid' : 'None',
+    withheld: labels(session.revealed_attrs.filter((key) => !session.disclosed_attrs.includes(key))),
   }
 }
